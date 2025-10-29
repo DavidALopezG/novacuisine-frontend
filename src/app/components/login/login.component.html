@@ -1,0 +1,81 @@
+<div class="login-container">
+    <div class="container" id="container" [class.right-panel-active]="isRightPanelActive">
+        <!-- Formulario de Registro -->
+        <div class="form-container sign-up-container">
+            <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+                <img src="assets/logo-nova-cuisine-dark.png" alt="Nova Cuisine Logo" class="logo-small">
+                <h1>Crear Cuenta</h1>
+                
+                <input type="text" formControlName="name" placeholder="Nombre Completo" required />
+                <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="error-message">
+                    El nombre es requerido
+                </div>
+
+                <input type="email" formControlName="email" placeholder="Correo Electrónico" required />
+                <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-message">
+                    Email inválido
+                </div>
+
+                <input type="password" formControlName="password" placeholder="Contraseña" required />
+                <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-message">
+                    La contraseña debe tener al menos 6 caracteres
+                </div>
+
+                <input type="password" formControlName="confirmPassword" placeholder="Confirmar Contraseña" required />
+                <div *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched" class="error-message">
+                    Las contraseñas no coinciden
+                </div>
+
+                <select formControlName="role" required>
+                    <option value="">Selecciona tu Rol</option>
+                    <option value="Docente">Docente</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Bodega">Personal de Bodega</option>
+                </select>
+                <div *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched" class="error-message">
+                    Debes seleccionar un rol
+                </div>
+
+                <button type="submit" [disabled]="registerForm.invalid">Registrarme</button>
+            </form>
+        </div>
+
+        <!-- Formulario de Login -->
+        <div class="form-container sign-in-container">
+            <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+                <img src="assets/logo-nova-cuisine-dark.png" alt="Nova Cuisine Logo" class="logo-small">
+                <h1>Iniciar Sesión</h1>
+                
+                <input type="email" formControlName="email" placeholder="Correo Electrónico" required />
+                <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-message">
+                    Email inválido
+                </div>
+
+                <input type="password" formControlName="password" placeholder="Contraseña" required />
+                <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
+                    La contraseña es requerida
+                </div>
+
+                <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                
+                <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
+            </form>
+        </div>
+
+        <!-- Overlay -->
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>¡Bienvenido de Nuevo!</h1>
+                    <p>Para mantenerte conectado, por favor inicia sesión con tu cuenta.</p>
+                    <button class="ghost" (click)="togglePanel(false)">Iniciar Sesión</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>¡Hola, Chef!</h1>
+                    <p>Ingresa tus datos personales y comienza tu viaje con nosotros.</p>
+                    <button class="ghost" (click)="togglePanel(true)">Registrarme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
