@@ -1,0 +1,22 @@
+<div class="main-layout">
+    <aside class="sidebar">
+        <div class="logo">Nova Cuisine</div>
+        
+        <nav>
+            <a routerLink="admin" routerLinkActive="active" 
+               *ngIf="isAdmin()">
+               💰 Gestión de Cobros
+            </a>
+            <a routerLink="/dashboard/reportes" routerLinkActive="active" 
+               *ngIf="isAdmin()">
+               📊 Reportes
+            </a>
+            
+            <button (click)="logout()">Cerrar Sesión</button>
+        </nav>
+    </aside>
+    
+    <main class="content">
+        <router-outlet></router-outlet>
+    </main>
+</div>

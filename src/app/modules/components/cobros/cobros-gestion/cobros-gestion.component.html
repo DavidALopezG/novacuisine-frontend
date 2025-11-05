@@ -1,0 +1,62 @@
+<div class="gestion-cobros">
+    <h2>💰 Gestión de Cobros y Obligaciones</h2>
+    
+    <div *ngIf="deudaCritica" class="alert-critica">
+        ⚠️ ALERTA: Hay estudiantes con **3 o más** pagos vencidos. Acción inmediata requerida.
+    </div>
+
+    <button class="btn-create">
+        + Crear Nueva Obligación
+    </button>
+
+    <hr>
+    
+    <div *ngIf="loading" class="loading-message">
+        Cargando datos de obligaciones...
+    </div>
+
+    <div *ngIf="error" class="error-message">
+        {{ error }}
+    </div>
+
+    <div *ngIf="!loading && !error && obligaciones.length > 0" class="tabla-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Obligación</th>
+                    <th>ID Estudiante</th>
+                    <th>Vencimiento</th>
+                    <th>Total</th>
+                    <th>Pagado</th>
+                    <th>Pendiente</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let o of obligaciones" 
+    [class.vencida]="esVencida(o)"
+    [class.pagado]="o.estado === 'Pagado'">
+    
+                    <td>{{ o.obligacion_id }}</td>
+                    <td>{{ o.estudiante_id }}</td>
+                    <td>{{ o.fecha_vencimiento | date:'mediumDate' }}</td>
+                    <td>{{ o.monto_total | currency:'USD' }}</td>
+                    <td>{{ o.monto_pagado | currency:'USD' }}</td>
+                    <td>{{ o.monto_total - o.monto_pagado | currency:'USD' }}</td>
+                    <td><span [class]="'estado-' + o.estado.toLowerCase()">{{ o.estado }}</span></td>
+                    <td>
+                        
+                        <button (click)="registrarPagoModal(o)" [disabled]="o.estado === 'Pagado'">
+                            Registrar Pago
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div *ngIf="!loading && !error && obligaciones.length === 0" class="no-data-message">
+        No hay obligaciones de cobro registradas.
+    </div>
+</div>

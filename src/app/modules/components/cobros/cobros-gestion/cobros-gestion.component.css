@@ -1,0 +1,179 @@
+/* Estilos generales del contenedor */
+.gestion-cobros {
+    padding: 30px;
+    background-color: #f7f9fc;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+h2 {
+    color: #333;
+    border-bottom: 2px solid #b8860b; /* Nova Gold para el título */
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* 🛑 Estilo para la Alerta de Deuda Crítica (HU-COB-02) */
+.alert-critica {
+    background-color: #ffe0e0; /* Fondo rojo muy claro */
+    color: #cc0000; /* Texto rojo oscuro */
+    border: 1px solid #ff9999;
+    padding: 15px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(204, 0, 0, 0.1);
+    animation: pulse 1.5s infinite alternate; /* Animación sutil */
+}
+
+@keyframes pulse {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.9;
+    }
+}
+
+/* --- Botones --- */
+.btn-create {
+    background-color: #b8860b; /* Nova Gold */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    margin-bottom: 20px;
+}
+
+.btn-create:hover {
+    background-color: #9b6e0a;
+}
+
+.logout-btn { /* Si lo tienes en el mismo componente, si no, ignóralo */
+    background-color: #555;
+    color: white;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: #ddd;
+    margin: 25px 0;
+}
+
+/* --- Mensajes de Estado --- */
+.loading-message, .error-message, .no-data-message {
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 500;
+    margin-top: 20px;
+}
+
+.error-message {
+    background-color: #fdd;
+    color: #d8000c;
+    border: 1px solid #f99;
+}
+
+
+/* --- Tabla de Obligaciones --- */
+.tabla-container {
+    overflow-x: auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead th {
+    background-color: #e9ecef;
+    color: #555;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+}
+
+tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+tbody tr:hover {
+    background-color: #f0f8ff; /* Resaltar fila al pasar el ratón */
+}
+
+/* --- Resaltado de Filas por Estado --- */
+
+/* Fila para obligaciones vencidas */
+tr.vencida {
+    background-color: #ffedeb; /* Fondo rojo pálido */
+    color: #c0392b; /* Texto más oscuro para visibilidad */
+    font-weight: 500;
+}
+
+/* Fila para obligaciones totalmente pagadas */
+tr.pagado {
+    background-color: #e6ffe6; /* Fondo verde muy claro */
+    color: #27ae60;
+}
+
+/* --- Estilos de las Etiquetas de Estado --- */
+td span {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.estado-pendiente {
+    background-color: #fff3e0; /* Naranja claro */
+    color: #e67e22; /* Naranja */
+}
+
+.estado-parcial {
+    background-color: #e3f2fd; /* Azul claro */
+    color: #3498db; /* Azul */
+}
+
+.estado-pagado {
+    background-color: #e8f5e9; /* Verde muy claro */
+    color: #27ae60; /* Verde */
+}
+
+/* --- Botón de Acción en la Tabla --- */
+td button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.3s;
+}
+
+td button:hover {
+    background-color: #2980b9;
+}
+
+td button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

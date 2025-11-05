@@ -1,12 +1,17 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router'; // 👈 Importar RouterModule
+
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule // ✅ necesario para usar <router-outlet>
+  ],
+  template: `<router-outlet></router-outlet>`,
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'novacuisine-frontend';
+  title = 'novacuisine-frontend'; // 👈 agregar propiedad
 }
