@@ -1,0 +1,75 @@
+<div class="gestion-usuarios">
+
+  <h2>Gestión de Usuarios</h2>
+
+  <div *ngIf="mostrarForm" class="modal-overlay"> <div class="form-container"> <h3>{{ editando ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+
+          <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()">
+
+              <label>ID Usuario</label>
+              <input formControlName="usuario_id" placeholder="Cédula" [readonly]="editando">
+
+              <label>Nombre completo</label>
+              <input formControlName="nombre_completo" placeholder="Nombre completo">
+
+              <label>Email</label>
+              <input formControlName="email" placeholder="Email">
+
+              <label>Rol</label>
+              <select formControlName="rol_id">
+                  <option value="1">Administrador</option>
+                  <option value="2">Profesor</option>
+                  <option value="3">Estudiante</option>
+              </select>
+
+              <label class="switch-label">
+                  <span>Usuario Activo</span>
+                  <label class="switch">
+                      <input type="checkbox" formControlName="activo">
+                      <span class="slider"></span>
+                  </label>
+              </label>
+
+              <div class="form-actions"> <button type="submit" class="btn-primary">{{ editando ? 'Guardar Cambios' : 'Crear Usuario' }}</button>
+                  <button type="button" (click)="cerrarFormulario()" class="btn-secondary">Cancelar</button>
+              </div>
+
+          </form>
+      </div>
+  </div>
+
+  <div class="tabla-container">
+      <table>
+          <thead>
+              <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Activo</th>
+                  <th>Acciones</th>
+              </tr>
+          </thead>
+
+          <tbody>
+              <tr *ngFor="let u of usuarios">
+                  <td>{{ u.usuario_id }}</td>
+                  <td>{{ u.nombre_completo }}</td>
+                  <td>{{ u.email }}</td>
+                  <td>{{ obtenerRolNombre(u.rol_id) }}</td>
+                  <td>
+                      <span [class.estado-activo]="u.activo" [class.estado-inactivo]="!u.activo">
+                          {{ u.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                  </td>
+                  <td>
+                      <button class="btn-edit" (click)="editarUsuario(u)">Editar</button>
+                      <button class="btn-delete" (click)="eliminarUsuario(u.usuario_id)">Eliminar</button>
+                  </td>
+              </tr>
+          </tbody>
+
+      </table>
+  </div>
+
+</div>

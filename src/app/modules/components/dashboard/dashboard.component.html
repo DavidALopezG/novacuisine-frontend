@@ -1,18 +1,38 @@
 <div class="main-layout">
     <aside class="sidebar">
-        <div class="logo">Nova Cuisine</div>
+        <div class="logo-container">
+            <img src="../../../../assets/imagenes/NovalogoBlack.png" alt="Logo Nova Cuisine" class="logo-img">
+        </div>
         
         <nav>
-            <a routerLink="admin" routerLinkActive="active" 
-               *ngIf="isAdmin()">
-               💰 Gestión de Cobros
-            </a>
-            <a routerLink="/dashboard/reportes" routerLinkActive="active" 
-               *ngIf="isAdmin()">
-               📊 Reportes
-            </a>
-            
-            <button (click)="logout()">Cerrar Sesión</button>
+            <!-- 🏠 Inicio común para todos -->
+            <a routerLink="inicio" routerLinkActive="active">🏠 Inicio</a>
+
+            <!-- 🛠️ Menú Administrador (Rol 1) -->
+            <ng-container *ngIf="isAdmin()">
+                <a routerLink="cobros" routerLinkActive="active">💰 Gestión de Cobros</a>
+                <a routerLink="estudiantes" routerLinkActive="active">🧑‍🎓 Gestión de Estudiantes</a>
+                <a routerLink="usuarios" routerLinkActive="active">🙍‍♂️ Gestión de Usuarios</a>
+                <a routerLink="reportes" routerLinkActive="active">📊 Reportes</a>
+            </ng-container>
+
+            <!-- 👨‍🏫 Menú Docente (Rol 2) -->
+<ng-container *ngIf="isDocente()">
+    <a routerLink="mis-grupos" routerLinkActive="active">👥 Mis Grupos</a>
+    <a routerLink="recetario-maestro" routerLinkActive="active">📖 Recetario Maestro</a>
+    <a routerLink="evaluaciones" routerLinkActive="active">📝 Calificaciones</a>
+    <a routerLink="horarios" routerLinkActive="active">📅 Horario Docente</a>
+</ng-container>
+
+            <!-- 🎓 Menú Estudiante (Rol 3) -->
+            <ng-container *ngIf="isEstudiante()">
+                <a routerLink="perfil" routerLinkActive="active">👤 Mi Perfil</a>
+                <a routerLink="mis-recetas" routerLinkActive="active">🍳 Mis Recetas</a>
+                <a routerLink="mi-cuenta" routerLinkActive="active">🧾 Estado de Cuenta</a>
+                <a routerLink="horarios" routerLinkActive="active">📅 Horarios de Clase</a>
+            </ng-container>
+
+            <button (click)="logout()" class="btn-logout">Cerrar Sesión</button>
         </nav>
     </aside>
     

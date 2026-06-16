@@ -1,0 +1,66 @@
+<div class="cuenta-container">
+    <div class="header-section">
+      <h2>🧾 Estado de Cuenta</h2>
+    </div>
+  
+    <!-- Tarjetas de Resumen Rápido -->
+    <div class="summary-grid">
+      <div class="summary-card paid">
+        <small>Total Pagado</small>
+        <h3>{{ resumen.totalPagado | currency }}</h3>
+      </div>
+      <div class="summary-card pending">
+        <small>Saldo Pendiente</small>
+        <h3>{{ resumen.saldoPendiente | currency }}</h3>
+      </div>
+      <div class="summary-card status">
+        <small>Próximo Vencimiento</small>
+        <p>{{ resumen.proximoVencimiento | date:'mediumDate' }}</p>
+      </div>
+    </div>
+  
+    <div class="main-grid">
+      <!-- Tabla de Movimientos -->
+      <div class="card table-card">
+        <h4>Detalle de Pagos y Cobros</h4>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>Fecha</th>
+              <th>Monto</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of historialPagos">
+              <td>{{ item.concepto }}</td>
+              <td>{{ item.fecha | date:'shortDate' }}</td>
+              <td>{{ item.monto | currency }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="item.estado.toLowerCase()">
+                  {{ item.estado }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  
+      <!-- Panel Lateral: Métodos de Pago -->
+      <div class="side-panel">
+        <div class="card methods-card">
+          <h4>💳 Métodos de Pago</h4>
+          <p class="help-text">Puedes realizar tus pagos mediante:</p>
+          
+          <div class="method-item" *ngFor="let m of metodosDisponibles">
+            <strong>{{ m.banco }}</strong>
+            <p>{{ m.banco }}</p>
+            <small>{{ m.detalles }}</small>
+          </div>
+  
+          <button class="btn-reportar">Reportar Pago Realizado</button>
+        </div>
+      </div>
+    </div>
+  </div>

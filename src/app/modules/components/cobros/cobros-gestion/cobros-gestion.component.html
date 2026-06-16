@@ -1,62 +1,89 @@
 <div class="gestion-cobros">
     <h2>💰 Gestión de Cobros y Obligaciones</h2>
-    
+  
     <div *ngIf="deudaCritica" class="alert-critica">
-        ⚠️ ALERTA: Hay estudiantes con **3 o más** pagos vencidos. Acción inmediata requerida.
+      ⚠️ ALERTA: Hay estudiantes con **3 o más** pagos vencidos.
     </div>
-
-    <button class="btn-create">
-        + Crear Nueva Obligación
-    </button>
-
+  
+    <button class="btn-create" (click)="abrirModalNuevaObligacion()">+ Crear Nueva Obligación</button>
+  
     <hr>
-    
-    <div *ngIf="loading" class="loading-message">
-        Cargando datos de obligaciones...
-    </div>
-
-    <div *ngIf="error" class="error-message">
-        {{ error }}
-    </div>
-
+  
+    <div *ngIf="loading" class="loading-message">Cargando datos de obligaciones...</div>
+    <div *ngIf="error" class="error-message">{{ error }}</div>
+  
     <div *ngIf="!loading && !error && obligaciones.length > 0" class="tabla-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Obligación</th>
-                    <th>ID Estudiante</th>
-                    <th>Vencimiento</th>
-                    <th>Total</th>
-                    <th>Pagado</th>
-                    <th>Pendiente</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let o of obligaciones" 
-    [class.vencida]="esVencida(o)"
-    [class.pagado]="o.estado === 'Pagado'">
-    
-                    <td>{{ o.obligacion_id }}</td>
-                    <td>{{ o.estudiante_id }}</td>
-                    <td>{{ o.fecha_vencimiento | date:'mediumDate' }}</td>
-                    <td>{{ o.monto_total | currency:'USD' }}</td>
-                    <td>{{ o.monto_pagado | currency:'USD' }}</td>
-                    <td>{{ o.monto_total - o.monto_pagado | currency:'USD' }}</td>
-                    <td><span [class]="'estado-' + o.estado.toLowerCase()">{{ o.estado }}</span></td>
-                    <td>
-                        
-                        <button (click)="registrarPagoModal(o)" [disabled]="o.estado === 'Pagado'">
-                            Registrar Pago
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+      <table>
+        <thead>
+          <tr>
+            <th>ID Obligación</th>
+            <th>ID Estudiante</th>
+            <th>Vencimiento</th>
+            <th>Total</th>
+            <th>Pagado</th>
+            <th>Pendiente</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let o of obligaciones" [class.vencida]="esVencida(o)" [class.pagado]="o.estado === 'Pagado'">
+            <td>{{ o.obligacion_id }}</td>
+            <td>{{ o.estudiante_id }}</td>
+            <td>{{ o.fecha_vencimiento | date: 'mediumDate' }}</td>
+            <td>{{ o.monto_total | currency: 'USD' }}</td>
+            <td>{{ o.monto_pagado | currency: 'USD' }}</td>
+            <td>{{ o.monto_total - o.monto_pagado | currency: 'USD' }}</td>
+            <td><span [class]="'estado-' + o.estado.toLowerCase()">{{ o.estado }}</span></td>
+            <td>
+              <button (click)="abrirModalPago(o)" [disabled]="o.estado === 'Pagado'">Registrar Pago</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
+  
     <div *ngIf="!loading && !error && obligaciones.length === 0" class="no-data-message">
-        No hay obligaciones de cobro registradas.
+      No hay obligaciones de cobro registradas.
     </div>
-</div>
+  </div>
+  
+  <!-- 🔹 Modal Registrar Pago -->
+  <div class="modal" *ngIf="mostrarModalPago">
+    <div class="modal-content">
+      <h3>Registrar Pago</h3>
+      <p><strong>Obligación:</strong> #{{ obligacionSeleccionada?.obligacion_id }}</p>
+      <p>
+        <strong>Pendiente:</strong>
+        ${{ (obligacionSeleccionada?.monto_total || 0) - (obligacionSeleccionada?.monto_pagado || 0) }}
+      </p>  
+      <label>Monto del pago:</label>
+      <input type="number" [(ngModel)]="montoPago" min="1" step="0.01" />
+  
+      <div class="modal-actions">
+        <button (click)="confirmarPago()">💾 Registrar</button>
+        <button (click)="cerrarModal()">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 🔹 Modal Crear Nueva Obligación -->
+  <div class="modal" *ngIf="mostrarModalObligacion">
+    <div class="modal-content">
+      <h3>Crear Nueva Obligación</h3>
+      <label>ID Estudiante:</label>
+      <input type="number" [(ngModel)]="nuevaObligacion.estudiante_id" />
+  
+      <label>Monto Total (USD):</label>
+      <input type="number" [(ngModel)]="nuevaObligacion.monto_total" step="0.01" />
+  
+      <label>Fecha de Vencimiento:</label>
+      <input type="date" [(ngModel)]="nuevaObligacion.fecha_vencimiento" />
+  
+      <div class="modal-actions">
+        <button (click)="crearObligacion()">✅ Crear</button>
+        <button (click)="cerrarModal()">❌ Cancelar</button>
+      </div>
+    </div>
+  </div>
+  

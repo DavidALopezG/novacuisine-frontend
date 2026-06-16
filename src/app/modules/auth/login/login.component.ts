@@ -35,9 +35,8 @@ export class LoginComponent implements OnInit {
       nombre_completo: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       contrasena: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-      rol_id: ['', [Validators.required]]
-    }, { validators: this.passwordMatchValidator });
+      confirmPassword: ['', [Validators.required]]
+        }, { validators: this.passwordMatchValidator });
   }
 
   ngOnInit(): void {}
@@ -66,11 +65,11 @@ export class LoginComponent implements OnInit {
     const userRole = this.authService.getRoleFromToken(); // Obtener el rol desde el servicio                    
                     // 🔑 Esto ahora funcionará porque 'this.router' existe
                     if (userRole === 1) {
-                        this.router.navigate(['/dashboard/admin']); 
+                        this.router.navigate(['/dashboard/inicio']); 
                     } else if (userRole === 2) {
-                        this.router.navigate(['/dashboard/docente']);
-                    } else {
-                        this.router.navigate(['/']);
+                        this.router.navigate(['/dashboard/inicio']);
+                    } else if(userRole === 3) {
+                        this.router.navigate(['/dashboard/inicio']);
                     }
                 },
                 error: (err) => {
@@ -82,9 +81,15 @@ export class LoginComponent implements OnInit {
         // 🔑 CORRECCIÓN 2: Se eliminó el bloque 'onLogin' duplicado que estaba aquí
       }
 
-  onRegister(): void {
-    if (this.registerForm.valid) {
-      const registerData = this.registerForm.value;
+    onRegister(): void {
+      if (this.registerForm.valid) {
+        const registerData = {
+          usuario_id: this.registerForm.value.usuario_id,
+          nombre_completo: this.registerForm.value.nombre_completo,
+          email: this.registerForm.value.email,
+          contrasena: this.registerForm.value.contrasena,
+          activo: true   // 👈 AGREGA ESTE CAMPO
+        };
       this.authService.register(registerData).subscribe({
         next: (res) => {
           console.log('✅ Usuario registrado:', res);

@@ -1,0 +1,61 @@
+<div class="recetario-container">
+    <div class="header-actions">
+      <div>
+        <h2>📖 Recetario Maestro</h2>
+        <p>Gestión global de fichas técnicas y procedimientos.</p>
+      </div>
+      <button class="btn-gold" (click)="nuevaReceta()">+ Crear Nueva Receta</button>
+    </div>
+  
+    <!-- Barra de Filtros -->
+    <div class="filter-bar">
+      <input 
+        type="text" 
+        placeholder="Buscar receta por nombre..." 
+        [(ngModel)]="searchTerm"
+        class="search-input"
+      >
+      <select [(ngModel)]="categoriaSeleccionada" class="category-select">
+        <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+      </select>
+    </div>
+  
+    <!-- Tabla de Recetas -->
+    <div class="card table-card">
+      <table class="master-table">
+        <thead>
+          <tr>
+            <th>Nombre de la Receta</th>
+            <th>Categoría</th>
+            <th>Dificultad</th>
+            <th>Tiempo Est.</th>
+            <th>Autor</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let receta of recetasFiltradas">
+            <td class="recipe-name">{{ receta.nombre }}</td>
+            <td><span class="badge-category">{{ receta.categoria }}</span></td>
+            <td>
+              <span [ngClass]="{
+                'diff-alta': receta.dificultad === 'Alta',
+                'diff-media': receta.dificultad === 'Media',
+                'diff-baja': receta.dificultad === 'Baja'
+              }">{{ receta.dificultad }}</span>
+            </td>
+            <td>{{ receta.tiempo }}</td>
+            <td>{{ receta.autor }}</td>
+            <td class="actions-cell">
+              <button class="btn-icon" (click)="editarReceta(receta.id)" title="Editar">✏️</button>
+              <button class="btn-icon" title="Imprimir PDF">📄</button>
+              <button class="btn-icon delete" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+          <tr *ngIf="recetasFiltradas.length === 0">
+            <td colspan="6" class="no-results">No se encontraron recetas con esos criterios.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>

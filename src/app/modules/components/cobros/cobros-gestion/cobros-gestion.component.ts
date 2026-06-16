@@ -1,11 +1,8 @@
-// src/app/components/cobros/cobros-gestion/cobros-gestion.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // ✅ para ngModel
 import { CobrosService } from '../../../../services/cobros.service';
-// RouterLink y RouterOutlet se importarán desde el Dashboard, pero se necesitan si este fuera standalone
 
-// Interfaz para dar tipado a los datos de la tabla
 interface Obligacion {
   obligacion_id: number;
   estudiante_id: number;
@@ -19,21 +16,27 @@ interface Obligacion {
 @Component({
   selector: 'app-cobros-gestion',
   standalone: true,
-  imports: [
-    CommonModule,
-    // Aquí agregarías módulos de Angular Material si los usaras (ej: MatTableModule)
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './cobros-gestion.component.html',
   styleUrl: './cobros-gestion.component.css'
 })
 export class CobrosGestionComponent implements OnInit {
-
   obligaciones: Obligacion[] = [];
-  loading: boolean = true;
+  loading = true;
   error: string | null = null;
-  
-  // Propiedades para la Alerta de Deuda Crítica (HU-COB-02)
-  deudaCritica: boolean = false;
+  deudaCritica = false;
+
+  // 🔹 Variables para los modales
+  mostrarModalPago = false;
+  mostrarModalObligacion = false;
+  obligacionSeleccionada: Obligacion | null = null;
+  montoPago = 0;
+
+  nuevaObligacion = {
+    estudiante_id: 0,
+    monto_total: 0,
+    fecha_vencimiento: ''
+  };
 
   constructor(private cobrosService: CobrosService) {}
 
@@ -41,9 +44,6 @@ export class CobrosGestionComponent implements OnInit {
     this.cargarObligaciones();
   }
 
-  /**
-   * Carga las obligaciones desde el backend (ruta protegida por el Interceptor JWT).
-   */
   cargarObligaciones(): void {
     this.loading = true;
     this.error = null;
@@ -52,82 +52,98 @@ export class CobrosGestionComponent implements OnInit {
       next: (data: Obligacion[]) => {
         this.obligaciones = data;
         this.loading = false;
-        
-        // 🔑 Llamar a la lógica de alerta tras cargar los datos
         this.verificarDeudaCritica();
       },
       error: (err) => {
         console.error('Error al cargar obligaciones:', err);
-        this.error = 'No se pudieron cargar las obligaciones. Acceso denegado o error de servidor.';
+        this.error = 'No se pudieron cargar las obligaciones.';
         this.loading = false;
       }
     });
   }
-  
-  /**
-   * Lógica para la Alerta Visual de Deuda Crítica (HU-COB-02).
-   * Determina si algún estudiante tiene 3 o más pagos vencidos.
-   */
+
   verificarDeudaCritica(): void {
-      const hoy = new Date();
-      const deudaPorEstudiante: { [key: number]: number } = {};
-
-      // 1. Contar obligaciones vencidas y pendientes por estudiante
-      this.obligaciones.forEach(obligacion => {
-          // Asume que 'Pendiente' o 'Parcial' son estados que cuentan como deuda
-          if (obligacion.estado !== 'Pagado') {
-              const vencimiento = new Date(obligacion.fecha_vencimiento);
-              
-              // Vencida: Si la fecha de vencimiento es anterior a hoy
-              if (vencimiento < hoy) {
-                  const id = obligacion.estudiante_id;
-                  deudaPorEstudiante[id] = (deudaPorEstudiante[id] || 0) + 1;
-              }
-          }
-      });
-      
-      // 2. Verificar si algún estudiante supera el umbral de 3+ deudas
-      this.deudaCritica = Object.values(deudaPorEstudiante).some(count => count >= 3);
-      
-      // La lógica del HU-COB-02 se cumplirá aquí.
-      if (this.deudaCritica) {
-          console.warn('ALERTA: Se detectaron estudiantes con 3 o más pagos vencidos.');
-      }
-  }
-
-  // Aquí irían los métodos para registrarPago(), editarObligacion(), etc.
-
-  /**
-   * Abre un modal o inicia el proceso para registrar un pago a una obligación.
-   * Resuelve el error de la propiedad faltante.
-   */
-  registrarPagoModal(obligacion: Obligacion): void {
-    console.log('Iniciando registro de pago para Obligación ID:', obligacion.obligacion_id);
-    console.log('Monto pendiente:', obligacion.monto_total - obligacion.monto_pagado);
-    
-    // ⚠️ TODO: Aquí se implementará la lógica para:
-    // 1. Mostrar un modal/formulario.
-    // 2. Capturar el monto del pago.
-    // 3. Llamar a this.cobrosService.registrarPago().
-  }
-
-
-
-  esVencida(obligacion: Obligacion): boolean {
-    // 1. Si ya está pagada o no tiene fecha de vencimiento, no está vencida.
-    if (obligacion.estado === 'Pagado' || !obligacion.fecha_vencimiento) {
-      return false;
-    }
-    
-    // 2. Convertir la fecha de vencimiento (puede venir como string de la BD)
-    const vencimiento = new Date(obligacion.fecha_vencimiento);
     const hoy = new Date();
-    
-    // 3. Comparar solo la fecha (ignorar la hora)
-    vencimiento.setHours(0, 0, 0, 0);
+    const deudaPorEstudiante: { [key: number]: number } = {};
+
+    this.obligaciones.forEach((o) => {
+      if (o.estado !== 'Pagado') {
+        const venc = new Date(o.fecha_vencimiento);
+        if (venc < hoy) deudaPorEstudiante[o.estudiante_id] = (deudaPorEstudiante[o.estudiante_id] || 0) + 1;
+      }
+    });
+
+    this.deudaCritica = Object.values(deudaPorEstudiante).some((count) => count >= 3);
+  }
+
+  abrirModalPago(obligacion: Obligacion): void {
+    this.obligacionSeleccionada = obligacion;
+    this.montoPago = 0;
+    this.mostrarModalPago = true;
+  }
+
+  abrirModalNuevaObligacion(): void {
+    this.mostrarModalObligacion = true;
+  }
+
+  cerrarModal(): void {
+    this.mostrarModalPago = false;
+    this.mostrarModalObligacion = false;
+    this.obligacionSeleccionada = null;
+  }
+
+  confirmarPago(): void {
+    if (!this.obligacionSeleccionada) return;
+
+    if (this.montoPago <= 0) {
+      alert('Monto inválido.');
+      return;
+    }
+
+    const pagoData = {
+      obligacion_id: this.obligacionSeleccionada.obligacion_id,
+      monto_pago: this.montoPago
+    };
+
+    this.cobrosService.registrarPago(pagoData).subscribe({
+      next: () => {
+        alert('💵 Pago registrado correctamente');
+        this.cerrarModal();
+        this.cargarObligaciones();
+      },
+      error: (err) => {
+        console.error('Error al registrar pago:', err);
+        alert('❌ Error al registrar el pago.');
+      }
+    });
+  }
+
+  crearObligacion(): void {
+    const data = {
+      estudiante_id: this.nuevaObligacion.estudiante_id,
+      monto_total: this.nuevaObligacion.monto_total,
+      fecha_vencimiento: this.nuevaObligacion.fecha_vencimiento
+    };
+
+    this.cobrosService.crearObligacion(data).subscribe({
+      next: () => {
+        alert('✅ Obligación creada correctamente');
+        this.cerrarModal();
+        this.cargarObligaciones();
+      },
+      error: (err) => {
+        console.error('Error al crear obligación:', err);
+        alert('❌ Error al crear la obligación.');
+      }
+    });
+  }
+
+  esVencida(o: Obligacion): boolean {
+    if (o.estado === 'Pagado') return false;
+    const venc = new Date(o.fecha_vencimiento);
+    const hoy = new Date();
+    venc.setHours(0, 0, 0, 0);
     hoy.setHours(0, 0, 0, 0);
-    
-    // Si la fecha de vencimiento es anterior a hoy, está vencida.
-    return vencimiento < hoy;
-} 
+    return venc < hoy;
+  }
 }

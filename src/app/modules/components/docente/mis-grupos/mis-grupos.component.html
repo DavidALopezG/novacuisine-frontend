@@ -1,0 +1,40 @@
+<div class="grupos-container">
+    <div class="header-section">
+      <h2>👥 Mis Grupos Asignados</h2>
+      <p>Bienvenido, <strong>{{ docenteInfo.nombre }}</strong>. Tienes {{ grupos.length }} grupos activos este ciclo.</p>
+    </div>
+  
+    <div class="grupos-grid">
+      <div class="grupo-card" *ngFor="let grupo of grupos">
+        <div class="card-header">
+          <span class="paralelo-badge">Paralelo {{ grupo.paralelo }}</span>
+          <span class="cocina-tag">📍 {{ grupo.cocina }}</span>
+        </div>
+        
+        <div class="card-body">
+          <h3>{{ grupo.nombre }}</h3>
+          <p class="horario"><i class="icon-clock"></i> {{ grupo.horario }}</p>
+          
+          <div class="stats">
+            <div class="stat-item">
+              <strong>{{ grupo.alumnosCount }}</strong>
+              <span>Estudiantes</span>
+            </div>
+            <div class="stat-item">
+              <strong>{{ grupo.progreso }}%</strong>
+              <span>Progreso</span>
+            </div>
+          </div>
+  
+          <div class="progress-container">
+            <div class="progress-bar" [style.width.%]="grupo.progreso"></div>
+          </div>
+        </div>
+  
+        <div class="card-footer">
+          <button class="btn-primary" (click)="verDetallesGrupo(grupo.id)">Ver Lista de Clase</button>
+          <button class="btn-outline">Pasar Asistencia</button>
+        </div>
+      </div>
+    </div>
+  </div>

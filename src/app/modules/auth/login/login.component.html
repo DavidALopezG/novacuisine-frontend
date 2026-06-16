@@ -32,14 +32,6 @@
                     Las contraseñas no coinciden
                 </div>
 
-                <select formControlName="rol_id" placeholder="Rol en el sistema" required>
-                    <option value="Docente">Docente</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Bodega">Personal de Bodega</option>
-                </select>
-                <div *ngIf="registerForm.get('rol_id')?.invalid && registerForm.get('rol_id')?.touched" class="error-message">
-                    Debes seleccionar un rol
-                </div>
 
                 <button type="submit" [disabled]="registerForm.invalid">Registrarme</button>
             </form>

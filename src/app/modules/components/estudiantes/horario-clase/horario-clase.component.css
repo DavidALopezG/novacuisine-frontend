@@ -1,0 +1,131 @@
+.horario-container {
+    padding: 2rem;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.header-section {
+    margin-bottom: 2rem;
+}
+
+.header-section h2 {
+    color: #1a1a1a;
+    border-bottom: 3px solid #b8860b;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+.info-badge {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 8px;
+}
+
+.schedule-table th {
+    background: #1a1a1a;
+    color: #b8860b;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.time-col {
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #2c3e50;
+    text-align: center;
+    border-radius: 8px;
+    min-width: 120px;
+}
+
+/* Caja de Clase */
+.class-box {
+    background: #fdfaf3;
+    border-left: 4px solid #b8860b;
+    padding: 12px;
+    border-radius: 8px;
+    transition: transform 0.2s;
+    min-height: 80px;
+}
+
+.class-box:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.2);
+}
+
+.materia {
+    display: block;
+    font-weight: bold;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+}
+
+.chef {
+    display: block;
+    font-size: 0.8rem;
+    color: #b8860b;
+    margin: 4px 0;
+}
+
+.aula {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+}
+
+.empty-box {
+    text-align: center;
+    color: #eee;
+    padding: 20px;
+}
+
+.footer-actions {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #1a1a1a;
+    color: #1a1a1a;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-outline:hover {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.note {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .table-responsive { overflow-x: auto; }
+    .schedule-table { min-width: 600px; }
+}

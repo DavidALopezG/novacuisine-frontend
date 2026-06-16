@@ -1,0 +1,170 @@
+/* ===========================================================
+    1. CONTENEDOR GENERAL (Sin cambios)
+    =========================================================== */
+    .gestion-usuarios {
+        padding: 30px;
+        background-color: #f7f9fc;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        font-family: Arial, sans-serif;
+    }
+    
+    .gestion-usuarios h2 {
+        color: #333;
+        margin-bottom: 25px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+    }
+    
+    /* ===========================================================
+        2. MODAL OVERLAY (FONDO OSCURO)
+        =========================================================== */
+    .modal-overlay { /* Selector que coincide con el HTML corregido */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* ===========================================================
+        3. FORMULARIO MODAL
+        =========================================================== */
+    .form-container { /* Selector que coincide con el HTML corregido */
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        width: 90%;
+        max-width: 480px;
+        z-index: 1001;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    .form-container h3 {
+        color: #007bff;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    /* Inputs */
+    .form-container form input,
+    .form-container form select {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        border: 1px solid #ced4da;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    
+    /* Botones del formulario */
+    .form-actions { /* Selector que coincide con el HTML corregido */
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    
+    /* ===========================================================
+        4. TABLA DE USUARIOS (Sin cambios)
+        =========================================================== */
+    .tabla-container {
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    thead th {
+        background-color: #007bff;
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    tbody td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    tbody tr:hover {
+        background-color: #e9f5ff;
+    }
+    
+    /* Botones de la tabla */
+    td button {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-right: 5px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .btn-edit {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background-color: #1e7e34;
+    }
+    
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background-color: #bd2130;
+    }

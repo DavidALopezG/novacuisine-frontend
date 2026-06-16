@@ -1,0 +1,148 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common'; 
+import { FormsModule } from '@angular/forms';
+import { EstudiantesService } from './../../../../services/estudiantes/estudiantes.service';
+
+@Component({
+  selector: 'app-estudiantes',
+  standalone: true, 
+  imports: [CommonModule, FormsModule],
+  templateUrl: './estudiantes.component.html',
+  styleUrl: './estudiantes.component.css'
+})
+export class EstudiantesComponent implements OnInit {
+  // Datos
+  listaEstudiantes: any[] = [];
+  recetasDelEstudiante: any[] = [];
+  estudianteSeleccionado: any = null;
+  
+  // UI State
+  loading: boolean = false;
+  error: string | null = null;
+  filtro: string = ''; // Para el buscador
+  
+  // Modales
+  mostrarModalDetalle: boolean = false;
+  mostrarModalNuevoEstudiante: boolean = false;
+
+  // Formulario Nuevo Estudiante
+  nuevoEstudiante = {
+    codigo_estudiante: '',
+    nombre: '',
+    apellido: '',
+    email: '',
+    titulacion_id: null
+  };
+
+  constructor(private estudiantesService: EstudiantesService) {}
+
+  ngOnInit(): void {
+    this.cargarEstudiantes();
+  }
+
+  // --- CARGA DE DATOS ---
+
+  cargarEstudiantes(): void {
+    this.loading = true;
+    this.error = null;
+    this.estudiantesService.getEstudiantes().subscribe({
+      next: (data) => {
+        this.listaEstudiantes = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar estudiantes', err);
+        this.error = 'No se pudo conectar con el servidor.';
+        this.loading = false;
+      }
+    });
+  }
+
+  // --- BUSCADOR (Lógica de filtrado en tiempo real) ---
+
+  get estudiantesFiltrados() {
+    if (!this.filtro) return this.listaEstudiantes;
+    const busqueda = this.filtro.toLowerCase();
+    return this.listaEstudiantes.filter(e => 
+      e.nombre.toLowerCase().includes(busqueda) ||
+      e.apellido.toLowerCase().includes(busqueda) ||
+      e.codigo_estudiante.toLowerCase().includes(busqueda)
+    );
+  }
+
+  // --- GESTIÓN DE EXPEDIENTE (MODAL) ---
+
+  verExpediente(estudiante: any): void {
+    this.estudianteSeleccionado = estudiante;
+    this.loading = true;
+    
+    // Obtenemos recetas y detalles desde la tabla intermedia en el backend
+    this.estudiantesService.getPerfilCompleto(estudiante.estudiante_id).subscribe({
+      next: (res) => {
+        this.recetasDelEstudiante = res.recetas || [];
+        this.mostrarModalDetalle = true;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar expediente', err);
+        this.loading = false;
+        alert('Error al cargar las recetas del estudiante');
+      }
+    });
+  }
+
+  // --- ACCIONES DE ADMINISTRADOR ---
+
+  abrirModalNuevoEstudiante(): void {
+    this.mostrarModalNuevoEstudiante = true;
+  }
+
+  crearEstudiante(): void {
+    if (!this.nuevoEstudiante.nombre || !this.nuevoEstudiante.codigo_estudiante) {
+      alert('Por favor complete los campos obligatorios');
+      return;
+    }
+
+    this.estudiantesService.createEstudiante(this.nuevoEstudiante).subscribe({
+      next: () => {
+        alert('Estudiante registrado exitosamente');
+        this.cargarEstudiantes(); // Recargar la lista
+        this.cerrarModal();
+      },
+      error: (err) => alert('Error al crear estudiante: ' + err.error.message)
+    });
+  }
+
+  abrirModalAsignarReceta(): void {
+    // Aquí podrías implementar un modal con un select de recetas
+    // Por ahora, usamos un prompt para capturar el ID de la receta para probar la tabla intermedia
+    const recetaId = prompt('Ingrese el ID de la receta para asignar a este estudiante:');
+    
+    if (recetaId && this.estudianteSeleccionado) {
+      this.estudiantesService.asignarReceta(this.estudianteSeleccionado.estudiante_id, +recetaId)
+        .subscribe({
+          next: () => {
+            alert('Receta vinculada correctamente');
+            this.verExpediente(this.estudianteSeleccionado); // Refrescar lista de recetas en el modal
+          },
+          error: (err) => alert('Error al asignar receta: ' + err.message)
+        });
+    }
+  }
+
+  // --- CIERRE DE MODALES ---
+
+  cerrarModal(): void {
+    this.mostrarModalDetalle = false;
+    this.mostrarModalNuevoEstudiante = false;
+    this.estudianteSeleccionado = null;
+    this.recetasDelEstudiante = [];
+    this.nuevoEstudiante = {
+      codigo_estudiante: '',
+      nombre: '',
+      apellido: '',
+      email: '',
+      titulacion_id: null
+    };
+  }
+}

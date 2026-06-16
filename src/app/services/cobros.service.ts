@@ -16,6 +16,15 @@ export class CobrosService {
   obtenerObligaciones(): Observable<any> {
     return this.http.get(`${this.apiUrl}/obligaciones`);
   }
+
+  
+  crearObligacion(obligacion: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/obligaciones`, obligacion);
+  }
+
+  registrarPago(pagoData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/pagar`, pagoData);
+  }
   
   // ... otros métodos (crearObligacion, registrarPago)
 }

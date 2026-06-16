@@ -14,32 +14,21 @@ import { AuthService } from '../../../services/auth.service'; // Asumiendo que t
   styleUrl: './dashboard.component.css'
 })
 
+// ... (imports previos)
+
 export class DashboardComponent implements OnInit {
-  
-  // Propiedad para almacenar el rol del usuario actual
-  userRole: number | null = null; // Asume que el rol es 1 (Admin), 2 (Docente), etc.
+  userRole: number | null = null; 
+
   constructor(
-    private authService: AuthService, // Para manejar la lógica de logout
-    private router: Router          // Para la redirección
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    // 🔑 CLAVE: Ahora solo determinamos el rol, NO manejamos la redirección aquí.
-    // Dejamos que el Angular Router (app.routes.ts) maneje la redirección a 'admin' 
-    // a través del: { path: '', redirectTo: 'admin', pathMatch: 'full' }
-    this.userRole =  this.authService.getRoleFromToken();
-  }
+    this.userRole = this.authService.getRoleFromToken();
+    console.log("Mi rol actual es:", this.userRole);
+  }
 
-  /**
-   * Lee el rol del usuario desde el token guardado en localStorage.
-   * NOTA: En una aplicación real, se recomienda leer un Observable del AuthService.
-   * NOTA 2: Esta lógica ASUME que el token JWT contiene el campo 'rol'.
-   */
-
-  /**
-   * Método de conveniencia para mostrar elementos de menú condicionalmente.
-   * Usado en el HTML como: *ngIf="isAdmin()"
-   */
   isAdmin(): boolean {
     return this.userRole === 1;
   }
@@ -48,17 +37,13 @@ export class DashboardComponent implements OnInit {
     return this.userRole === 2;
   }
 
-  /**
-   * Cierra la sesión del usuario.
-   */
-  logout(): void {
-    // 1. Eliminar el token
-    localStorage.removeItem('token'); 
-    
-    // 2. Opcional: Llamar a AuthService.logout() si realiza alguna limpieza en el backend
-    // this.authService.logout().subscribe(); 
+  // 🎓 Nuevo método para estudiantes
+  isEstudiante(): boolean {
+    return this.userRole === 3; 
+  }
 
-    // 3. Redirigir a la página de login
+  logout(): void {
+    localStorage.removeItem('token'); 
     this.router.navigate(['/login']);
   }
 }

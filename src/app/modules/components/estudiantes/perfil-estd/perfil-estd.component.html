@@ -1,0 +1,61 @@
+<div class="perfil-container">
+    <div class="header-section">
+      <h2>👤 Mi Perfil Académico</h2>
+    </div>
+  
+    <div class="perfil-grid">
+      <!-- Columna Izquierda: Tarjeta Principal -->
+      <div class="card profile-main">
+        <div class="avatar-section">
+          <div class="avatar-circle">
+            <span>{{ perfil.nombre[0] }}{{ perfil.apellido[0] }}</span>
+          </div>
+          <span class="badge-estado">{{ perfil.estado }}</span>
+        </div>
+        
+        <div class="user-info">
+          <h3>{{ perfil.nombre }} {{ perfil.apellido }}</h3>
+          <p class="titulacion">{{ perfil.titulacion }}</p>
+          <p class="codigo">{{ perfil.codigo }}</p>
+        </div>
+  
+        <hr>
+  
+        <div class="contact-info">
+          <div class="info-item">
+            <small>Correo Electrónico</small>
+            <p>{{ perfil.email }}</p>
+          </div>
+          <div class="info-item">
+            <small>Fecha de Ingreso</small>
+            <p>{{ perfil.fechaIngreso | date:'longDate' }}</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Columna Derecha: Detalles e Inscripciones -->
+      <div class="details-column">
+        <div class="card">
+          <h4>📚 Inscripciones y Cursos</h4>
+          <div class="inscripciones-list">
+            <div class="inscripcion-item" *ngFor="let insc of inscripciones">
+              <div class="dot" [ngClass]="{'completado': insc.estado === 'Completado'}"></div>
+              <div class="insc-text">
+                <strong>{{ insc.curso }}</strong>
+                <small>{{ insc.fecha }} • {{ insc.estado }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <div class="card status-card">
+          <h4>🚀 Progreso del Ciclo</h4>
+          <p>Actualmente cursando el <strong>{{ perfil.ciclo }}</strong>.</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 65%;"></div>
+          </div>
+          <small>65% del nivel completado</small>
+        </div>
+      </div>
+    </div>
+  </div>

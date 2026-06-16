@@ -1,0 +1,40 @@
+<div class="horario-container">
+    <div class="header-section">
+      <h2>📅 Mi Horario de Clases</h2>
+      <div class="info-badge">
+        <span>{{ ciclo }}</span> | <span>{{ periodoActual }}</span>
+      </div>
+    </div>
+  
+    <div class="card calendar-card">
+      <div class="table-responsive">
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th *ngFor="let dia of diasSemana">{{ dia }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bloque of horarios">
+              <td class="time-col">{{ bloque.hora }}</td>
+              <td *ngFor="let dia of diasSemana">
+                <!-- Usamos el método auxiliar para renderizar el contenido -->
+                <div class="class-box" *ngIf="getClase(dia, bloque.clases) as clase">
+                  <span class="materia">{{ clase.materia }}</span>
+                  <span class="chef">{{ clase.chef }}</span>
+                  <span class="aula">{{ clase.aula }}</span>
+                </div>
+                <div class="empty-box" *ngIf="!getClase(dia, bloque.clases)">-</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  
+    <div class="footer-actions">
+      <button class="btn-outline" onclick="window.print()">🖨️ Imprimir Horario</button>
+      <p class="note">* Los horarios pueden estar sujetos a cambios por eventos especiales del Instituto.</p>
+    </div>
+  </div>

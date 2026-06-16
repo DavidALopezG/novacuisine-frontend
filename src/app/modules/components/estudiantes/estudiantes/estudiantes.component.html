@@ -1,0 +1,82 @@
+<div class="gestion-estudiantes">
+    <h2>🧑‍🎓 Gestión de Estudiantes y Expedientes</h2>
+  
+    <div class="toolbar">
+      <div class="search-box">
+        <input type="text" placeholder="Buscar por nombre, código o email..." [(ngModel)]="filtro">
+      </div>
+      <button class="btn-create" (click)="abrirModalNuevoEstudiante()">+ Registrar Nuevo Estudiante</button>
+    </div>
+  
+    <hr>
+  
+    <div *ngIf="loading" class="loading-message">Cargando base de datos de estudiantes...</div>
+  
+    <div *ngIf="!loading && listaEstudiantes.length > 0" class="tabla-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre Completo</th>
+            <th>Email</th>
+            <th>Fecha Ingreso</th>
+            <th>Saldo Pendiente</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let est of listaEstudiantes">
+            <td><strong>{{ est.codigo_estudiante }}</strong></td>
+            <td>{{ est.apellido }}, {{ est.nombre }}</td>
+            <td>{{ est.email }}</td>
+            <td>{{ est.fecha_ingreso | date: 'mediumDate' }}</td>
+            <td>
+              <span [class.estado-pendiente]="est.saldo_pendiente > 0" 
+                    [class.estado-pagado]="est.saldo_pendiente <= 0">
+                {{ est.saldo_pendiente > 0 ? (est.saldo_pendiente | currency:'USD') : 'Al día' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-view" (click)="verExpediente(est)">📋 Ver Ficha / Recetas</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+    <div class="modal" *ngIf="mostrarModalDetalle">
+      <div class="modal-content large">
+        <h3>Expediente de {{ estudianteSeleccionado?.nombre }}</h3>
+        
+        <div class="expediente-grid">
+          <div class="info-card">
+            <h4>Datos Generales</h4>
+            <p><strong>Titulación ID:</strong> {{ estudianteSeleccionado?.titulacion_id }}</p>
+            <p><strong>Estado Financiero:</strong> 
+              <span [style.color]="estudianteSeleccionado?.saldo_pendiente > 0 ? '#e67e22' : '#27ae60'">
+                {{ estudianteSeleccionado?.saldo_pendiente | currency:'USD' }}
+              </span>
+            </p>
+          </div>
+  
+          <div class="recetas-card">
+            <h4>🍳 Recetas del Ciclo</h4>
+            <div class="recetas-list">
+              <div *ngFor="let receta of recetasDelEstudiante" class="receta-item">
+                <span>{{ receta.nombre_receta }}</span>
+                <small>{{ receta.categoria }}</small>
+              </div>
+              <div *ngIf="recetasDelEstudiante.length === 0" class="no-data-small">
+                No hay recetas asignadas aún.
+              </div>
+            </div>
+            <button class="btn-add-mini" (click)="abrirModalAsignarReceta()">+ Asignar Receta</button>
+          </div>
+        </div>
+  
+        <div class="modal-actions">
+          <button class="btn-close" (click)="cerrarModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>

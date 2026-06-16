@@ -25,7 +25,7 @@ export class AuthService {
       rol_id: this.mapRole(userData.rol_id),
       activo: true
     };
-    return this.http.post(`${this.apiUrl}/usuarios`, payload);
+    return this.http.post(`${this.apiUrl}/auth/register`, payload);
   }
 
   // 🧩 Mapea el nombre del rol a un ID numérico (ajusta según tu BD)
@@ -33,7 +33,7 @@ export class AuthService {
     switch (role) {
       case 'Administrador': return 1;
       case 'Docente': return 2;
-      case 'Bodega': return 3;
+      case 'Estudiante': return 3;
       default: return 0;
     }
   }
