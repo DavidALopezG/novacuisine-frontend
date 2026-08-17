@@ -230,3 +230,27 @@
     gap: 6px;
     margin-top: 8px;
 }
+/* ── Fix UX ingredientes ────────────────────────────────── */
+.btn-agregar {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.btn-agregar:hover {
+    background: #1b5e20;
+}
+
+.contador-ingredientes {
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #2e7d32;
+    margin-left: 6px;
+}

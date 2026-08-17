@@ -52,13 +52,10 @@ export class RecetarioMaestroComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  searchTerm: string = '';
-  categoriaSeleccionada: string = 'Todas';
+  searchTerm = '';
+  categoriaSeleccionada = 'Todas';
 
-  /* ===========================================================
-     MODAL 1: Crear / Editar datos básicos de la receta
-     (al crear, también se registran los ingredientes iniciales)
-     =========================================================== */
+  // ── MODAL 1: Crear / Editar receta ──────────────────────
   mostrarModalReceta = false;
   modoEdicion = false;
   recetaSeleccionadaId: number | null = null;
@@ -70,37 +67,26 @@ export class RecetarioMaestroComponent implements OnInit {
     asignatura_id: null as number | null
   };
 
-  // Ingredientes que se asignan solo al CREAR una receta nueva
   ingredientesNuevaReceta: IngredienteForm[] = [];
 
-  /* ===========================================================
-     Selector compartido para agregar un ingrediente desde el
-     catálogo (se usa tanto al crear receta como al gestionar
-     ingredientes de una receta ya existente)
-     =========================================================== */
+  // ── Selector compartido de ingredientes ─────────────────
   selectorInsumoId: number | null = null;
   selectorCantidad: number = 1;
 
-  // Alta rápida de un insumo nuevo si no existe en el catálogo
   nuevoInsumoNombre = '';
   nuevoInsumoCosto = 0;
   nuevoInsumoUnidad = '';
 
-  /* ===========================================================
-     MODAL 2: Gestionar ingredientes de una receta existente
-     (genera una nueva versión, ej: 1.0 -> 1.1)
-     =========================================================== */
+  // ── MODAL 2: Gestionar ingredientes (nueva versión) ──────
   mostrarModalIngredientes = false;
   recetaIngredientesId: number | null = null;
   recetaIngredientesNombre = '';
   numeroVersionActual: string | null = null;
-  precioVentaActual: number = 0;
+  precioVentaActual = 0;
   ingredientesVersion: IngredienteForm[] = [];
   guardandoVersion = false;
 
-  /* ===========================================================
-     MODAL 3: Asignar receta a un estudiante
-     =========================================================== */
+  // ── MODAL 3: Asignar receta a estudiante ─────────────────
   mostrarModalAsignar = false;
   recetaAsignarId: number | null = null;
   recetaAsignarNombre = '';
@@ -112,7 +98,7 @@ export class RecetarioMaestroComponent implements OnInit {
     private asignaturasService: AsignaturasService,
     private insumosService: InsumosService,
     private estudiantesService: EstudiantesService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.cargarAsignaturas();
@@ -121,58 +107,49 @@ export class RecetarioMaestroComponent implements OnInit {
     this.cargarEstudiantes();
   }
 
-  /* =================== CARGA DE DATOS =================== */
+  // ─────────────────── CARGA DE DATOS ─────────────────────
 
   cargarRecetas(): void {
     this.loading = true;
     this.error = null;
-
     this.recetasService.obtenerRecetas().subscribe({
-      next: (data: Receta[]) => {
-        this.recetas = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error al cargar recetas:', err);
-        this.error = 'No se pudieron cargar las recetas.';
-        this.loading = false;
-      }
+      next: (data: Receta[]) => { this.recetas = data; this.loading = false; },
+      error: () => { this.error = 'No se pudieron cargar las recetas.'; this.loading = false; }
     });
   }
 
   cargarAsignaturas(): void {
     this.asignaturasService.obtenerAsignaturas().subscribe({
       next: (data) => (this.asignaturas = data),
-      error: (err) => console.error('Error al cargar asignaturas:', err)
+      error: (err) => console.error('Error asignaturas:', err)
     });
   }
 
   cargarCatalogoInsumos(): void {
     this.insumosService.obtenerInsumos().subscribe({
       next: (data) => (this.catalogoInsumos = data),
-      error: (err) => console.error('Error al cargar insumos:', err)
+      error: (err) => console.error('Error insumos:', err)
     });
   }
 
   cargarEstudiantes(): void {
     this.estudiantesService.getEstudiantes().subscribe({
       next: (data) => (this.estudiantes = data),
-      error: (err) => console.error('Error al cargar estudiantes:', err)
+      error: (err) => console.error('Error estudiantes:', err)
     });
   }
 
-  /* =================== FILTRO DE TABLA =================== */
+  // ─────────────────── FILTRO ─────────────────────────────
 
   get recetasFiltradas(): Receta[] {
     return this.recetas.filter(r => {
-      const coincideBusqueda = r.nombre.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const coincideCategoria =
-        this.categoriaSeleccionada === 'Todas' || r.nombre_asignatura === this.categoriaSeleccionada;
-      return coincideBusqueda && coincideCategoria;
+      const b = r.nombre.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const c = this.categoriaSeleccionada === 'Todas' || r.nombre_asignatura === this.categoriaSeleccionada;
+      return b && c;
     });
   }
 
-  /* =================== MODAL 1: CREAR / EDITAR =================== */
+  // ─────────────────── MODAL 1 ────────────────────────────
 
   abrirModalNuevaReceta(): void {
     this.modoEdicion = false;
@@ -198,6 +175,8 @@ export class RecetarioMaestroComponent implements OnInit {
   cerrarModal(): void {
     this.mostrarModalReceta = false;
     this.recetaSeleccionadaId = null;
+    this.ingredientesNuevaReceta = [];   // ← limpiar siempre al cerrar
+    this.resetSelectorIngrediente();
   }
 
   guardarReceta(): void {
@@ -208,79 +187,76 @@ export class RecetarioMaestroComponent implements OnInit {
 
     if (this.modoEdicion && this.recetaSeleccionadaId) {
       this.recetasService.actualizarReceta(this.recetaSeleccionadaId, this.formReceta).subscribe({
-        next: () => {
-          alert('✅ Receta actualizada correctamente');
-          this.cerrarModal();
-          this.cargarRecetas();
-        },
-        error: (err) => {
-          console.error('Error al actualizar receta:', err);
-          alert('❌ Error al actualizar la receta.');
-        }
+        next: () => { alert('✅ Receta actualizada correctamente'); this.cerrarModal(); this.cargarRecetas(); },
+        error: () => alert('❌ Error al actualizar la receta.')
       });
     } else {
+      // ─── BUG FIX: si quedó algo seleccionado en el selector sin presionar "+",
+      //     lo agregamos automáticamente antes de guardar
+      if (this.selectorInsumoId) {
+        this.agregarIngrediente('nueva');
+      }
+
       const payload = {
         ...this.formReceta,
         insumos: this.ingredientesNuevaReceta.map(i => ({ insumo_id: i.insumo_id, cantidad: i.cantidad }))
       };
 
       this.recetasService.crearReceta(payload).subscribe({
-        next: () => {
-          alert('✅ Receta creada correctamente con sus ingredientes');
+        next: (resp) => {
+          const total = resp?.message || 'Receta creada correctamente';
+          alert('✅ ' + total);
           this.cerrarModal();
           this.cargarRecetas();
         },
-        error: (err) => {
-          console.error('Error al crear receta:', err);
-          alert('❌ Error al crear la receta.');
-        }
+        error: () => alert('❌ Error al crear la receta.')
       });
     }
   }
 
   eliminarReceta(receta: Receta): void {
     if (!confirm(`¿Seguro que deseas eliminar la receta "${receta.nombre}"?`)) return;
-
     this.recetasService.eliminarReceta(receta.receta_id).subscribe({
-      next: () => {
-        alert('🗑️ Receta eliminada');
-        this.cargarRecetas();
-      },
-      error: (err) => {
-        console.error('Error al eliminar receta:', err);
-        alert('❌ Error al eliminar la receta.');
-      }
+      next: () => { alert('🗑️ Receta eliminada'); this.cargarRecetas(); },
+      error: () => alert('❌ Error al eliminar la receta.')
     });
   }
 
-  /* =================== INGREDIENTES (selector compartido) =================== */
+  // ─────────────────── INGREDIENTES ───────────────────────
 
   resetSelectorIngrediente(): void {
     this.selectorInsumoId = null;
     this.selectorCantidad = 1;
   }
 
-  // target indica a qué lista se agrega: la de "nueva receta" o la del "modal de versión"
   agregarIngrediente(target: 'nueva' | 'version'): void {
-    if (!this.selectorInsumoId || this.selectorCantidad <= 0) {
-      alert('Selecciona un insumo y una cantidad válida.');
+    // ── BUG FIX: convertir a número para evitar comparación estricta string vs number
+    const idNum = Number(this.selectorInsumoId);
+    const cantNum = Number(this.selectorCantidad);
+
+    if (!idNum || cantNum <= 0) {
+      alert('Selecciona un insumo y una cantidad mayor a 0.');
       return;
     }
 
-    const insumo = this.catalogoInsumos.find(i => i.insumo_id === this.selectorInsumoId);
-    if (!insumo) return;
+    // ── BUG FIX: buscar por Number() para que 5 === "5" no sea un problema
+    const insumo = this.catalogoInsumos.find(i => Number(i.insumo_id) === idNum);
+    if (!insumo) {
+      alert('Insumo no encontrado en el catálogo. Recarga la página e intenta de nuevo.');
+      return;
+    }
 
     const lista = target === 'nueva' ? this.ingredientesNuevaReceta : this.ingredientesVersion;
 
-    const existente = lista.find(i => i.insumo_id === insumo.insumo_id);
+    const existente = lista.find(i => Number(i.insumo_id) === idNum);
     if (existente) {
-      existente.cantidad += this.selectorCantidad;
+      existente.cantidad = Number((existente.cantidad + cantNum).toFixed(3));
     } else {
       lista.push({
         insumo_id: insumo.insumo_id,
         nombre_insumo: insumo.nombre_insumo,
         unidad_medida: insumo.unidad_medida,
-        cantidad: this.selectorCantidad
+        cantidad: cantNum
       });
     }
 
@@ -297,7 +273,6 @@ export class RecetarioMaestroComponent implements OnInit {
       alert('Completa nombre, costo y unidad de medida del nuevo insumo.');
       return;
     }
-
     this.insumosService.crearInsumo({
       nombre_insumo: this.nuevoInsumoNombre,
       costo_unitario: this.nuevoInsumoCosto,
@@ -305,21 +280,18 @@ export class RecetarioMaestroComponent implements OnInit {
     }).subscribe({
       next: (resp) => {
         const nuevo: Insumo = resp.insumo;
-        this.catalogoInsumos.push(nuevo);
+        this.catalogoInsumos = [...this.catalogoInsumos, nuevo]; // nueva referencia para CD
         this.selectorInsumoId = nuevo.insumo_id;
         this.nuevoInsumoNombre = '';
         this.nuevoInsumoCosto = 0;
         this.nuevoInsumoUnidad = '';
-        alert(`✅ Insumo "${nuevo.nombre_insumo}" creado. Ahora puedes agregarlo a la receta.`);
+        alert(`✅ Insumo "${nuevo.nombre_insumo}" creado y seleccionado. Ajusta la cantidad y presiona "+".`);
       },
-      error: (err) => {
-        console.error('Error al crear insumo:', err);
-        alert('❌ ' + (err?.error?.error || 'No se pudo crear el insumo.'));
-      }
+      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo crear el insumo.'))
     });
   }
 
-  /* =================== MODAL 2: GESTIONAR INGREDIENTES (nueva versión) =================== */
+  // ─────────────────── MODAL 2 ────────────────────────────
 
   abrirModalIngredientes(receta: Receta): void {
     this.recetaIngredientesId = receta.receta_id;
@@ -331,17 +303,14 @@ export class RecetarioMaestroComponent implements OnInit {
         this.numeroVersionActual = detalle.ultima_version?.numero_version || null;
         this.precioVentaActual = detalle.ultima_version?.precio_venta_sugerido || 0;
         this.ingredientesVersion = (detalle.insumos || []).map((i: any) => ({
-          insumo_id: i.insumo_id,
+          insumo_id: Number(i.insumo_id),
           nombre_insumo: i.nombre_insumo,
           unidad_medida: i.unidad_medida,
           cantidad: Number(i.cantidad)
         }));
         this.mostrarModalIngredientes = true;
       },
-      error: (err) => {
-        console.error('Error al cargar el detalle de la receta:', err);
-        alert('❌ No se pudo cargar el detalle de la receta.');
-      }
+      error: () => alert('❌ No se pudo cargar el detalle de la receta.')
     });
   }
 
@@ -353,13 +322,17 @@ export class RecetarioMaestroComponent implements OnInit {
 
   private incrementarVersion(actual: string | null): string {
     if (!actual) return '1.0';
-    const numero = parseFloat(actual);
-    if (isNaN(numero)) return '1.0';
-    return (numero + 0.1).toFixed(1);
+    const n = parseFloat(actual);
+    return isNaN(n) ? '1.0' : (n + 0.1).toFixed(1);
   }
 
   guardarNuevaVersion(): void {
     if (!this.recetaIngredientesId) return;
+
+    // Auto-agregar si quedó algo en el selector
+    if (this.selectorInsumoId) {
+      this.agregarIngrediente('version');
+    }
 
     if (this.ingredientesVersion.length === 0) {
       alert('Agrega al menos un ingrediente antes de guardar la versión.');
@@ -367,7 +340,6 @@ export class RecetarioMaestroComponent implements OnInit {
     }
 
     const nuevoNumero = this.incrementarVersion(this.numeroVersionActual);
-
     const payload = {
       numero_version: nuevoNumero,
       precio_venta_sugerido: this.precioVentaActual,
@@ -377,44 +349,34 @@ export class RecetarioMaestroComponent implements OnInit {
     this.guardandoVersion = true;
     this.recetasService.crearVersion(this.recetaIngredientesId, payload).subscribe({
       next: () => {
-        alert(`✅ Nueva versión ${nuevoNumero} creada con los ingredientes actualizados. Queda pendiente de aprobación.`);
+        alert(`✅ Versión ${nuevoNumero} creada con ${this.ingredientesVersion.length} ingrediente(s). Pendiente de aprobación.`);
         this.guardandoVersion = false;
         this.cerrarModalIngredientes();
         this.cargarRecetas();
       },
       error: (err) => {
-        console.error('Error al crear la nueva versión:', err);
         alert('❌ ' + (err?.error?.error || 'No se pudo guardar la nueva versión.'));
         this.guardandoVersion = false;
       }
     });
   }
 
-  /* =================== APROBAR VERSIÓN =================== */
+  // ─────────────────── APROBAR VERSIÓN ────────────────────
 
   aprobarVersionReceta(receta: Receta): void {
     if (!receta.version_id) {
       alert('Esta receta no tiene una versión para aprobar.');
       return;
     }
-
-    if (!confirm(`¿Aprobar la versión ${receta.numero_version} de "${receta.nombre}"? Quedará visible para los estudiantes que la tengan asignada.`)) {
-      return;
-    }
+    if (!confirm(`¿Aprobar versión ${receta.numero_version} de "${receta.nombre}"? Quedará visible para los estudiantes.`)) return;
 
     this.recetasService.aprobarVersion(receta.version_id).subscribe({
-      next: () => {
-        alert('✅ Versión aprobada.');
-        this.cargarRecetas();
-      },
-      error: (err) => {
-        console.error('Error al aprobar la versión:', err);
-        alert('❌ No se pudo aprobar la versión.');
-      }
+      next: () => { alert('✅ Versión aprobada.'); this.cargarRecetas(); },
+      error: () => alert('❌ No se pudo aprobar la versión.')
     });
   }
 
-  /* =================== MODAL 3: ASIGNAR A ESTUDIANTE =================== */
+  // ─────────────────── MODAL 3 ────────────────────────────
 
   abrirModalAsignar(receta: Receta): void {
     this.recetaAsignarId = receta.receta_id;
@@ -433,19 +395,10 @@ export class RecetarioMaestroComponent implements OnInit {
       alert('Selecciona un estudiante.');
       return;
     }
-
     this.asignando = true;
     this.recetasService.asignarReceta(this.recetaAsignarId, this.estudianteSeleccionadoId).subscribe({
-      next: (resp) => {
-        alert('✅ ' + (resp?.message || 'Receta asignada.'));
-        this.asignando = false;
-        this.cerrarModalAsignar();
-      },
-      error: (err) => {
-        console.error('Error al asignar receta:', err);
-        alert('❌ No se pudo asignar la receta.');
-        this.asignando = false;
-      }
+      next: (resp) => { alert('✅ ' + (resp?.message || 'Receta asignada.')); this.asignando = false; this.cerrarModalAsignar(); },
+      error: () => { alert('❌ No se pudo asignar la receta.'); this.asignando = false; }
     });
   }
 }
