@@ -1,37 +1,45 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common'; // 👈 Asegúrate de importar estos dos
+import { CommonModule, DatePipe } from '@angular/common';
+import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
+
 @Component({
   selector: 'app-perfil-estd',
-  imports: [
-
-    CommonModule, // 👈 Esto soluciona el error de [ngClass]
-    DatePipe
-  ],
+  standalone: true,
+  imports: [CommonModule, DatePipe],
   templateUrl: './perfil-estd.component.html',
   styleUrl: './perfil-estd.component.css'
 })
-export class PerfilEstdComponent {
-// Datos simulados del estudiante
-perfil = {
-  nombre: 'Jean Pierre',
-  apellido: 'Casiraghi',
-  email: 'j.casiraghi@novacuisine.com',
-  codigo: 'EST-2024-089',
-  fechaIngreso: new Date(2024, 1, 15),
-  estado: 'Activo',
-  titulacion: 'Diplomado en Alta Pastelería',
-  ciclo: 'Segundo Nivel',
-  imagen: 'assets/imagenes/default-avatar.png' // Puedes poner una ruta real o un placeholder
-};
+export class PerfilEstdComponent implements OnInit {
 
-// Historial de inscripciones simulado
-inscripciones = [
-  { curso: 'Fundamentos de Cocina', fecha: 'Feb 2024', estado: 'Completado' },
-  { curso: 'Alta Pastelería I', fecha: 'Mayo 2024', estado: 'En curso' },
-  { curso: 'Manejo de Cuchillos y Seguridad', fecha: 'Feb 2024', estado: 'Completado' }
-];
+  perfil: any = null;
+  progresoPorAsignatura: any[] = [];
+  resumenAcademico: { total_recetas: number; recetas_aprobadas: number; porcentaje_avance: number } | null = null;
 
-constructor() { }
+  loading = true;
+  error: string | null = null;
 
-ngOnInit(): void { }
+  constructor(private estudiantesService: EstudiantesService) { }
+
+  ngOnInit(): void {
+    this.cargarPerfil();
+  }
+
+  cargarPerfil(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.estudiantesService.getMiPerfil().subscribe({
+      next: (data) => {
+        this.perfil = data.perfil;
+        this.progresoPorAsignatura = data.progresoPorAsignatura || [];
+        this.resumenAcademico = data.resumenAcademico;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar el perfil:', err);
+        this.error = 'No se pudo cargar tu perfil académico.';
+        this.loading = false;
+      }
+    });
+  }
 }

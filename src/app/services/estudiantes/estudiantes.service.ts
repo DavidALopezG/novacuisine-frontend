@@ -12,6 +12,11 @@ export class EstudiantesService {
     return this.http.get<any[]>(this.url);
   }
 
+  // 🎓 Perfil real del estudiante autenticado (Mi Perfil)
+  getMiPerfil(): Observable<any> {
+    return this.http.get<any>(`${this.url}/perfil/me`);
+  }
+
   // Obtener recetas y saldos de un estudiante específico
   getPerfilCompleto(id: number): Observable<any> {
     return this.http.get<any>(`${this.url}/${id}/detalle`);

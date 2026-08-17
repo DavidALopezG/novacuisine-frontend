@@ -1,61 +1,215 @@
 <div class="recetario-container">
-    <div class="header-actions">
-      <div>
-        <h2>📖 Recetario Maestro</h2>
-        <p>Gestión global de fichas técnicas y procedimientos.</p>
-      </div>
-      <button class="btn-gold" (click)="nuevaReceta()">+ Crear Nueva Receta</button>
+  <div class="header-actions">
+    <div>
+      <h2>📖 Recetario Maestro</h2>
+      <p>Gestión global de fichas técnicas y procedimientos.</p>
     </div>
-  
-    <!-- Barra de Filtros -->
-    <div class="filter-bar">
-      <input 
-        type="text" 
-        placeholder="Buscar receta por nombre..." 
-        [(ngModel)]="searchTerm"
-        class="search-input"
-      >
-      <select [(ngModel)]="categoriaSeleccionada" class="category-select">
-        <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+    <button class="btn-gold" (click)="abrirModalNuevaReceta()">+ Crear Nueva Receta</button>
+  </div>
+
+  <!-- Barra de Filtros -->
+  <div class="filter-bar">
+    <input
+      type="text"
+      placeholder="Buscar receta por nombre..."
+      [(ngModel)]="searchTerm"
+      class="search-input"
+    >
+    <select [(ngModel)]="categoriaSeleccionada" class="category-select">
+      <option value="Todas">Todas</option>
+      <option *ngFor="let asig of asignaturas" [value]="asig.nombre_asignatura">
+        {{ asig.nombre_asignatura }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Estados de carga / error -->
+  <p *ngIf="loading">Cargando recetas...</p>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+
+  <!-- Tabla de Recetas -->
+  <div class="card table-card" *ngIf="!loading && !error">
+    <table class="master-table">
+      <thead>
+        <tr>
+          <th>Nombre de la Receta</th>
+          <th>Categoría</th>
+          <th>Estado</th>
+          <th>Tiempo Est.</th>
+          <th>Costo</th>
+          <th>Autor</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let receta of recetasFiltradas">
+          <td class="recipe-name">{{ receta.nombre }}</td>
+          <td><span class="badge-category">{{ receta.nombre_asignatura || 'Sin asignatura' }}</span></td>
+          <td>
+            <span [ngClass]="{
+              'diff-alta': receta.estado_version === 'BORRADOR',
+              'diff-baja': receta.estado_version === 'APROBADA'
+            }">{{ receta.estado_version || 'Sin versión' }}</span>
+          </td>
+          <td>{{ receta.tiempo_prep_min ? receta.tiempo_prep_min + ' min' : '-' }}</td>
+          <td>{{ receta.costo_unitario ? ('$' + receta.costo_unitario) : '-' }}</td>
+          <td>{{ receta.autor }}</td>
+          <td class="actions-cell">
+            <button class="btn-icon" (click)="editarReceta(receta)" title="Editar datos básicos">✏️</button>
+            <button class="btn-icon" (click)="abrirModalIngredientes(receta)" title="Gestionar ingredientes (nueva versión)">🧂</button>
+            <button
+              class="btn-icon"
+              (click)="aprobarVersionReceta(receta)"
+              *ngIf="receta.estado_version === 'BORRADOR'"
+              title="Aprobar versión">✅</button>
+            <button class="btn-icon" (click)="abrirModalAsignar(receta)" title="Asignar a estudiante">👩‍🎓</button>
+            <button class="btn-icon delete" (click)="eliminarReceta(receta)" title="Eliminar">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="recetasFiltradas.length === 0">
+          <td colspan="7" class="no-results">No se encontraron recetas con esos criterios.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============================================================
+       MODAL 1: Crear / Editar receta
+       (al crear, incluye sección de ingredientes)
+       ============================================================ -->
+  <div class="modal-overlay" *ngIf="mostrarModalReceta">
+    <div class="modal-box">
+      <h3>{{ modoEdicion ? 'Editar Receta' : 'Nueva Receta' }}</h3>
+
+      <label>Nombre</label>
+      <input type="text" [(ngModel)]="formReceta.nombre" class="search-input" placeholder="Nombre de la receta">
+
+      <label>Porciones</label>
+      <input type="number" [(ngModel)]="formReceta.porciones" class="search-input" min="1">
+
+      <label>Tiempo de preparación (min)</label>
+      <input type="number" [(ngModel)]="formReceta.tiempo_prep_min" class="search-input" min="0">
+
+      <label>Asignatura</label>
+      <select [(ngModel)]="formReceta.asignatura_id" class="category-select">
+        <option [ngValue]="null">Sin asignatura</option>
+        <option *ngFor="let asig of asignaturas" [ngValue]="asig.asignatura_id">
+          {{ asig.nombre_asignatura }}
+        </option>
       </select>
-    </div>
-  
-    <!-- Tabla de Recetas -->
-    <div class="card table-card">
-      <table class="master-table">
-        <thead>
-          <tr>
-            <th>Nombre de la Receta</th>
-            <th>Categoría</th>
-            <th>Dificultad</th>
-            <th>Tiempo Est.</th>
-            <th>Autor</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let receta of recetasFiltradas">
-            <td class="recipe-name">{{ receta.nombre }}</td>
-            <td><span class="badge-category">{{ receta.categoria }}</span></td>
-            <td>
-              <span [ngClass]="{
-                'diff-alta': receta.dificultad === 'Alta',
-                'diff-media': receta.dificultad === 'Media',
-                'diff-baja': receta.dificultad === 'Baja'
-              }">{{ receta.dificultad }}</span>
-            </td>
-            <td>{{ receta.tiempo }}</td>
-            <td>{{ receta.autor }}</td>
-            <td class="actions-cell">
-              <button class="btn-icon" (click)="editarReceta(receta.id)" title="Editar">✏️</button>
-              <button class="btn-icon" title="Imprimir PDF">📄</button>
-              <button class="btn-icon delete" title="Eliminar">🗑️</button>
-            </td>
-          </tr>
-          <tr *ngIf="recetasFiltradas.length === 0">
-            <td colspan="6" class="no-results">No se encontraron recetas con esos criterios.</td>
-          </tr>
-        </tbody>
-      </table>
+
+      <!-- Sección de ingredientes: solo al crear una receta nueva -->
+      <div class="ingredientes-box" *ngIf="!modoEdicion">
+        <h4>🧂 Ingredientes de la receta</h4>
+
+        <ul class="lista-ingredientes" *ngIf="ingredientesNuevaReceta.length > 0">
+          <li *ngFor="let ing of ingredientesNuevaReceta; let i = index">
+            {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
+            <button class="btn-quitar" (click)="quitarIngrediente('nueva', i)">✕</button>
+          </li>
+        </ul>
+        <p *ngIf="ingredientesNuevaReceta.length === 0" class="hint-text">Aún no has agregado ingredientes.</p>
+
+        <div class="selector-ingrediente">
+          <select [(ngModel)]="selectorInsumoId" class="category-select">
+            <option [ngValue]="null">Selecciona un insumo...</option>
+            <option *ngFor="let ins of catalogoInsumos" [ngValue]="ins.insumo_id">
+              {{ ins.nombre_insumo }} ({{ ins.unidad_medida }})
+            </option>
+          </select>
+          <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad">
+          <button class="btn-icon" (click)="agregarIngrediente('nueva')" title="Agregar ingrediente">+</button>
+        </div>
+
+        <details class="nuevo-insumo-details">
+          <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
+          <div class="nuevo-insumo-form">
+            <input type="text" [(ngModel)]="nuevoInsumoNombre" placeholder="Nombre del insumo" class="search-input">
+            <input type="number" [(ngModel)]="nuevoInsumoCosto" placeholder="Costo unitario" min="0" step="0.01" class="search-input">
+            <input type="text" [(ngModel)]="nuevoInsumoUnidad" placeholder="Unidad (g, ml, unidad...)" class="search-input">
+            <button class="btn-icon" (click)="crearInsumoRapido('nueva')">Crear insumo</button>
+          </div>
+        </details>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-gold" (click)="guardarReceta()">Guardar</button>
+      </div>
     </div>
   </div>
+
+  <!-- ============================================================
+       MODAL 2: Gestionar ingredientes de una receta existente
+       (crea una nueva versión: 1.0 -> 1.1)
+       ============================================================ -->
+  <div class="modal-overlay" *ngIf="mostrarModalIngredientes">
+    <div class="modal-box">
+      <h3>🧂 Ingredientes — {{ recetaIngredientesNombre }}</h3>
+      <p class="hint-text">
+        Versión actual: {{ numeroVersionActual || 'N/A' }}. Guardar creará la versión
+        {{ numeroVersionActual ? (numeroVersionActual + ' → siguiente') : '1.0' }}, en estado BORRADOR hasta que la apruebes.
+      </p>
+
+      <ul class="lista-ingredientes" *ngIf="ingredientesVersion.length > 0">
+        <li *ngFor="let ing of ingredientesVersion; let i = index">
+          {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
+          <button class="btn-quitar" (click)="quitarIngrediente('version', i)">✕</button>
+        </li>
+      </ul>
+      <p *ngIf="ingredientesVersion.length === 0" class="hint-text">Esta receta aún no tiene ingredientes registrados.</p>
+
+      <div class="selector-ingrediente">
+        <select [(ngModel)]="selectorInsumoId" class="category-select">
+          <option [ngValue]="null">Selecciona un insumo...</option>
+          <option *ngFor="let ins of catalogoInsumos" [ngValue]="ins.insumo_id">
+            {{ ins.nombre_insumo }} ({{ ins.unidad_medida }})
+          </option>
+        </select>
+        <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad">
+        <button class="btn-icon" (click)="agregarIngrediente('version')" title="Agregar ingrediente">+</button>
+      </div>
+
+      <details class="nuevo-insumo-details">
+        <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
+        <div class="nuevo-insumo-form">
+          <input type="text" [(ngModel)]="nuevoInsumoNombre" placeholder="Nombre del insumo" class="search-input">
+          <input type="number" [(ngModel)]="nuevoInsumoCosto" placeholder="Costo unitario" min="0" step="0.01" class="search-input">
+          <input type="text" [(ngModel)]="nuevoInsumoUnidad" placeholder="Unidad (g, ml, unidad...)" class="search-input">
+          <button class="btn-icon" (click)="crearInsumoRapido('version')">Crear insumo</button>
+        </div>
+      </details>
+
+      <div class="modal-actions">
+        <button class="btn-icon" (click)="cerrarModalIngredientes()">Cancelar</button>
+        <button class="btn-gold" (click)="guardarNuevaVersion()" [disabled]="guardandoVersion">
+          {{ guardandoVersion ? 'Guardando...' : 'Guardar nueva versión' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL 3: Asignar receta a un estudiante
+       ============================================================ -->
+  <div class="modal-overlay" *ngIf="mostrarModalAsignar">
+    <div class="modal-box">
+      <h3>👩‍🎓 Asignar "{{ recetaAsignarNombre }}"</h3>
+
+      <label>Estudiante</label>
+      <select [(ngModel)]="estudianteSeleccionadoId" class="category-select">
+        <option [ngValue]="null">Selecciona un estudiante...</option>
+        <option *ngFor="let est of estudiantes" [ngValue]="est.estudiante_id">
+          {{ est.nombre }} {{ est.apellido }} ({{ est.codigo_estudiante }})
+        </option>
+      </select>
+
+      <div class="modal-actions">
+        <button class="btn-icon" (click)="cerrarModalAsignar()">Cancelar</button>
+        <button class="btn-gold" (click)="confirmarAsignacion()" [disabled]="asignando">
+          {{ asignando ? 'Asignando...' : 'Asignar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

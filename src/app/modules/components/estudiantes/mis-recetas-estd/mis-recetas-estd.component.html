@@ -1,14 +1,60 @@
 <div class="estudiante-container">
-    <h2>👨‍🍳 Mi Recetario Personal</h2>
-    <p>Aquí encontrarás las técnicas y platillos asignados por tus docentes.</p>
-  
-    <div class="recetas-grid">
-      <!-- Esto se llenaría con un *ngFor de un servicio -->
-      <div class="receta-card">
-        <div class="badge">Pastelería I</div>
-        <h3>Mousse de Chocolate</h3>
-        <p>Técnica: Emulsión y aireado.</p>
-        <button class="btn-ver">Ver Receta Completa</button>
+  <h2>👨‍🍳 Mi Recetario Personal</h2>
+  <p>Aquí encontrarás las técnicas y platillos asignados por tus docentes.</p>
+
+  <p *ngIf="loading">Cargando tus recetas...</p>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p *ngIf="!loading && !error && recetas.length === 0">
+    Aún no tienes recetas asignadas por tus docentes.
+  </p>
+
+  <div class="recetas-grid" *ngIf="!loading && !error">
+    <div class="receta-card" *ngFor="let receta of recetas">
+      <div class="badge">{{ receta.nombre_asignatura || 'Sin asignatura' }}</div>
+      <h3>{{ receta.nombre }}</h3>
+      <p>Porciones: {{ receta.porciones }} · Tiempo: {{ receta.tiempo_prep_min || '-' }} min</p>
+      <p *ngIf="receta.numero_version">Versión {{ receta.numero_version }} ({{ receta.estado_version }})</p>
+      <button class="btn-ver" (click)="verRecetaCompleta(receta)">Ver Receta Completa</button>
+    </div>
+  </div>
+
+  <!-- Modal Detalle de Receta -->
+  <div class="modal-overlay" *ngIf="mostrarModalDetalle">
+    <div class="modal-box">
+      <p *ngIf="cargandoDetalle">Cargando ficha técnica...</p>
+
+      <ng-container *ngIf="!cargandoDetalle && recetaDetalle">
+        <h3>{{ recetaDetalle.receta.nombre }}</h3>
+        <p class="hint-text">
+          {{ recetaDetalle.receta.nombre_asignatura || 'Sin asignatura' }} ·
+          {{ recetaDetalle.receta.porciones }} porciones ·
+          {{ recetaDetalle.receta.tiempo_prep_min || '-' }} min
+        </p>
+
+        <h4>🧂 Ingredientes</h4>
+        <ul class="lista-ingredientes" *ngIf="recetaDetalle.insumos?.length > 0">
+          <li *ngFor="let ing of recetaDetalle.insumos">
+            {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
+          </li>
+        </ul>
+        <p *ngIf="!recetaDetalle.insumos || recetaDetalle.insumos.length === 0" class="hint-text">
+          Esta receta aún no tiene ingredientes registrados.
+        </p>
+
+        <h4>🍳 Menaje / Utensilios</h4>
+        <ul class="lista-ingredientes" *ngIf="recetaDetalle.menaje?.length > 0">
+          <li *ngFor="let m of recetaDetalle.menaje">
+            {{ m.cantidad_requerida }} x {{ m.nombre }}
+          </li>
+        </ul>
+        <p *ngIf="!recetaDetalle.menaje || recetaDetalle.menaje.length === 0" class="hint-text">
+          No se requieren utensilios especiales registrados.
+        </p>
+      </ng-container>
+
+      <div class="modal-actions">
+        <button class="btn-ver" (click)="cerrarModalDetalle()">Cerrar</button>
       </div>
     </div>
   </div>
+</div>

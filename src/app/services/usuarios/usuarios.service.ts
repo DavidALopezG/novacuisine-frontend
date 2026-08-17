@@ -3,11 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Usuario {
-  id?: number;
-  nombre: string;
-  apellido: string;
-  correo: string;
-  rol: string;
+  usuario_id?: string;
+  nombre_completo: string;
+  email: string;
+  contrasena?: string;
+  rol_id: number;
+  activo?: boolean;
 }
 
 @Injectable({
@@ -27,11 +28,11 @@ export class UsuariosService {
     return this.http.post(this.apiUrl, usuario);
   }
 
-  updateUsuario(id: number, usuario: Usuario): Observable<any> {
+  updateUsuario(id: string, usuario: Partial<Usuario>): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}`, usuario);
   }
 
-  deleteUsuario(id: number): Observable<any> {
+  deleteUsuario(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 }

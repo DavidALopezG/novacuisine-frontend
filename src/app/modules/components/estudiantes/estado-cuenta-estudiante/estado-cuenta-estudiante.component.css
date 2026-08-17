@@ -67,6 +67,13 @@
 }
 .status-pill.pagado { background: #e8f5e9; color: #2e7d32; }
 .status-pill.pendiente { background: #ffebee; color: #c62828; }
+.status-pill.vencido { background: #fff3e0; color: #e65100; }
+
+.no-results {
+    color: #c62828;
+    font-weight: 500;
+    padding: 1rem 0;
+}
 
 /* Métodos de Pago */
 .method-item {

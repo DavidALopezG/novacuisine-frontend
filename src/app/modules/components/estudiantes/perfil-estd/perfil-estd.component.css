@@ -106,3 +106,8 @@
 @media (max-width: 900px) {
     .perfil-grid { grid-template-columns: 1fr; }
 }
+.no-results {
+    color: #c62828;
+    font-weight: 500;
+    padding: 1rem 0;
+}

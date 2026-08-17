@@ -2,11 +2,14 @@
     <div class="header-section">
       <h2>📅 Mi Horario de Clases</h2>
       <div class="info-badge">
-        <span>{{ ciclo }}</span> | <span>{{ periodoActual }}</span>
+        <span>{{ tituloHorario }}</span>
       </div>
     </div>
-  
-    <div class="card calendar-card">
+
+    <p *ngIf="loading">Cargando tu horario...</p>
+    <p *ngIf="error" class="note">{{ error }}</p>
+
+    <div class="card calendar-card" *ngIf="!loading && !error && horarios.length > 0">
       <div class="table-responsive">
         <table class="schedule-table">
           <thead>
@@ -32,8 +35,12 @@
         </table>
       </div>
     </div>
-  
-    <div class="footer-actions">
+
+    <p *ngIf="!loading && !error && horarios.length === 0" class="note">
+      Aún no se han configurado horarios para tu titulación. Consulta con tu coordinación académica.
+    </p>
+
+    <div class="footer-actions" *ngIf="!loading && !error && horarios.length > 0">
       <button class="btn-outline" onclick="window.print()">🖨️ Imprimir Horario</button>
       <p class="note">* Los horarios pueden estar sujetos a cambios por eventos especiales del Instituto.</p>
     </div>

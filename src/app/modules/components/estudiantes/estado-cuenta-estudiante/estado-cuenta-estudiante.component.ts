@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CobrosService } from '../../../../services/cobros/cobros.service';
 
 @Component({
   selector: 'app-estado-cuenta-estudiante',
@@ -10,34 +11,74 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 })
 export class EstadoCuentaEstudianteComponent implements OnInit {
 
-  // Resumen financiero del estudiante
+  loading = true;
+  error: string | null = null;
+
+  // Resumen financiero, calculado a partir de las obligaciones reales
   resumen = {
-  
-    totalPagado: 580.00,
-    saldoPendiente: 210.50,
-    proximoVencimiento: new Date(2024, 5, 15),
-    estadoGeneral: 'Pendiente'
+    totalPagado: 0,
+    saldoPendiente: 0,
+    proximoVencimiento: null as Date | null,
+    estadoGeneral: 'Al día'
   };
 
-  // Listado detallado de movimientos
-  historialPagos = [
-    { concepto: 'Matrícula Semestral', monto: 200.00, estado: 'Pagado', fecha: '2024-01-10' },
-    { concepto: 'Mensualidad Febrero', monto: 190.00, estado: 'Pagado', fecha: '2024-02-05' },
-    { concepto: 'Mensualidad Marzo', monto: 190.00, estado: 'Pagado', fecha: '2024-03-05' },
-    { concepto: 'Taller de Panadería Artesanal', monto: 85.50, estado: 'Pendiente', fecha: '2024-05-15' },
-    { concepto: 'Mensualidad Abril', monto: 125.00, estado: 'Pendiente', fecha: '2024-04-10' }
-  ];
+  // Listado real de obligaciones (proviene de VISTA_ESTADO_COBROS)
+  historialPagos: any[] = [];
 
-  // Información para realizar transferencias
+  // Información institucional para realizar transferencias (no depende de la BD)
   metodosDisponibles = [
     { banco: 'Banco Pichincha', detalles: 'Cta. Corriente #123456789 - Nova Cuisine S.A.' },
     { banco: 'PayPal / Tarjeta', detalles: 'pagos@novacuisine.edu.ec (Link de pago directo)' }
   ];
 
-  constructor() { }
+  constructor(private cobrosService: CobrosService) { }
 
   ngOnInit(): void {
-    // Aquí se llamaría al servicio de estudiantes para obtener datos reales en el futuro
+    this.cargarEstadoCuenta();
+  }
+
+  cargarEstadoCuenta(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.cobrosService.obtenerMisObligaciones().subscribe({
+      next: (obligaciones) => {
+        this.historialPagos = obligaciones;
+        this.calcularResumen(obligaciones);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar el estado de cuenta:', err);
+        this.error = 'No se pudo cargar tu estado de cuenta.';
+        this.loading = false;
+      }
+    });
+  }
+
+  private calcularResumen(obligaciones: any[]): void {
+    const totalPagado = obligaciones.reduce((acc, o) => acc + Number(o.monto_pagado), 0);
+    const saldoPendiente = obligaciones.reduce((acc, o) => acc + Number(o.saldo_pendiente), 0);
+
+    const pendientesOVencidas = obligaciones.filter(o => o.estado_calculado !== 'PAGADO');
+    const proximaFecha = pendientesOVencidas.length > 0
+      ? pendientesOVencidas
+          .map(o => new Date(o.fecha_vencimiento))
+          .sort((a, b) => a.getTime() - b.getTime())[0]
+      : null;
+
+    let estadoGeneral = 'Al día';
+    if (obligaciones.some(o => o.estado_calculado === 'VENCIDO')) {
+      estadoGeneral = 'Vencido';
+    } else if (obligaciones.some(o => o.estado_calculado === 'PENDIENTE')) {
+      estadoGeneral = 'Pendiente';
+    }
+
+    this.resumen = {
+      totalPagado,
+      saldoPendiente,
+      proximoVencimiento: proximaFecha,
+      estadoGeneral
+    };
   }
 
   /**

@@ -1,4 +1,4 @@
-.recetario-container {
+.horarios-container {
     padding: 2rem;
 }
 
@@ -29,30 +29,6 @@
 
 .btn-gold:hover { background: #1a1a1a; }
 
-/* Filtros */
-.filter-bar {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 1.5rem;
-}
-
-.search-input {
-    flex: 2;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    outline: none;
-}
-
-.category-select {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-}
-
-/* Tabla */
 .table-card {
     background: white;
     padding: 1rem;
@@ -81,24 +57,6 @@
     font-size: 0.95rem;
 }
 
-.recipe-name {
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.badge-category {
-    background: #fdfaf3;
-    color: #b8860b;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-
-/* Colores de Dificultad */
-.diff-alta { color: #e74c3c; font-weight: bold; }
-.diff-media { color: #f39c12; font-weight: bold; }
-.diff-baja { color: #27ae60; font-weight: bold; }
-
 .actions-cell {
     display: flex;
     gap: 8px;
@@ -122,7 +80,6 @@
     color: #999;
 }
 
-/* Modal */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -155,78 +112,16 @@
     margin-top: 8px;
 }
 
+.search-input {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
     margin-top: 1.5rem;
-}
-
-/* Ingredientes */
-.ingredientes-box {
-    margin-top: 1.2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
-}
-
-.ingredientes-box h4 {
-    margin: 0 0 8px 0;
-    color: #1a1a1a;
-}
-
-.hint-text {
-    font-size: 0.8rem;
-    color: #888;
-    margin: 4px 0 8px 0;
-}
-
-.lista-ingredientes {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 10px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.lista-ingredientes li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f7f7f7;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-}
-
-.btn-quitar {
-    background: none;
-    border: none;
-    color: #c62828;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.selector-ingrediente {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.cantidad-input {
-    max-width: 100px;
-}
-
-.nuevo-insumo-details {
-    margin-top: 6px;
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.nuevo-insumo-form {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
 }

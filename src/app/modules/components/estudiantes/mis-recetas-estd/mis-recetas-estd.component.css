@@ -52,3 +52,66 @@ h2 {
 .btn-ver:hover {
     background: #b8860b;
 }
+
+.no-results {
+    color: #c62828;
+    font-weight: 500;
+}
+
+/* Modal de detalle */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 460px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-box h3 {
+    margin: 0 0 6px 0;
+    color: #1a1a1a;
+}
+
+.modal-box h4 {
+    margin: 1rem 0 6px 0;
+    color: #b8860b;
+}
+
+.hint-text {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.lista-ingredientes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lista-ingredientes li {
+    background: #f7f7f7;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.2rem;
+}

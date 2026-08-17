@@ -139,4 +139,38 @@
     letter-spacing: 1px;
     text-transform: uppercase;
   }
+
+  /* Estilos para los enlaces del menú */
+.nav-link {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+/* Efecto Hover */
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+  color: #fff !important;
+}
+
+/* Clase Active que maneja Angular */
+.nav-link.active {
+  background-color: #0d6efd; /* Azul de Bootstrap (puedes cambiarlo al color de tu marca) */
+  color: #fff !important;
+  opacity: 1;
+  font-weight: 500;
+}
+
+/* Iconos un poco más grandes y estilizados */
+.nav-link i {
+  font-size: 1.2rem;
+}
+
+/* Separadores de sección opcionales */
+.nav-section-title {
+  letter-spacing: 0.05rem;
+  font-weight: bold;
+}
   

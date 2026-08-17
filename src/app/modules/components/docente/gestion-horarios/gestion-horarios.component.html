@@ -1,0 +1,78 @@
+<div class="horarios-container">
+  <div class="header-actions">
+    <h2>📅 {{ esAdmin ? 'Gestión de Horarios' : 'Mi Horario de Clases' }}</h2>
+    <button class="btn-gold" (click)="abrirModalNuevo()">+ Agregar Horario</button>
+  </div>
+
+  <p *ngIf="loading">Cargando horarios...</p>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+
+  <div class="card table-card" *ngIf="!loading && !error">
+    <table class="master-table">
+      <thead>
+        <tr>
+          <th>Asignatura</th>
+          <th>Día</th>
+          <th>Hora</th>
+          <th>Aula</th>
+          <th *ngIf="esAdmin">Docente</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of horarios">
+          <td class="recipe-name">{{ h.nombre_asignatura }}</td>
+          <td>{{ h.dia_semana }}</td>
+          <td>{{ h.hora_inicio?.slice(0,5) }} - {{ h.hora_fin?.slice(0,5) }}</td>
+          <td>{{ h.aula || '-' }}</td>
+          <td *ngIf="esAdmin">{{ h.docente_nombre || 'Sin asignar' }}</td>
+          <td class="actions-cell">
+            <button class="btn-icon delete" (click)="eliminarHorario(h)" title="Eliminar">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="horarios.length === 0">
+          <td [attr.colspan]="esAdmin ? 6 : 5" class="no-results">No hay bloques de horario registrados todavía.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostrarModal">
+    <div class="modal-box">
+      <h3>Nuevo Bloque de Horario</h3>
+
+      <label>Asignatura</label>
+      <select [(ngModel)]="formHorario.asignatura_id" class="search-input">
+        <option [ngValue]="null">Selecciona una asignatura...</option>
+        <option *ngFor="let a of asignaturas" [ngValue]="a.asignatura_id">{{ a.nombre_asignatura }}</option>
+      </select>
+
+      <ng-container *ngIf="esAdmin">
+        <label>Docente</label>
+        <select [(ngModel)]="formHorario.docente_id" class="search-input">
+          <option [ngValue]="null">Sin asignar</option>
+          <option *ngFor="let d of docentes" [ngValue]="d.usuario_id">{{ d.nombre_completo }}</option>
+        </select>
+      </ng-container>
+
+      <label>Día</label>
+      <select [(ngModel)]="formHorario.dia_semana" class="search-input">
+        <option *ngFor="let d of diasSemana" [value]="d">{{ d }}</option>
+      </select>
+
+      <label>Hora de inicio</label>
+      <input type="time" [(ngModel)]="formHorario.hora_inicio" class="search-input">
+
+      <label>Hora de fin</label>
+      <input type="time" [(ngModel)]="formHorario.hora_fin" class="search-input">
+
+      <label>Aula</label>
+      <input type="text" [(ngModel)]="formHorario.aula" class="search-input" placeholder="Ej: Cocina A">
+
+      <div class="modal-actions">
+        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-gold" (click)="guardarHorario()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>

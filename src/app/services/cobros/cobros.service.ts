@@ -25,6 +25,18 @@ export class CobrosService {
   registrarPago(pagoData: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/pagar`, pagoData);
   }
-  
+
+  // 📥 Importación masiva de obligaciones desde un archivo Excel
+  importarObligacionesExcel(archivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post(`${this.apiUrl}/obligaciones/importar-excel`, formData);
+  }
+
+  // 🎓 Estado de cuenta real del estudiante autenticado
+  obtenerMisObligaciones(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/mis-obligaciones`);
+  }
+
   // ... otros métodos (crearObligacion, registrarPago)
 }

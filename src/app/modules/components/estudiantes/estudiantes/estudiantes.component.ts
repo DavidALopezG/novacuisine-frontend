@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
 import { EstudiantesService } from './../../../../services/estudiantes/estudiantes.service';
+import { RecetasService } from './../../../../services/recetas/recetas.service';
 
 @Component({
   selector: 'app-estudiantes',
@@ -34,7 +35,10 @@ export class EstudiantesComponent implements OnInit {
     titulacion_id: null
   };
 
-  constructor(private estudiantesService: EstudiantesService) {}
+  constructor(
+    private estudiantesService: EstudiantesService,
+    private recetasService: RecetasService
+  ) {}
 
   ngOnInit(): void {
     this.cargarEstudiantes();
@@ -117,15 +121,15 @@ export class EstudiantesComponent implements OnInit {
     // Aquí podrías implementar un modal con un select de recetas
     // Por ahora, usamos un prompt para capturar el ID de la receta para probar la tabla intermedia
     const recetaId = prompt('Ingrese el ID de la receta para asignar a este estudiante:');
-    
+
     if (recetaId && this.estudianteSeleccionado) {
-      this.estudiantesService.asignarReceta(this.estudianteSeleccionado.estudiante_id, +recetaId)
+      this.recetasService.asignarReceta(+recetaId, this.estudianteSeleccionado.estudiante_id)
         .subscribe({
           next: () => {
             alert('Receta vinculada correctamente');
             this.verExpediente(this.estudianteSeleccionado); // Refrescar lista de recetas en el modal
           },
-          error: (err) => alert('Error al asignar receta: ' + err.message)
+          error: (err) => alert('Error al asignar receta: ' + (err?.error?.error || err.message))
         });
     }
   }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // ✅ para ngModel
-import { CobrosService } from '../../../../services/cobros.service';
+import { CobrosService } from '../../../../services/cobros/cobros.service';
 
 interface Obligacion {
   obligacion_id: number;
@@ -37,6 +37,12 @@ export class CobrosGestionComponent implements OnInit {
     monto_total: 0,
     fecha_vencimiento: ''
   };
+
+  // 📥 Importación desde Excel
+  mostrarModalImportar = false;
+  archivoSeleccionado: File | null = null;
+  importando = false;
+  resumenImportacion: { message: string; total_filas: number; insertadas: any[]; errores: any[] } | null = null;
 
   constructor(private cobrosService: CobrosService) {}
 
@@ -90,6 +96,45 @@ export class CobrosGestionComponent implements OnInit {
     this.mostrarModalPago = false;
     this.mostrarModalObligacion = false;
     this.obligacionSeleccionada = null;
+  }
+
+  // 📥 Importación masiva desde Excel
+  abrirModalImportar(): void {
+    this.archivoSeleccionado = null;
+    this.resumenImportacion = null;
+    this.mostrarModalImportar = true;
+  }
+
+  cerrarModalImportar(): void {
+    this.mostrarModalImportar = false;
+    this.archivoSeleccionado = null;
+    this.resumenImportacion = null;
+  }
+
+  onArchivoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.archivoSeleccionado = input.files && input.files.length > 0 ? input.files[0] : null;
+  }
+
+  importarExcel(): void {
+    if (!this.archivoSeleccionado) {
+      alert('Selecciona primero un archivo Excel (.xlsx o .xls).');
+      return;
+    }
+
+    this.importando = true;
+    this.cobrosService.importarObligacionesExcel(this.archivoSeleccionado).subscribe({
+      next: (resp) => {
+        this.resumenImportacion = resp;
+        this.importando = false;
+        this.cargarObligaciones();
+      },
+      error: (err) => {
+        console.error('Error al importar el Excel:', err);
+        alert('❌ ' + (err?.error?.error || 'No se pudo importar el archivo.'));
+        this.importando = false;
+      }
+    });
   }
 
   confirmarPago(): void {

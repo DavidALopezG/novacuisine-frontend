@@ -130,3 +130,32 @@
 
 .btn-primary:hover { background: #b8860b; }
 .btn-outline:hover { background: #1a1a1a; color: #fff; }
+
+
+/*Cambios Boostrap*/
+/* Utilidades de fuentes y tracking */
+.fs-8 {
+    font-size: 0.75rem;
+  }
+  .tracking-wider {
+    letter-spacing: 0.05rem;
+  }
+  
+  /* Efecto hover suave para las tarjetas */
+  .transition-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .transition-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important;
+  }
+  
+  /* Forzar bordes redondeados consistentes en elementos internos de Bootstrap */
+  .card {
+    border-radius: 12px;
+  }
+  .card-header {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+  }

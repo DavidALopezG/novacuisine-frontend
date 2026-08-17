@@ -1,61 +1,70 @@
 <div class="perfil-container">
-    <div class="header-section">
-      <h2>👤 Mi Perfil Académico</h2>
-    </div>
-  
-    <div class="perfil-grid">
-      <!-- Columna Izquierda: Tarjeta Principal -->
-      <div class="card profile-main">
-        <div class="avatar-section">
-          <div class="avatar-circle">
-            <span>{{ perfil.nombre[0] }}{{ perfil.apellido[0] }}</span>
-          </div>
-          <span class="badge-estado">{{ perfil.estado }}</span>
+  <div class="header-section">
+    <h2>👤 Mi Perfil Académico</h2>
+  </div>
+
+  <p *ngIf="loading">Cargando tu perfil...</p>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+
+  <div class="perfil-grid" *ngIf="!loading && !error && perfil">
+    <!-- Columna Izquierda: Tarjeta Principal -->
+    <div class="card profile-main">
+      <div class="avatar-section">
+        <div class="avatar-circle">
+          <span>{{ perfil.nombre[0] }}{{ perfil.apellido[0] }}</span>
         </div>
-        
-        <div class="user-info">
-          <h3>{{ perfil.nombre }} {{ perfil.apellido }}</h3>
-          <p class="titulacion">{{ perfil.titulacion }}</p>
-          <p class="codigo">{{ perfil.codigo }}</p>
+        <span class="badge-estado">{{ perfil.activo ? 'Activo' : 'Inactivo' }}</span>
+      </div>
+
+      <div class="user-info">
+        <h3>{{ perfil.nombre }} {{ perfil.apellido }}</h3>
+        <p class="titulacion">{{ perfil.nombre_titulacion || 'Sin titulación asignada' }}</p>
+        <p class="codigo">{{ perfil.codigo_estudiante }}</p>
+      </div>
+
+      <hr>
+
+      <div class="contact-info">
+        <div class="info-item">
+          <small>Correo Electrónico</small>
+          <p>{{ perfil.email }}</p>
         </div>
-  
-        <hr>
-  
-        <div class="contact-info">
-          <div class="info-item">
-            <small>Correo Electrónico</small>
-            <p>{{ perfil.email }}</p>
-          </div>
-          <div class="info-item">
-            <small>Fecha de Ingreso</small>
-            <p>{{ perfil.fechaIngreso | date:'longDate' }}</p>
-          </div>
+        <div class="info-item">
+          <small>Fecha de Ingreso</small>
+          <p>{{ perfil.fecha_ingreso ? (perfil.fecha_ingreso | date:'longDate') : 'No registrada' }}</p>
         </div>
       </div>
-  
-      <!-- Columna Derecha: Detalles e Inscripciones -->
-      <div class="details-column">
-        <div class="card">
-          <h4>📚 Inscripciones y Cursos</h4>
-          <div class="inscripciones-list">
-            <div class="inscripcion-item" *ngFor="let insc of inscripciones">
-              <div class="dot" [ngClass]="{'completado': insc.estado === 'Completado'}"></div>
-              <div class="insc-text">
-                <strong>{{ insc.curso }}</strong>
-                <small>{{ insc.fecha }} • {{ insc.estado }}</small>
-              </div>
+    </div>
+
+    <!-- Columna Derecha: Progreso real por asignatura -->
+    <div class="details-column">
+      <div class="card">
+        <h4>📚 Recetas por Asignatura</h4>
+        <div class="inscripciones-list" *ngIf="progresoPorAsignatura.length > 0">
+          <div class="inscripcion-item" *ngFor="let a of progresoPorAsignatura">
+            <div class="dot" [ngClass]="{'completado': a.recetas_aprobadas === a.total_recetas}"></div>
+            <div class="insc-text">
+              <strong>{{ a.nombre_asignatura || 'Sin asignatura' }}</strong>
+              <small>{{ a.recetas_aprobadas }} de {{ a.total_recetas }} recetas aprobadas</small>
             </div>
           </div>
         </div>
-  
-        <div class="card status-card">
-          <h4>🚀 Progreso del Ciclo</h4>
-          <p>Actualmente cursando el <strong>{{ perfil.ciclo }}</strong>.</p>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: 65%;"></div>
-          </div>
-          <small>65% del nivel completado</small>
+        <p *ngIf="progresoPorAsignatura.length === 0" class="no-results">
+          Aún no tienes recetas asignadas por tus docentes.
+        </p>
+      </div>
+
+      <div class="card status-card" *ngIf="resumenAcademico">
+        <h4>🚀 Progreso General</h4>
+        <p>
+          Tienes <strong>{{ resumenAcademico.recetas_aprobadas }}</strong> de
+          <strong>{{ resumenAcademico.total_recetas }}</strong> recetas asignadas ya aprobadas.
+        </p>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="resumenAcademico.porcentaje_avance"></div>
         </div>
+        <small>{{ resumenAcademico.porcentaje_avance }}% de avance</small>
       </div>
     </div>
   </div>
+</div>

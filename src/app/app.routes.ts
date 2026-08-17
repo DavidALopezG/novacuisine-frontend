@@ -15,6 +15,8 @@ import { HorarioClaseComponent } from './modules/components/estudiantes/horario-
 // Importa el componente para Docentes cuando exista
  import { MisGruposComponent } from './modules/components/docente/mis-grupos/mis-grupos.component';
  import { RecetarioMaestroComponent } from './modules/components/docente/recetario-maestro/recetario-maestro.component';
+import { TitulacionesComponent } from './modules/components/titulaciones/titulaciones.component';
+import { GestionHorariosComponent } from './modules/components/docente/gestion-horarios/gestion-horarios.component';
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   {
@@ -27,12 +29,15 @@ export const routes: Routes = [
       { path: 'usuarios', component: UsuariosComponent },
       { path: 'estudiantes', component: EstudiantesComponent },
       { path: 'reportes', component: ReportesComponent },
-      
+      { path: 'titulaciones', component: TitulacionesComponent },
+
       // Rutas Docente (Rol 2)
        { path: 'mis-grupos', component: MisGruposComponent },
        { path: 'recetario-maestro', component: RecetarioMaestroComponent },
       // { path: 'evaluaciones', component: CalificacionesComponent },
-      // { path: 'mi-horario-docente', component: HorarioClaseComponent }, // Se puede reutilizar el componente si es genérico
+
+      // 📅 Gestión de horarios: compartida por Admin (gestiona todos) y Docente (gestiona los suyos)
+      { path: 'gestion-horarios', component: GestionHorariosComponent },
 
       // 🎓 Rutas Estudiante (Debes crear estos componentes)
       { path: 'perfil', component: PerfilEstdComponent },

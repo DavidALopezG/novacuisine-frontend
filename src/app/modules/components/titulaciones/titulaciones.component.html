@@ -1,0 +1,48 @@
+<div class="titulaciones-container">
+  <div class="header-actions">
+    <h2>🎓 Titulaciones</h2>
+    <button class="btn-gold" (click)="abrirModalNueva()">+ Nueva Titulación</button>
+  </div>
+
+  <p *ngIf="loading">Cargando titulaciones...</p>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+
+  <div class="card table-card" *ngIf="!loading && !error">
+    <table class="master-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre de la Titulación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of titulaciones">
+          <td>{{ t.titulacion_id }}</td>
+          <td>{{ t.nombre_titulacion }}</td>
+          <td class="actions-cell">
+            <button class="btn-icon" (click)="editarTitulacion(t)" title="Editar">✏️</button>
+            <button class="btn-icon delete" (click)="eliminarTitulacion(t)" title="Eliminar">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="titulaciones.length === 0">
+          <td colspan="3" class="no-results">No hay titulaciones registradas todavía.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostrarModal">
+    <div class="modal-box">
+      <h3>{{ modoEdicion ? 'Editar Titulación' : 'Nueva Titulación' }}</h3>
+
+      <label>Nombre</label>
+      <input type="text" [(ngModel)]="nombreTitulacion" class="search-input" placeholder="Ej: Alta Pastelería">
+
+      <div class="modal-actions">
+        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-gold" (click)="guardarTitulacion()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>

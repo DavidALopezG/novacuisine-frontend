@@ -214,3 +214,54 @@ td button:disabled {
     padding: 0.5rem;
   }
   
+
+
+
+/*VERSION DE DISE;O CON BOOSTRAP*/
+
+/* Tamaño de fuentes para encabezados de tabla estilo Dashboard */
+.fs-7 {
+    font-size: 0.8rem;
+    letter-spacing: 0.05rem;
+  }
+  
+  /* Clases sutiles para filas de tablas en lugar de colores chillones */
+  .table-danger-light {
+    background-color: rgba(220, 53, 69, 0.03);
+  }
+  .table-success-light {
+    background-color: rgba(25, 135, 84, 0.02);
+  }
+  
+  /* Modales manuales con comportamiento nativo (Backdrop oscuro) */
+  .custom-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro translúcido */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    backdrop-filter: blur(2px); /* Opcional: efecto difuminado moderno */
+  }
+  
+  .custom-modal-backdrop .modal-dialog {
+    width: 100%;
+    max-width: 500px;
+    margin: 1.75rem;
+  }
+  
+  /* Color personalizado para texto de alertas de advertencia */
+  .text-warning-dark {
+    color: #664d03;
+  }
+  
+  /* Bordes punteados para el "No data state" */
+  .border-dashed {
+    border-style: dashed !important;
+    border-width: 2px !important;
+  }
+
