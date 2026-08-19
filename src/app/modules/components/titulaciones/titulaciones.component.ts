@@ -78,11 +78,11 @@ export class TitulacionesComponent implements OnInit {
 
     accion.subscribe({
       next: () => {
-        alert(this.modoEdicion ? '✅ Titulación actualizada.' : '✅ Titulación creada.');
+        this.notif.exito(this.modoEdicion ? 'Titulación actualizada con éxito.' : 'Titulación creada con éxito.');
         this.cerrarModal();
         this.cargarTitulaciones();
       },
-      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo guardar la titulación.'))
+      error: (err) => this.notif.error(err?.error?.error || 'No se pudo guardar la titulación.')
     });
   }
 
@@ -91,9 +91,10 @@ export class TitulacionesComponent implements OnInit {
 
     this.titulacionesService.eliminarTitulacion(titulacion.titulacion_id).subscribe({
       next: () => {
+        this.notif.exito('Titulación eliminada correctamente.');
         this.cargarTitulaciones();
       },
-      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo eliminar la titulación.'))
+      error: (err) => this.notif.error(err?.error?.error || 'No se pudo eliminar la titulación.')
     });
   }
 }

@@ -133,7 +133,7 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-icon" style="background-color: black;" (click)="cerrarModal()">Cancelar</button>
         <button class="btn-gold" (click)="guardarReceta()">Guardar</button>
       </div>
     </div>
@@ -181,7 +181,7 @@
       </details>
 
       <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModalIngredientes()">Cancelar</button>
+        <button class="btn-icon" style="background-color: black;" (click)="cerrarModalIngredientes()">Cancelar</button>
         <button class="btn-gold" (click)="guardarNuevaVersion()" [disabled]="guardandoVersion">
           {{ guardandoVersion ? 'Guardando...' : 'Guardar nueva versión' }}
         </button>
@@ -205,7 +205,7 @@
       </select>
 
       <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModalAsignar()">Cancelar</button>
+        <button class="btn-icon" style="background-color: black;" (click)="cerrarModalAsignar()">Cancelar</button>
         <button class="btn-gold" (click)="confirmarAsignacion()" [disabled]="asignando">
           {{ asignando ? 'Asignando...' : 'Asignar' }}
         </button>

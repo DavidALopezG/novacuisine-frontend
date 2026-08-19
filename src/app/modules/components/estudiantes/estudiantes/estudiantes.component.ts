@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EstudiantesService } from './../../../../services/estudiantes/estudiantes.service';
 import { RecetasService } from './../../../../services/recetas/recetas.service';
+import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
@@ -38,7 +39,8 @@ export class EstudiantesComponent implements OnInit {
 
   constructor(
     private estudiantesService: EstudiantesService,
-    private recetasService: RecetasService
+    private recetasService: RecetasService,
+    private notif: NotificacionService
   ) {}
 
   ngOnInit(): void {
@@ -91,7 +93,7 @@ export class EstudiantesComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar expediente', err);
         this.loading = false;
-        alert('Error al cargar las recetas del estudiante');
+        this.notif.error('Error al cargar las recetas del estudiante');
       }
     });
   }
@@ -104,33 +106,31 @@ export class EstudiantesComponent implements OnInit {
 
   crearEstudiante(): void {
     if (!this.nuevoEstudiante.nombre || !this.nuevoEstudiante.codigo_estudiante) {
-      alert('Por favor complete los campos obligatorios');
+      this.notif.advertencia('Por favor complete los campos obligatorios');
       return;
     }
 
     this.estudiantesService.createEstudiante(this.nuevoEstudiante).subscribe({
       next: () => {
-        alert('Estudiante registrado exitosamente');
+        this.notif.exito('Estudiante registrado exitosamente');
         this.cargarEstudiantes(); // Recargar la lista
         this.cerrarModal();
       },
-      error: (err) => alert('Error al crear estudiante: ' + err.error.message)
+      error: (err) => this.notif.error(err?.error?.error || err?.error?.message || 'Error al crear estudiante')
     });
   }
 
   abrirModalAsignarReceta(): void {
-    // Aquí podrías implementar un modal con un select de recetas
-    // Por ahora, usamos un prompt para capturar el ID de la receta para probar la tabla intermedia
     const recetaId = prompt('Ingrese el ID de la receta para asignar a este estudiante:');
 
     if (recetaId && this.estudianteSeleccionado) {
       this.recetasService.asignarReceta(+recetaId, this.estudianteSeleccionado.estudiante_id)
         .subscribe({
           next: () => {
-            alert('Receta vinculada correctamente');
+            this.notif.exito('Receta vinculada correctamente');
             this.verExpediente(this.estudianteSeleccionado); // Refrescar lista de recetas en el modal
           },
-          error: (err) => alert('Error al asignar receta: ' + (err?.error?.error || err.message))
+          error: (err) => this.notif.error('Error al asignar receta: ' + (err?.error?.error || err.message))
         });
     }
   }

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../../../services/usuarios/usuarios.service';
 import { TitulacionesService } from '../../../../services/titulaciones/titulaciones.service';
+import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
@@ -35,7 +36,8 @@ export class UsuariosComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private usuariosService: UsuariosService,
-    private titulacionesService: TitulacionesService
+    private titulacionesService: TitulacionesService,
+    private notif: NotificacionService
   ) {}
 
   ngOnInit(): void {
@@ -120,7 +122,7 @@ export class UsuariosComponent implements OnInit {
     if (!this.usuarioForm.valid) return;
 
     if (!this.editando && !this.usuarioForm.value.contrasena?.trim()) {
-      alert('Debes asignar una contraseña inicial para el nuevo usuario.');
+      this.notif.advertencia('Debes asignar una contraseña inicial para el nuevo usuario.');
       return;
     }
 
@@ -130,20 +132,20 @@ export class UsuariosComponent implements OnInit {
         this.usuarioForm.value
       ).subscribe({
         next: () => {
-          alert('Usuario actualizado correctamente');
+          this.notif.exito('Usuario actualizado correctamente');
           this.cargarUsuarios();
           this.cerrarFormulario();
         },
-        error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo actualizar el usuario.'))
+        error: (err) => this.notif.error(err?.error?.error || 'No se pudo actualizar el usuario.')
       });
     } else {
       this.usuariosService.createUsuario(this.usuarioForm.value).subscribe({
         next: (resp) => {
-          alert('✅ ' + (resp?.message || 'Usuario creado correctamente'));
+          this.notif.exito(resp?.message || 'Usuario creado correctamente');
           this.cargarUsuarios();
           this.cerrarFormulario();
         },
-        error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo crear el usuario.'))
+        error: (err) => this.notif.error(err?.error?.error || 'No se pudo crear el usuario.')
       });
     }
   }
@@ -160,9 +162,10 @@ export class UsuariosComponent implements OnInit {
       activo: !usuario.activo
     }).subscribe({
       next: () => {
+        this.notif.exito(`Usuario ${usuario.activo ? 'desactivado' : 'activado'} correctamente`);
         this.cargarUsuarios();
       },
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo cambiar el estado del usuario.'))
+      error: (err) => this.notif.error(err?.error?.error || 'No se pudo cambiar el estado del usuario.')
     });
   }
 

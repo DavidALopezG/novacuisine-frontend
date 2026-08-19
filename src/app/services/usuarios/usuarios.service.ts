@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { APP_CONFIG } from '../../config/app.config.env';
 
 export interface Usuario {
   usuario_id?: string;
@@ -16,7 +17,7 @@ export interface Usuario {
 })
 export class UsuariosService {
 
-  private apiUrl = 'http://localhost:3000/api/usuarios'; // tu backend
+  private apiUrl = `${APP_CONFIG.apiUrl}/usuarios`;
 
   constructor(private http: HttpClient) {}
 

@@ -90,7 +90,7 @@ export class CobrosGestionComponent implements OnInit {
     const deudaPorEstudiante: { [key: number]: number } = {};
 
     this.obligaciones.forEach((o) => {
-      if (o.estado !== 'Pagado') {
+      if (o.estado?.toUpperCase() !== 'PAGADO') {
         const venc = new Date(o.fecha_vencimiento);
         if (venc < hoy) deudaPorEstudiante[o.estudiante_id] = (deudaPorEstudiante[o.estudiante_id] || 0) + 1;
       }
@@ -144,12 +144,13 @@ export class CobrosGestionComponent implements OnInit {
       next: (resp) => {
         this.resumenImportacion = resp;
         this.importando = false;
+        this.notif.exito(resp.message || 'Importación completada.');
         this.cargarObligaciones();
-    this.cargarEstudiantes();
+        this.cargarEstudiantes();
       },
       error: (err) => {
         console.error('Error al importar el Excel:', err);
-        this.notif.error('' + (err?.error?.error || 'No se pudo importar el archivo.'));
+        this.notif.error(err?.error?.error || 'No se pudo importar el archivo.');
         this.importando = false;
       }
     });
@@ -159,7 +160,7 @@ export class CobrosGestionComponent implements OnInit {
     if (!this.obligacionSeleccionada) return;
 
     if (this.montoPago <= 0) {
-      this.notif.info('Monto inválido.');
+      this.notif.advertencia('Ingresa un monto válido mayor a 0.');
       return;
     }
 
@@ -170,19 +171,28 @@ export class CobrosGestionComponent implements OnInit {
 
     this.cobrosService.registrarPago(pagoData).subscribe({
       next: () => {
-        this.notif.info('💵 Pago registrado correctamente');
+        this.notif.exito('Pago registrado correctamente.');
         this.cerrarModal();
         this.cargarObligaciones();
-    this.cargarEstudiantes();
+        this.cargarEstudiantes();
       },
       error: (err) => {
         console.error('Error al registrar pago:', err);
-        this.notif.error('Error al registrar el pago.');
+        this.notif.error(err?.error?.error || 'Error al registrar el pago.');
       }
     });
   }
 
   crearObligacion(): void {
+    if (!this.nuevaObligacion.estudiante_id) {
+      this.notif.advertencia('Selecciona un estudiante.');
+      return;
+    }
+    if (this.nuevaObligacion.monto_total <= 0) {
+      this.notif.advertencia('Ingresa un monto válido mayor a 0.');
+      return;
+    }
+
     const data = {
       estudiante_id: this.nuevaObligacion.estudiante_id,
       monto_total: this.nuevaObligacion.monto_total,
@@ -194,17 +204,17 @@ export class CobrosGestionComponent implements OnInit {
         this.notif.exito('Obligación creada correctamente');
         this.cerrarModal();
         this.cargarObligaciones();
-    this.cargarEstudiantes();
+        this.cargarEstudiantes();
       },
       error: (err) => {
         console.error('Error al crear obligación:', err);
-        this.notif.error('Error al crear la obligación.');
+        this.notif.error(err?.error?.error || 'Error al crear la obligación.');
       }
     });
   }
 
   esVencida(o: Obligacion): boolean {
-    if (o.estado === 'Pagado') return false;
+    if (o.estado?.toUpperCase() === 'PAGADO') return false;
     const venc = new Date(o.fecha_vencimiento);
     const hoy = new Date();
     venc.setHours(0, 0, 0, 0);
@@ -223,7 +233,7 @@ export class CobrosGestionComponent implements OnInit {
     return this.obligaciones.filter(o => {
       const nombre  = ((o.nombre || '') + ' ' + (o.apellido || '') + ' ' + (o.codigo_estudiante || '')).toLowerCase();
       const txtOk   = !this.filtroTexto  || nombre.includes(this.filtroTexto.toLowerCase());
-      const estOk   = !this.filtroEstado || o.estado === this.filtroEstado;
+      const estOk   = !this.filtroEstado || o.estado?.toUpperCase() === this.filtroEstado.toUpperCase();
       return txtOk && estOk;
     });
   }

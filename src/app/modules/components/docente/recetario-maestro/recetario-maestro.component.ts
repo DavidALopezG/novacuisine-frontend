@@ -287,9 +287,9 @@ export class RecetarioMaestroComponent implements OnInit {
         this.nuevoInsumoNombre = '';
         this.nuevoInsumoCosto = 0;
         this.nuevoInsumoUnidad = '';
-        alert(`✅ Insumo "${nuevo.nombre_insumo}" creado y seleccionado. Ajusta la cantidad y presiona "+".`);
+        this.notif.exito(`Insumo "${nuevo.nombre_insumo}" creado y seleccionado.`);
       },
-      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo crear el insumo.'))
+      error: (err) => this.notif.error(err?.error?.error || 'No se pudo crear el insumo.')
     });
   }
 
@@ -351,13 +351,13 @@ export class RecetarioMaestroComponent implements OnInit {
     this.guardandoVersion = true;
     this.recetasService.crearVersion(this.recetaIngredientesId, payload).subscribe({
       next: () => {
-        alert(`✅ Versión ${nuevoNumero} creada con ${this.ingredientesVersion.length} ingrediente(s). Pendiente de aprobación.`);
+        this.notif.exito(`Versión ${nuevoNumero} creada con ${this.ingredientesVersion.length} ingrediente(s). Pendiente de aprobación.`);
         this.guardandoVersion = false;
         this.cerrarModalIngredientes();
         this.cargarRecetas();
       },
       error: (err) => {
-        this.notif.error('' + (err?.error?.error || 'No se pudo guardar la nueva versión.'));
+        this.notif.error(err?.error?.error || 'No se pudo guardar la nueva versión.');
         this.guardandoVersion = false;
       }
     });

@@ -1,11 +1,11 @@
-// src/app/services/reportes/reportes.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { APP_CONFIG } from '../../config/app.config.env';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
-  private cobrosUrl = 'http://localhost:3000/api/cobros';
+  private cobrosUrl = `${APP_CONFIG.apiUrl}/cobros`;
 
   constructor(private http: HttpClient) {}
 

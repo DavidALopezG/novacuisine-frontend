@@ -1,11 +1,11 @@
-// src/app/services/recetas/recetas.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { APP_CONFIG } from '../../config/app.config.env';
 
 @Injectable({ providedIn: 'root' })
 export class RecetasService {
-  private apiUrl = 'http://localhost:3000/api/recetas';
+  private apiUrl = `${APP_CONFIG.apiUrl}/recetas`;
 
   constructor(private http: HttpClient) {}
 

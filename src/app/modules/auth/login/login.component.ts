@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
-import { Router } from '@angular/router'; // 👈 Asegúrate de que esta línea esté presente
+import { NotificacionService } from '../../../services/notificacion/notificacion.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -20,23 +21,24 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   registerForm: FormGroup;
 
-  constructor(private fb: FormBuilder,
-     private authService: AuthService,
-     private router: Router // 🔑 CORRECCIÓN CLAVE: Inyectar el servicio Router
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private notif: NotificacionService,
+    private router: Router
   ) {
-    
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       contrasena: ['', [Validators.required]],
     });
 
     this.registerForm = this.fb.group({
-      usuario_id: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.minLength(10), Validators.maxLength(10)]], // Ajusta min/max length según el formato de cédula en Ecuador (10 dígitos)
+      usuario_id: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.minLength(10), Validators.maxLength(10)]],
       nombre_completo: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       contrasena: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
-        }, { validators: this.passwordMatchValidator });
+    }, { validators: this.passwordMatchValidator });
   }
 
   ngOnInit(): void {}
@@ -53,53 +55,48 @@ export class LoginComponent implements OnInit {
   }
 
   onLogin(): void {
-        if (this.loginForm.valid) {
-            const { email, contrasena } = this.loginForm.value;
-            this.authService.login(email, contrasena).subscribe({
-                next: (res) => {
-                    console.log('✅ Login exitoso:', res);
-                    alert('Inicio de sesión exitoso');
-                    
-                    localStorage.setItem('token', res.token);
-                    
-    const userRole = this.authService.getRoleFromToken(); // Obtener el rol desde el servicio                    
-                    // 🔑 Esto ahora funcionará porque 'this.router' existe
-                    if (userRole === 1) {
-                        this.router.navigate(['/dashboard/inicio']); 
-                    } else if (userRole === 2) {
-                        this.router.navigate(['/dashboard/inicio']);
-                    } else if(userRole === 3) {
-                        this.router.navigate(['/dashboard/inicio']);
-                    }
-                },
-                error: (err) => {
-                    console.error('❌ Error en login:', err);
-                    alert(err.error?.error || 'Error al iniciar sesión');
-                }
-            });
-        }
-        // 🔑 CORRECCIÓN 2: Se eliminó el bloque 'onLogin' duplicado que estaba aquí
-      }
+    if (this.loginForm.valid) {
+      const { email, contrasena } = this.loginForm.value;
+      this.authService.login(email, contrasena).subscribe({
+        next: (res) => {
+          this.notif.exito('Inicio de sesión exitoso');
+          localStorage.setItem('token', res.token);
+          const nombreCompleto = res.nombre_completo || res.usuario?.nombre || res.usuario?.nombre_completo || '';
+          localStorage.setItem('nombre_completo', nombreCompleto);
+          
+          const userRole = this.authService.getRoleFromToken();
+          if (userRole !== null) {
+            localStorage.setItem('user_role', String(userRole));
+          }
 
-    onRegister(): void {
-      if (this.registerForm.valid) {
-        const registerData = {
-          usuario_id: this.registerForm.value.usuario_id,
-          nombre_completo: this.registerForm.value.nombre_completo,
-          email: this.registerForm.value.email,
-          contrasena: this.registerForm.value.contrasena,
-          activo: true   // 👈 AGREGA ESTE CAMPO
-        };
+          this.router.navigate(['/dashboard/inicio']);
+        },
+        error: (err) => {
+          console.error('❌ Error en login:', err);
+          this.notif.error(err.error?.error || 'Error al iniciar sesión');
+        }
+      });
+    }
+  }
+
+  onRegister(): void {
+    if (this.registerForm.valid) {
+      const registerData = {
+        usuario_id: this.registerForm.value.usuario_id,
+        nombre_completo: this.registerForm.value.nombre_completo,
+        email: this.registerForm.value.email,
+        contrasena: this.registerForm.value.contrasena,
+        activo: true
+      };
       this.authService.register(registerData).subscribe({
         next: (res) => {
-          console.log('✅ Usuario registrado:', res);
-          alert('Usuario creado correctamente');
+          this.notif.exito('Usuario creado correctamente');
           this.togglePanel(false);
           this.registerForm.reset();
         },
         error: (err) => {
           console.error('❌ Error en registro:', err);
-          alert(err.error?.error || 'Error al registrar usuario');
+          this.notif.error(err.error?.error || 'Error al registrar usuario');
         }
       });
     }

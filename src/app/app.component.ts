@@ -1,15 +1,20 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router'; // 👈 Importar RouterModule
+import { RouterModule } from '@angular/router';
+import { ToastComponent } from './shared/toast/toast.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule // ✅ necesario para usar <router-outlet>
+    RouterModule,
+    ToastComponent
   ],
-  template: `<router-outlet></router-outlet>`,
+  template: `
+    <router-outlet></router-outlet>
+    <app-toast></app-toast>
+  `,
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
