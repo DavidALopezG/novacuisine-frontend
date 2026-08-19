@@ -218,6 +218,21 @@
     max-width: 100px;
 }
 
+.cantidad-input:disabled {
+    background: #eee;
+    color: #999;
+}
+
+.checkbox-al-gusto {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #555;
+    margin: -4px 0 10px 0;
+    cursor: pointer;
+}
+
 .nuevo-insumo-details {
     margin-top: 6px;
     font-size: 0.8rem;
@@ -253,4 +268,58 @@
     font-weight: normal;
     color: #2e7d32;
     margin-left: 6px;
+}
+
+/* ── Pasos de preparación ────────────────────────────────── */
+.lista-pasos {
+    list-style: none;
+    counter-reset: paso-counter;
+    padding: 0;
+    margin: 0 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lista-pasos li {
+    counter-increment: paso-counter;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    background: #f7f7f7;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.lista-pasos li::before {
+    content: counter(paso-counter) ".";
+    font-weight: bold;
+    color: #EDB833;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.paso-texto {
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+.paso-acciones {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.selector-paso {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.selector-paso textarea {
+    resize: vertical;
+    font-family: inherit;
 }

@@ -30,7 +30,15 @@ export class MisRecetasEstdComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  constructor(private recetasService: RecetasService, private notif: NotificacionService) { }
+  // Detalle completo de la receta seleccionada
+  mostrarModalDetalle = false;
+  cargandoDetalle = false;
+  recetaDetalle: any = null;
+
+  constructor(
+    private recetasService: RecetasService,
+    private notif: NotificacionService
+  ) { }
 
   ngOnInit(): void {
     this.cargarMisRecetas();
@@ -52,11 +60,6 @@ export class MisRecetasEstdComponent implements OnInit {
       }
     });
   }
-
-  // Detalle completo de la receta seleccionada
-  mostrarModalDetalle = false;
-  cargandoDetalle = false;
-  recetaDetalle: any = null;
 
   verRecetaCompleta(receta: RecetaAsignada): void {
     this.cargandoDetalle = true;

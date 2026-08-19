@@ -24,7 +24,7 @@
   </div>
 
   <!-- Estados de carga / error -->
-  <app-spinner [visible]="loading"></app-spinner>
+  <p *ngIf="loading">Cargando recetas...</p>
   <p *ngIf="error" class="no-results">{{ error }}</p>
 
   <!-- Tabla de Recetas -->
@@ -104,7 +104,8 @@
 
         <ul class="lista-ingredientes" *ngIf="ingredientesNuevaReceta.length > 0">
           <li *ngFor="let ing of ingredientesNuevaReceta; let i = index">
-            {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
+            <ng-container *ngIf="ing.cantidad > 0; else alGustoNueva">{{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}</ng-container>
+            <ng-template #alGustoNueva>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
             <button class="btn-quitar" (click)="quitarIngrediente('nueva', i)">✕</button>
           </li>
         </ul>
@@ -117,9 +118,13 @@
               {{ ins.nombre_insumo }} ({{ ins.unidad_medida }})
             </option>
           </select>
-          <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad">
+          <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad" [disabled]="selectorAlGusto">
           <button class="btn-agregar" (click)="agregarIngrediente('nueva')" title="Agregar ingrediente a la lista">✚ Agregar</button>
         </div>
+        <label class="checkbox-al-gusto">
+          <input type="checkbox" [(ngModel)]="selectorAlGusto">
+          Cantidad al gusto / c/n (ej. canela, aceite para freír)
+        </label>
 
         <details class="nuevo-insumo-details">
           <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
@@ -130,10 +135,30 @@
             <button class="btn-icon" (click)="crearInsumoRapido('nueva')">Crear insumo</button>
           </div>
         </details>
+
+        <h4>📋 Pasos de preparación <span class="contador-ingredientes" *ngIf="pasosNuevaReceta.length > 0">({{ pasosNuevaReceta.length }} paso(s))</span></h4>
+
+        <ol class="lista-pasos" *ngIf="pasosNuevaReceta.length > 0">
+          <li *ngFor="let paso of pasosNuevaReceta; let i = index">
+            <span class="paso-texto">{{ paso }}</span>
+            <span class="paso-acciones">
+              <button class="btn-icon" (click)="moverPaso('nueva', i, -1)" [disabled]="i === 0" title="Subir">↑</button>
+              <button class="btn-icon" (click)="moverPaso('nueva', i, 1)" [disabled]="i === pasosNuevaReceta.length - 1" title="Bajar">↓</button>
+              <button class="btn-quitar" (click)="quitarPaso('nueva', i)">✕</button>
+            </span>
+          </li>
+        </ol>
+        <p *ngIf="pasosNuevaReceta.length === 0" class="hint-text">Aún no has agregado pasos de preparación.</p>
+
+        <div class="selector-paso">
+          <textarea [(ngModel)]="nuevoPasoTextoNueva" class="search-input" rows="2"
+            placeholder="Describe el siguiente paso (ej. Cernir la harina junto con la sal y el polvo de hornear)."></textarea>
+          <button class="btn-agregar" (click)="agregarPaso('nueva')" title="Agregar paso a la lista">✚ Agregar paso</button>
+        </div>
       </div>
 
       <div class="modal-actions">
-        <button class="btn-icon" style="background-color: black;" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
         <button class="btn-gold" (click)="guardarReceta()">Guardar</button>
       </div>
     </div>
@@ -153,7 +178,8 @@
 
       <ul class="lista-ingredientes" *ngIf="ingredientesVersion.length > 0">
         <li *ngFor="let ing of ingredientesVersion; let i = index">
-          {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
+          <ng-container *ngIf="ing.cantidad > 0; else alGustoVersion">{{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}</ng-container>
+          <ng-template #alGustoVersion>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
           <button class="btn-quitar" (click)="quitarIngrediente('version', i)">✕</button>
         </li>
       </ul>
@@ -166,9 +192,13 @@
             {{ ins.nombre_insumo }} ({{ ins.unidad_medida }})
           </option>
         </select>
-        <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad">
+        <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad" [disabled]="selectorAlGusto">
         <button class="btn-agregar" (click)="agregarIngrediente('version')" title="Agregar ingrediente a la lista">✚ Agregar</button>
       </div>
+      <label class="checkbox-al-gusto">
+        <input type="checkbox" [(ngModel)]="selectorAlGusto">
+        Cantidad al gusto / c/n (ej. canela, aceite para freír)
+      </label>
 
       <details class="nuevo-insumo-details">
         <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
@@ -180,8 +210,28 @@
         </div>
       </details>
 
+      <h4>📋 Pasos de preparación <span class="contador-ingredientes" *ngIf="pasosVersion.length > 0">({{ pasosVersion.length }} paso(s))</span></h4>
+
+      <ol class="lista-pasos" *ngIf="pasosVersion.length > 0">
+        <li *ngFor="let paso of pasosVersion; let i = index">
+          <span class="paso-texto">{{ paso }}</span>
+          <span class="paso-acciones">
+            <button class="btn-icon" (click)="moverPaso('version', i, -1)" [disabled]="i === 0" title="Subir">↑</button>
+            <button class="btn-icon" (click)="moverPaso('version', i, 1)" [disabled]="i === pasosVersion.length - 1" title="Bajar">↓</button>
+            <button class="btn-quitar" (click)="quitarPaso('version', i)">✕</button>
+          </span>
+        </li>
+      </ol>
+      <p *ngIf="pasosVersion.length === 0" class="hint-text">Esta receta aún no tiene pasos de preparación registrados.</p>
+
+      <div class="selector-paso">
+        <textarea [(ngModel)]="nuevoPasoTextoVersion" class="search-input" rows="2"
+          placeholder="Describe el siguiente paso..."></textarea>
+        <button class="btn-agregar" (click)="agregarPaso('version')" title="Agregar paso a la lista">✚ Agregar paso</button>
+      </div>
+
       <div class="modal-actions">
-        <button class="btn-icon" style="background-color: black;" (click)="cerrarModalIngredientes()">Cancelar</button>
+        <button class="btn-icon" (click)="cerrarModalIngredientes()">Cancelar</button>
         <button class="btn-gold" (click)="guardarNuevaVersion()" [disabled]="guardandoVersion">
           {{ guardandoVersion ? 'Guardando...' : 'Guardar nueva versión' }}
         </button>
@@ -205,7 +255,7 @@
       </select>
 
       <div class="modal-actions">
-        <button class="btn-icon" style="background-color: black;" (click)="cerrarModalAsignar()">Cancelar</button>
+        <button class="btn-icon" (click)="cerrarModalAsignar()">Cancelar</button>
         <button class="btn-gold" (click)="confirmarAsignacion()" [disabled]="asignando">
           {{ asignando ? 'Asignando...' : 'Asignar' }}
         </button>

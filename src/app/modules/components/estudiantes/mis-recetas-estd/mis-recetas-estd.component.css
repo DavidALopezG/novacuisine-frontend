@@ -110,6 +110,39 @@ h2 {
     font-size: 0.85rem;
 }
 
+.lista-pasos {
+    list-style: none;
+    counter-reset: paso-counter;
+    padding: 0;
+    margin: 0 0 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lista-pasos li {
+    counter-increment: paso-counter;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #f7f7f7;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.lista-pasos li::before {
+    content: counter(paso-counter) ".";
+    font-weight: bold;
+    color: #EDB833;
+    flex-shrink: 0;
+}
+
+.paso-texto {
+    white-space: pre-wrap;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;

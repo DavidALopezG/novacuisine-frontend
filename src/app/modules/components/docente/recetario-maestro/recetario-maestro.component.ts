@@ -5,8 +5,6 @@ import { RecetasService } from '../../../../services/recetas/recetas.service';
 import { AsignaturasService } from '../../../../services/asignaturas/asignaturas.service';
 import { InsumosService } from '../../../../services/insumos/insumos.service';
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
-import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
-import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 interface Receta {
   receta_id: number;
@@ -35,12 +33,13 @@ interface IngredienteForm {
   nombre_insumo: string;
   unidad_medida: string;
   cantidad: number;
+  es_al_gusto: boolean;
 }
 
 @Component({
   selector: 'app-recetario-maestro',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpinnerComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './recetario-maestro.component.html',
   styleUrl: './recetario-maestro.component.css'
 })
@@ -70,10 +69,13 @@ export class RecetarioMaestroComponent implements OnInit {
   };
 
   ingredientesNuevaReceta: IngredienteForm[] = [];
+  pasosNuevaReceta: string[] = [];
+  nuevoPasoTextoNueva = '';
 
   // ── Selector compartido de ingredientes ─────────────────
   selectorInsumoId: number | null = null;
   selectorCantidad: number = 1;
+  selectorAlGusto: boolean = false; // "cantidad necesaria" (c/n): canela, aceite para freír, etc.
 
   nuevoInsumoNombre = '';
   nuevoInsumoCosto = 0;
@@ -86,6 +88,8 @@ export class RecetarioMaestroComponent implements OnInit {
   numeroVersionActual: string | null = null;
   precioVentaActual = 0;
   ingredientesVersion: IngredienteForm[] = [];
+  pasosVersion: string[] = [];
+  nuevoPasoTextoVersion = '';
   guardandoVersion = false;
 
   // ── MODAL 3: Asignar receta a estudiante ─────────────────
@@ -100,7 +104,7 @@ export class RecetarioMaestroComponent implements OnInit {
     private asignaturasService: AsignaturasService,
     private insumosService: InsumosService,
     private estudiantesService: EstudiantesService
-  , private notif: NotificacionService) {}
+  ) {}
 
   ngOnInit(): void {
     this.cargarAsignaturas();
@@ -158,6 +162,8 @@ export class RecetarioMaestroComponent implements OnInit {
     this.recetaSeleccionadaId = null;
     this.formReceta = { nombre: '', porciones: 1, tiempo_prep_min: 0, asignatura_id: null };
     this.ingredientesNuevaReceta = [];
+    this.pasosNuevaReceta = [];
+    this.nuevoPasoTextoNueva = '';
     this.resetSelectorIngrediente();
     this.mostrarModalReceta = true;
   }
@@ -178,19 +184,21 @@ export class RecetarioMaestroComponent implements OnInit {
     this.mostrarModalReceta = false;
     this.recetaSeleccionadaId = null;
     this.ingredientesNuevaReceta = [];   // ← limpiar siempre al cerrar
+    this.pasosNuevaReceta = [];
+    this.nuevoPasoTextoNueva = '';
     this.resetSelectorIngrediente();
   }
 
   guardarReceta(): void {
     if (!this.formReceta.nombre.trim()) {
-      this.notif.info('El nombre de la receta es obligatorio.');
+      alert('El nombre de la receta es obligatorio.');
       return;
     }
 
     if (this.modoEdicion && this.recetaSeleccionadaId) {
       this.recetasService.actualizarReceta(this.recetaSeleccionadaId, this.formReceta).subscribe({
-        next: () => { this.notif.exito('Receta actualizada correctamente'); this.cerrarModal(); this.cargarRecetas(); },
-        error: () => this.notif.error('Error al actualizar la receta.')
+        next: () => { alert('✅ Receta actualizada correctamente'); this.cerrarModal(); this.cargarRecetas(); },
+        error: () => alert('❌ Error al actualizar la receta.')
       });
     } else {
       // ─── BUG FIX: si quedó algo seleccionado en el selector sin presionar "+",
@@ -198,20 +206,25 @@ export class RecetarioMaestroComponent implements OnInit {
       if (this.selectorInsumoId) {
         this.agregarIngrediente('nueva');
       }
+      // Mismo guard para un paso de preparación escrito pero no agregado a la lista
+      if (this.nuevoPasoTextoNueva.trim()) {
+        this.agregarPaso('nueva');
+      }
 
       const payload = {
         ...this.formReceta,
-        insumos: this.ingredientesNuevaReceta.map(i => ({ insumo_id: i.insumo_id, cantidad: i.cantidad }))
+        insumos: this.ingredientesNuevaReceta.map(i => ({ insumo_id: i.insumo_id, cantidad: i.cantidad, es_al_gusto: i.es_al_gusto })),
+        contenido_json: this.pasosNuevaReceta.length > 0 ? { pasos: this.pasosNuevaReceta } : null
       };
 
       this.recetasService.crearReceta(payload).subscribe({
         next: (resp) => {
           const total = resp?.message || 'Receta creada correctamente';
-          this.notif.exito(total);
+          alert('✅ ' + total);
           this.cerrarModal();
           this.cargarRecetas();
         },
-        error: () => this.notif.error('Error al crear la receta.')
+        error: () => alert('❌ Error al crear la receta.')
       });
     }
   }
@@ -219,8 +232,8 @@ export class RecetarioMaestroComponent implements OnInit {
   eliminarReceta(receta: Receta): void {
     if (!confirm(`¿Seguro que deseas eliminar la receta "${receta.nombre}"?`)) return;
     this.recetasService.eliminarReceta(receta.receta_id).subscribe({
-      next: () => { this.notif.info('Receta eliminada'); this.cargarRecetas(); },
-      error: () => this.notif.error('Error al eliminar la receta.')
+      next: () => { alert('🗑️ Receta eliminada'); this.cargarRecetas(); },
+      error: () => alert('❌ Error al eliminar la receta.')
     });
   }
 
@@ -229,22 +242,26 @@ export class RecetarioMaestroComponent implements OnInit {
   resetSelectorIngrediente(): void {
     this.selectorInsumoId = null;
     this.selectorCantidad = 1;
+    this.selectorAlGusto = false;
   }
 
   agregarIngrediente(target: 'nueva' | 'version'): void {
     // ── BUG FIX: convertir a número para evitar comparación estricta string vs number
     const idNum = Number(this.selectorInsumoId);
-    const cantNum = Number(this.selectorCantidad);
+    // "Al gusto / c/n" (ej. canela, aceite para freír): sin cantidad exacta.
+    // Se guarda como 0 porque la columna cantidad es NUMERIC NOT NULL en la BD
+    // (no admite NULL); el trigger de costo lo trata como $0 aporte al costo total.
+    const cantNum = this.selectorAlGusto ? 0 : Number(this.selectorCantidad);
 
-    if (!idNum || cantNum <= 0) {
-      this.notif.info('Selecciona un insumo y una cantidad mayor a 0.');
+    if (!idNum || (!this.selectorAlGusto && cantNum <= 0)) {
+      alert('Selecciona un insumo y una cantidad mayor a 0 (o marca "cantidad al gusto").');
       return;
     }
 
     // ── BUG FIX: buscar por Number() para que 5 === "5" no sea un problema
     const insumo = this.catalogoInsumos.find(i => Number(i.insumo_id) === idNum);
     if (!insumo) {
-      this.notif.info('Insumo no encontrado en el catálogo. Recarga la página e intenta de nuevo.');
+      alert('Insumo no encontrado en el catálogo. Recarga la página e intenta de nuevo.');
       return;
     }
 
@@ -252,13 +269,21 @@ export class RecetarioMaestroComponent implements OnInit {
 
     const existente = lista.find(i => Number(i.insumo_id) === idNum);
     if (existente) {
-      existente.cantidad = Number((existente.cantidad + cantNum).toFixed(3));
+      // Si cualquiera de las dos cantidades a sumar es "al gusto", el resultado
+      // se mantiene como "al gusto" en vez de sumar cantidades incompatibles.
+      if (this.selectorAlGusto || existente.es_al_gusto) {
+        existente.es_al_gusto = true;
+        existente.cantidad = 0;
+      } else {
+        existente.cantidad = Number((existente.cantidad + cantNum).toFixed(3));
+      }
     } else {
       lista.push({
         insumo_id: insumo.insumo_id,
         nombre_insumo: insumo.nombre_insumo,
         unidad_medida: insumo.unidad_medida,
-        cantidad: cantNum
+        cantidad: cantNum,
+        es_al_gusto: this.selectorAlGusto
       });
     }
 
@@ -270,9 +295,40 @@ export class RecetarioMaestroComponent implements OnInit {
     lista.splice(index, 1);
   }
 
+  // ─────────────────── PASOS DE PREPARACIÓN ───────────────
+  // Se guardan en recetas_versiones.contenido_json como { pasos: string[] }
+
+  agregarPaso(target: 'nueva' | 'version'): void {
+    const texto = target === 'nueva' ? this.nuevoPasoTextoNueva : this.nuevoPasoTextoVersion;
+    if (!texto || !texto.trim()) {
+      alert('Escribe el paso antes de agregarlo.');
+      return;
+    }
+
+    if (target === 'nueva') {
+      this.pasosNuevaReceta.push(texto.trim());
+      this.nuevoPasoTextoNueva = '';
+    } else {
+      this.pasosVersion.push(texto.trim());
+      this.nuevoPasoTextoVersion = '';
+    }
+  }
+
+  quitarPaso(target: 'nueva' | 'version', index: number): void {
+    const lista = target === 'nueva' ? this.pasosNuevaReceta : this.pasosVersion;
+    lista.splice(index, 1);
+  }
+
+  moverPaso(target: 'nueva' | 'version', index: number, direccion: -1 | 1): void {
+    const lista = target === 'nueva' ? this.pasosNuevaReceta : this.pasosVersion;
+    const nuevoIndex = index + direccion;
+    if (nuevoIndex < 0 || nuevoIndex >= lista.length) return;
+    [lista[index], lista[nuevoIndex]] = [lista[nuevoIndex], lista[index]];
+  }
+
   crearInsumoRapido(target: 'nueva' | 'version'): void {
     if (!this.nuevoInsumoNombre.trim() || !this.nuevoInsumoUnidad.trim() || this.nuevoInsumoCosto < 0) {
-      this.notif.info('Completa nombre, costo y unidad de medida del nuevo insumo.');
+      alert('Completa nombre, costo y unidad de medida del nuevo insumo.');
       return;
     }
     this.insumosService.crearInsumo({
@@ -287,9 +343,9 @@ export class RecetarioMaestroComponent implements OnInit {
         this.nuevoInsumoNombre = '';
         this.nuevoInsumoCosto = 0;
         this.nuevoInsumoUnidad = '';
-        this.notif.exito(`Insumo "${nuevo.nombre_insumo}" creado y seleccionado.`);
+        alert(`✅ Insumo "${nuevo.nombre_insumo}" creado y seleccionado. Ajusta la cantidad y presiona "+".`);
       },
-      error: (err) => this.notif.error(err?.error?.error || 'No se pudo crear el insumo.')
+      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo crear el insumo.'))
     });
   }
 
@@ -308,11 +364,20 @@ export class RecetarioMaestroComponent implements OnInit {
           insumo_id: Number(i.insumo_id),
           nombre_insumo: i.nombre_insumo,
           unidad_medida: i.unidad_medida,
-          cantidad: Number(i.cantidad)
+          cantidad: Number(i.cantidad),
+          // La BD no tiene columna es_al_gusto; se infiere de cantidad === 0
+          // (nunca tendría sentido guardar 0 de un ingrediente real).
+          es_al_gusto: Number(i.cantidad) === 0
         }));
+        // Precarga los pasos de la última versión para que el docente los edite
+        // en vez de tener que volver a escribirlos desde cero.
+        this.pasosVersion = detalle.ultima_version?.contenido_json?.pasos
+          ? [...detalle.ultima_version.contenido_json.pasos]
+          : [];
+        this.nuevoPasoTextoVersion = '';
         this.mostrarModalIngredientes = true;
       },
-      error: () => this.notif.error('No se pudo cargar el detalle de la receta.')
+      error: () => alert('❌ No se pudo cargar el detalle de la receta.')
     });
   }
 
@@ -320,6 +385,8 @@ export class RecetarioMaestroComponent implements OnInit {
     this.mostrarModalIngredientes = false;
     this.recetaIngredientesId = null;
     this.ingredientesVersion = [];
+    this.pasosVersion = [];
+    this.nuevoPasoTextoVersion = '';
   }
 
   private incrementarVersion(actual: string | null): string {
@@ -335,9 +402,12 @@ export class RecetarioMaestroComponent implements OnInit {
     if (this.selectorInsumoId) {
       this.agregarIngrediente('version');
     }
+    if (this.nuevoPasoTextoVersion.trim()) {
+      this.agregarPaso('version');
+    }
 
     if (this.ingredientesVersion.length === 0) {
-      this.notif.info('Agrega al menos un ingrediente antes de guardar la versión.');
+      alert('Agrega al menos un ingrediente antes de guardar la versión.');
       return;
     }
 
@@ -345,19 +415,20 @@ export class RecetarioMaestroComponent implements OnInit {
     const payload = {
       numero_version: nuevoNumero,
       precio_venta_sugerido: this.precioVentaActual,
-      insumos: this.ingredientesVersion.map(i => ({ insumo_id: i.insumo_id, cantidad: i.cantidad }))
+      insumos: this.ingredientesVersion.map(i => ({ insumo_id: i.insumo_id, cantidad: i.cantidad, es_al_gusto: i.es_al_gusto })),
+      contenido_json: this.pasosVersion.length > 0 ? { pasos: this.pasosVersion } : null
     };
 
     this.guardandoVersion = true;
     this.recetasService.crearVersion(this.recetaIngredientesId, payload).subscribe({
       next: () => {
-        this.notif.exito(`Versión ${nuevoNumero} creada con ${this.ingredientesVersion.length} ingrediente(s). Pendiente de aprobación.`);
+        alert(`✅ Versión ${nuevoNumero} creada con ${this.ingredientesVersion.length} ingrediente(s). Pendiente de aprobación.`);
         this.guardandoVersion = false;
         this.cerrarModalIngredientes();
         this.cargarRecetas();
       },
       error: (err) => {
-        this.notif.error(err?.error?.error || 'No se pudo guardar la nueva versión.');
+        alert('❌ ' + (err?.error?.error || 'No se pudo guardar la nueva versión.'));
         this.guardandoVersion = false;
       }
     });
@@ -367,14 +438,14 @@ export class RecetarioMaestroComponent implements OnInit {
 
   aprobarVersionReceta(receta: Receta): void {
     if (!receta.version_id) {
-      this.notif.info('Esta receta no tiene una versión para aprobar.');
+      alert('Esta receta no tiene una versión para aprobar.');
       return;
     }
     if (!confirm(`¿Aprobar versión ${receta.numero_version} de "${receta.nombre}"? Quedará visible para los estudiantes.`)) return;
 
     this.recetasService.aprobarVersion(receta.version_id).subscribe({
-      next: () => { this.notif.exito('Versión aprobada.'); this.cargarRecetas(); },
-      error: () => this.notif.error('No se pudo aprobar la versión.')
+      next: () => { alert('✅ Versión aprobada.'); this.cargarRecetas(); },
+      error: () => alert('❌ No se pudo aprobar la versión.')
     });
   }
 
@@ -394,13 +465,13 @@ export class RecetarioMaestroComponent implements OnInit {
 
   confirmarAsignacion(): void {
     if (!this.recetaAsignarId || !this.estudianteSeleccionadoId) {
-      this.notif.info('Selecciona un estudiante.');
+      alert('Selecciona un estudiante.');
       return;
     }
     this.asignando = true;
     this.recetasService.asignarReceta(this.recetaAsignarId, this.estudianteSeleccionadoId).subscribe({
-      next: (resp) => { this.notif.exito('' + (resp?.message || 'Receta asignada.')); this.asignando = false; this.cerrarModalAsignar(); },
-      error: () => { this.notif.error('No se pudo asignar la receta.'); this.asignando = false; }
+      next: (resp) => { alert('✅ ' + (resp?.message || 'Receta asignada.')); this.asignando = false; this.cerrarModalAsignar(); },
+      error: () => { alert('❌ No se pudo asignar la receta.'); this.asignando = false; }
     });
   }
 }
