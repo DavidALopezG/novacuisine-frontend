@@ -24,7 +24,7 @@
   </div>
 
   <!-- Estados de carga / error -->
-  <p *ngIf="loading">Cargando recetas...</p>
+  <app-spinner [visible]="loading"></app-spinner>
   <p *ngIf="error" class="no-results">{{ error }}</p>
 
   <!-- Tabla de Recetas -->

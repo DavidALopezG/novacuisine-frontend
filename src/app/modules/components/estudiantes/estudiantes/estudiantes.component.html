@@ -21,10 +21,9 @@
 
   <hr class="text-secondary my-4">
 
-  <div *ngIf="loading" class="d-flex flex-column align-items-center my-5">
-    <div class="spinner-border text-primary mb-2" role="status"></div>
-    <span class="text-muted">Cargando base de datos de estudiantes...</span>
-  </div>
+  <app-spinner [visible]="loading"></app-spinner>
+    <p *ngIf="error" class="no-results">{{ error }}</p>
+
 
   <div *ngIf="!loading && listaEstudiantes.length > 0" class="card shadow-sm overflow-hidden">
     <div class="table-responsive">

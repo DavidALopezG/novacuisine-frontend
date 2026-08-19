@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RecetasService } from '../../../../services/recetas/recetas.service';
+import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 interface RecetaAsignada {
   receta_id: number;
@@ -18,7 +20,7 @@ interface RecetaAsignada {
 @Component({
   selector: 'app-mis-recetas-estd',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SpinnerComponent],
   templateUrl: './mis-recetas-estd.component.html',
   styleUrl: './mis-recetas-estd.component.css'
 })
@@ -28,7 +30,7 @@ export class MisRecetasEstdComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  constructor(private recetasService: RecetasService) { }
+  constructor(private recetasService: RecetasService, private notif: NotificacionService) { }
 
   ngOnInit(): void {
     this.cargarMisRecetas();
@@ -68,7 +70,7 @@ export class MisRecetasEstdComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al obtener el detalle de la receta:', err);
-        alert('❌ No se pudo cargar el detalle de la receta.');
+        this.notif.error('No se pudo cargar el detalle de la receta.');
         this.cargandoDetalle = false;
         this.mostrarModalDetalle = false;
       }

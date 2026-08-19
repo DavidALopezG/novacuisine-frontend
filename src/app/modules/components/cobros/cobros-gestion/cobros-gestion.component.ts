@@ -2,8 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // ✅ para ngModel
 import { CobrosService } from '../../../../services/cobros/cobros.service';
+import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
+import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
+
 
 interface Obligacion {
+  // Campos del JOIN con la tabla estudiantes
+  nombre?: string;
+  apellido?: string;
+  codigo_estudiante?: string;
+
   obligacion_id: number;
   estudiante_id: number;
   fecha_vencimiento: Date;
@@ -16,12 +25,15 @@ interface Obligacion {
 @Component({
   selector: 'app-cobros-gestion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,SpinnerComponent],
   templateUrl: './cobros-gestion.component.html',
   styleUrl: './cobros-gestion.component.css'
 })
 export class CobrosGestionComponent implements OnInit {
   obligaciones: Obligacion[] = [];
+  estudiantes: any[] = [];
+  filtroTexto  = '';
+  filtroEstado = '';
   loading = true;
   error: string | null = null;
   deudaCritica = false;
@@ -44,10 +56,15 @@ export class CobrosGestionComponent implements OnInit {
   importando = false;
   resumenImportacion: { message: string; total_filas: number; insertadas: any[]; errores: any[] } | null = null;
 
-  constructor(private cobrosService: CobrosService) {}
+  constructor(
+    private cobrosService: CobrosService,
+    private estudiantesService: EstudiantesService,
+    private notif: NotificacionService
+  ) {}
 
   ngOnInit(): void {
     this.cargarObligaciones();
+    this.cargarEstudiantes();
   }
 
   cargarObligaciones(): void {
@@ -118,7 +135,7 @@ export class CobrosGestionComponent implements OnInit {
 
   importarExcel(): void {
     if (!this.archivoSeleccionado) {
-      alert('Selecciona primero un archivo Excel (.xlsx o .xls).');
+      this.notif.info('Selecciona primero un archivo Excel (.xlsx o .xls).');
       return;
     }
 
@@ -128,10 +145,11 @@ export class CobrosGestionComponent implements OnInit {
         this.resumenImportacion = resp;
         this.importando = false;
         this.cargarObligaciones();
+    this.cargarEstudiantes();
       },
       error: (err) => {
         console.error('Error al importar el Excel:', err);
-        alert('❌ ' + (err?.error?.error || 'No se pudo importar el archivo.'));
+        this.notif.error('' + (err?.error?.error || 'No se pudo importar el archivo.'));
         this.importando = false;
       }
     });
@@ -141,7 +159,7 @@ export class CobrosGestionComponent implements OnInit {
     if (!this.obligacionSeleccionada) return;
 
     if (this.montoPago <= 0) {
-      alert('Monto inválido.');
+      this.notif.info('Monto inválido.');
       return;
     }
 
@@ -152,13 +170,14 @@ export class CobrosGestionComponent implements OnInit {
 
     this.cobrosService.registrarPago(pagoData).subscribe({
       next: () => {
-        alert('💵 Pago registrado correctamente');
+        this.notif.info('💵 Pago registrado correctamente');
         this.cerrarModal();
         this.cargarObligaciones();
+    this.cargarEstudiantes();
       },
       error: (err) => {
         console.error('Error al registrar pago:', err);
-        alert('❌ Error al registrar el pago.');
+        this.notif.error('Error al registrar el pago.');
       }
     });
   }
@@ -172,13 +191,14 @@ export class CobrosGestionComponent implements OnInit {
 
     this.cobrosService.crearObligacion(data).subscribe({
       next: () => {
-        alert('✅ Obligación creada correctamente');
+        this.notif.exito('Obligación creada correctamente');
         this.cerrarModal();
         this.cargarObligaciones();
+    this.cargarEstudiantes();
       },
       error: (err) => {
         console.error('Error al crear obligación:', err);
-        alert('❌ Error al crear la obligación.');
+        this.notif.error('Error al crear la obligación.');
       }
     });
   }
@@ -191,4 +211,21 @@ export class CobrosGestionComponent implements OnInit {
     hoy.setHours(0, 0, 0, 0);
     return venc < hoy;
   }
+
+  cargarEstudiantes(): void {
+    this.estudiantesService.getEstudiantes().subscribe({
+      next: (data: any[]) => (this.estudiantes = data),
+      error: (err: any)  => console.error('Error al cargar estudiantes:', err)
+    });
+  }
+
+  get obligacionesFiltradas(): any[] {
+    return this.obligaciones.filter(o => {
+      const nombre  = ((o.nombre || '') + ' ' + (o.apellido || '') + ' ' + (o.codigo_estudiante || '')).toLowerCase();
+      const txtOk   = !this.filtroTexto  || nombre.includes(this.filtroTexto.toLowerCase());
+      const estOk   = !this.filtroEstado || o.estado === this.filtroEstado;
+      return txtOk && estOk;
+    });
+  }
+
 }

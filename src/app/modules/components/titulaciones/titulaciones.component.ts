@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TitulacionesService } from '../../../services/titulaciones/titulaciones.service';
+import { NotificacionService } from '../../../services/notificacion/notificacion.service';
+import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-titulaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SpinnerComponent],
   templateUrl: './titulaciones.component.html',
   styleUrl: './titulaciones.component.css'
 })
@@ -21,7 +23,7 @@ export class TitulacionesComponent implements OnInit {
   titulacionSeleccionadaId: number | null = null;
   nombreTitulacion = '';
 
-  constructor(private titulacionesService: TitulacionesService) { }
+  constructor(private titulacionesService: TitulacionesService, private notif: NotificacionService) { }
 
   ngOnInit(): void {
     this.cargarTitulaciones();
@@ -64,7 +66,7 @@ export class TitulacionesComponent implements OnInit {
 
   guardarTitulacion(): void {
     if (!this.nombreTitulacion.trim()) {
-      alert('El nombre de la titulación es obligatorio.');
+      this.notif.info('El nombre de la titulación es obligatorio.');
       return;
     }
 
@@ -80,7 +82,7 @@ export class TitulacionesComponent implements OnInit {
         this.cerrarModal();
         this.cargarTitulaciones();
       },
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo guardar la titulación.'))
+      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo guardar la titulación.'))
     });
   }
 
@@ -91,7 +93,7 @@ export class TitulacionesComponent implements OnInit {
       next: () => {
         this.cargarTitulaciones();
       },
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo eliminar la titulación.'))
+      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo eliminar la titulación.'))
     });
   }
 }

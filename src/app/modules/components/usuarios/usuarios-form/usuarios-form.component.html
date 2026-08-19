@@ -5,53 +5,56 @@
     <button class="btn-primary" (click)="abrirModalNuevoUsuario()">+ Nuevo Usuario</button>
   </div>
 
-  <div *ngIf="mostrarForm" class="modal-overlay"> <div class="form-container"> <h3>{{ editando ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+  <div *ngIf="mostrarForm" class="modal-overlay"> 
+    <div class="form-container"> 
+      <h3>{{ editando ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
 
-          <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()">
+      <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()">
 
-              <label>ID Usuario</label>
-              <input formControlName="usuario_id" placeholder="Cédula" [readonly]="editando">
+        <label>ID Usuario</label>
+        <input formControlName="usuario_id" placeholder="Cédula" [readonly]="editando">
 
-              <label>Nombre completo</label>
-              <input formControlName="nombre_completo" placeholder="Nombre completo">
+        <label>Nombre completo</label>
+        <input formControlName="nombre_completo" placeholder="Nombre completo">
 
-              <label>Email</label>
-              <input formControlName="email" placeholder="Email">
+        <label>Email</label>
+        <input formControlName="email" placeholder="Email">
 
-              <label>Contraseña{{ editando ? ' (dejar en blanco para no cambiarla)' : '' }}</label>
-              <input formControlName="contrasena" type="password" placeholder="Contraseña">
+        <label>Contraseña{{ editando ? ' (dejar en blanco para no cambiarla)' : '' }}</label>
+        <input formControlName="contrasena" type="password" placeholder="Contraseña">
 
-              <label>Rol</label>
-              <select formControlName="rol_id">
-                  <option value="1">Administrador</option>
-                  <option value="2">Profesor</option>
-                  <option value="3">Estudiante</option>
-              </select>
+        <label>Rol</label>
+        <select formControlName="rol_id">
+          <option value="1">Administrador</option>
+          <option value="2">Profesor</option>
+          <option value="3">Estudiante</option>
+        </select>
 
-              <ng-container *ngIf="usuarioForm.value.rol_id == 3">
-                <label>Titulación</label>
-                <select formControlName="titulacion_id">
-                  <option [ngValue]="null">Selecciona una titulación...</option>
-                  <option *ngFor="let t of titulaciones" [ngValue]="t.titulacion_id">
-                    {{ t.nombre_titulacion }}
-                  </option>
-                </select>
-              </ng-container>
+        <ng-container *ngIf="usuarioForm.value.rol_id == 3">
+          <label>Titulación</label>
+          <select formControlName="titulacion_id">
+            <option [ngValue]="null">Selecciona una titulación...</option>
+            <option *ngFor="let t of titulaciones" [ngValue]="t.titulacion_id">
+              {{ t.nombre_titulacion }}
+            </option>
+          </select>
+        </ng-container>
 
-              <label class="switch-label">
-                  <span>Usuario Activo</span>
-                  <label class="switch">
-                      <input type="checkbox" formControlName="activo">
-                      <span class="slider"></span>
-                  </label>
-              </label>
+        <label class="switch-label">
+          <span>Usuario Activo</span>
+          <label class="switch">
+            <input type="checkbox" formControlName="activo">
+            <span class="slider"></span>
+          </label>
+        </label>
 
-              <div class="form-actions"> <button type="submit" class="btn-primary">{{ editando ? 'Guardar Cambios' : 'Crear Usuario' }}</button>
-                  <button type="button" (click)="cerrarFormulario()" class="btn-secondary">Cancelar</button>
-              </div>
+        <div class="form-actions"> 
+          <button type="submit" class="btn-primary">{{ editando ? 'Guardar Cambios' : 'Crear Usuario' }}</button>
+          <button type="button" (click)="cerrarFormulario()" class="btn-secondary">Cancelar</button>
+        </div>
 
-          </form>
-      </div>
+      </form>
+    </div>
   </div>
 
   <div class="filter-bar">
@@ -64,7 +67,10 @@
     </select>
   </div>
 
-  <div class="tabla-container">
+  <app-spinner [visible]="loading"></app-spinner>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+
+  <div class="tabla-container" *ngIf="!loading && !error">
       <table>
           <thead>
               <tr>
@@ -93,12 +99,12 @@
                       <button class="btn-delete" (click)="toggleActivo(u)">{{ u.activo ? 'Desactivar' : 'Activar' }}</button>
                   </td>
               </tr>
-              <tr *ngIf="usuariosFiltrados.length === 0">
-                <td colspan="6" style="text-align:center; padding: 2rem;">No se encontraron usuarios con esos criterios.</td>
-              </tr>
           </tbody>
-
       </table>
+
+      <p *ngIf="usuariosFiltrados.length === 0" class="no-results">
+        No se encontraron usuarios cargados.
+      </p>
   </div>
 
 </div>

@@ -10,15 +10,30 @@
 
   <hr>
 
-  <div *ngIf="loading" class="loading-message">Cargando datos de obligaciones...</div>
-  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <!-- Filtros de búsqueda -->
+  <div class="filtros-cobros">
+    <input type="text" [(ngModel)]="filtroTexto" placeholder="Buscar por nombre o código..." class="filtro-input">
+    <select [(ngModel)]="filtroEstado" class="filtro-select">
+      <option value="">Todos los estados</option>
+      <option value="PENDIENTE">Pendiente</option>
+      <option value="PARCIAL">Parcial</option>
+      <option value="PAGADO">Pagado</option>
+      <option value="VENCIDO">Vencido</option>
+    </select>
+  </div>
+
+
+
+  <app-spinner [visible]="loading"></app-spinner>
+    <p *ngIf="error" class="no-results">{{ error }}</p>
+
 
   <div *ngIf="!loading && !error && obligaciones.length > 0" class="tabla-container">
     <table>
       <thead>
         <tr>
           <th>ID Obligación</th>
-          <th>ID Estudiante</th>
+          <th>Estudiante</th>
           <th>Vencimiento</th>
           <th>Total</th>
           <th>Pagado</th>
@@ -28,23 +43,23 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let o of obligaciones" [class.vencida]="esVencida(o)" [class.pagado]="o.estado === 'Pagado'">
+        <tr *ngFor="let o of obligacionesFiltradas" [class.vencida]="esVencida(o)" [class.pagado]="o.estado === 'PAGADO'">
           <td>{{ o.obligacion_id }}</td>
-          <td>{{ o.estudiante_id }}</td>
+          <td>{{ o.nombre ? (o.nombre + " " + o.apellido) : o.estudiante_id }}<br><small style="color:#999">{{ o.codigo_estudiante }}</small></td>
           <td>{{ o.fecha_vencimiento | date: 'mediumDate' }}</td>
           <td>{{ o.monto_total | currency: 'USD' }}</td>
           <td>{{ o.monto_pagado | currency: 'USD' }}</td>
           <td>{{ o.monto_total - o.monto_pagado | currency: 'USD' }}</td>
           <td><span [class]="'estado-' + o.estado.toLowerCase()">{{ o.estado }}</span></td>
           <td>
-            <button (click)="abrirModalPago(o)" [disabled]="o.estado === 'Pagado'">Registrar Pago</button>
+            <button (click)="abrirModalPago(o)" [disabled]="o.estado === 'PAGADO'">Registrar Pago</button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <div *ngIf="!loading && !error && obligaciones.length === 0" class="no-data-message">
+  <div *ngIf="!loading && !error && obligacionesFiltradas.length === 0" class="no-data-message">
     No hay obligaciones de cobro registradas.
   </div>
 </div>
@@ -72,8 +87,13 @@
 <div class="modal" *ngIf="mostrarModalObligacion">
   <div class="modal-content">
     <h3>Crear Nueva Obligación</h3>
-    <label>ID Estudiante:</label>
-    <input type="number" [(ngModel)]="nuevaObligacion.estudiante_id" />
+    <label>Estudiante</label>
+    <select [(ngModel)]="nuevaObligacion.estudiante_id" class="form-control">
+      <option [ngValue]="null" disabled>Selecciona un estudiante...</option>
+      <option *ngFor="let est of estudiantes" [ngValue]="est.estudiante_id">
+        {{ est.nombre }} {{ est.apellido }} — {{ est.codigo_estudiante }}
+      </option>
+    </select>
 
     <label>Monto Total (USD):</label>
     <input type="number" [(ngModel)]="nuevaObligacion.monto_total" step="0.01" />

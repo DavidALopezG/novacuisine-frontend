@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HorariosService } from '../../../../services/horarios/horarios.service';
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 interface BloqueHorario {
   hora: string;
@@ -11,7 +12,7 @@ interface BloqueHorario {
 @Component({
   selector: 'app-horario-clase',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, SpinnerComponent],
   templateUrl: './horario-clase.component.html',
   styleUrl: './horario-clase.component.css'
 })

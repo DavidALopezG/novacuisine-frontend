@@ -1,18 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ReportesService } from '../../../services/reportes/reportes.service';
+import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CurrencyPipe, DatePipe, SpinnerComponent],
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.css'
 })
 export class ReportesComponent implements OnInit {
-  resumen: any = {};
+
+  loading = true;
+  error: string | null = null;
+
+  resumen: any = null;
   pagosRecientes: any[] = [];
-  loading: boolean = true;
 
   constructor(private reportesService: ReportesService) {}
 
@@ -20,20 +24,25 @@ export class ReportesComponent implements OnInit {
     this.cargarReportes();
   }
 
-  cargarReportes() {
+  cargarReportes(): void {
     this.loading = true;
-    // Ejecutamos ambas peticiones
-    this.reportesService.getResumenFinanciero().subscribe(data => {
-      this.resumen = data;
-    });
+    this.error = null;
 
-    this.reportesService.getReportePagosRecientes().subscribe(data => {
-      this.pagosRecientes = data;
-      this.loading = false;
+    this.reportesService.getResumenCompleto().subscribe({
+      next: (data) => {
+        this.resumen       = data.resumen;
+        this.pagosRecientes = data.pagosRecientes || [];
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar reportes:', err);
+        this.error = 'No se pudieron cargar los reportes financieros.';
+        this.loading = false;
+      }
     });
   }
 
-  imprimirReporte() {
+  imprimirReporte(): void {
     window.print();
   }
 }

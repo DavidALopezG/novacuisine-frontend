@@ -3,7 +3,7 @@
     <h2>👤 Mi Perfil Académico</h2>
   </div>
 
-  <p *ngIf="loading">Cargando tu perfil...</p>
+  <app-spinner [visible]="loading"></app-spinner>
   <p *ngIf="error" class="no-results">{{ error }}</p>
 
   <div class="perfil-grid" *ngIf="!loading && !error && perfil">

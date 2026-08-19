@@ -9,14 +9,20 @@ export class HorariosService {
 
   constructor(private http: HttpClient) {}
 
-  // 🎓 Estudiante: su propio horario real, según su titulación
   obtenerMiHorario(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/mi-horario`);
   }
 
-  // 👩‍🏫 Admin/Docente
   obtenerHorarios(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
+  }
+
+  obtenerMisGrupos(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/mis-grupos`);
+  }
+
+  obtenerEstudiantesDeGrupo(asignaturaId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/mis-grupos/${asignaturaId}/estudiantes`);
   }
 
   crearHorario(horario: any): Observable<any> {

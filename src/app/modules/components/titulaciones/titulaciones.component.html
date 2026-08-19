@@ -4,7 +4,7 @@
     <button class="btn-gold" (click)="abrirModalNueva()">+ Nueva Titulación</button>
   </div>
 
-  <p *ngIf="loading">Cargando titulaciones...</p>
+  <app-spinner [visible]="loading"></app-spinner>
   <p *ngIf="error" class="no-results">{{ error }}</p>
 
   <div class="card table-card" *ngIf="!loading && !error">

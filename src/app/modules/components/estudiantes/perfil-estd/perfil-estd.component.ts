@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-perfil-estd',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, SpinnerComponent],
   templateUrl: './perfil-estd.component.html',
   styleUrl: './perfil-estd.component.css'
 })

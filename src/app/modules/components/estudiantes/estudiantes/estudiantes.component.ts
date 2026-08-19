@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EstudiantesService } from './../../../../services/estudiantes/estudiantes.service';
 import { RecetasService } from './../../../../services/recetas/recetas.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-estudiantes',
   standalone: true, 
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SpinnerComponent],
   templateUrl: './estudiantes.component.html',
   styleUrl: './estudiantes.component.css'
 })

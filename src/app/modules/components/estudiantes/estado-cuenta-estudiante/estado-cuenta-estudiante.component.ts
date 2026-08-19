@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { CobrosService } from '../../../../services/cobros/cobros.service';
+import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-estado-cuenta-estudiante',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, CurrencyPipe, DatePipe, SpinnerComponent],
   templateUrl: './estado-cuenta-estudiante.component.html',
   styleUrl: './estado-cuenta-estudiante.component.css'
 })
@@ -14,7 +16,6 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  // Resumen financiero, calculado a partir de las obligaciones reales
   resumen = {
     totalPagado: 0,
     saldoPendiente: 0,
@@ -22,16 +23,14 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
     estadoGeneral: 'Al día'
   };
 
-  // Listado real de obligaciones (proviene de VISTA_ESTADO_COBROS)
   historialPagos: any[] = [];
 
-  // Información institucional para realizar transferencias (no depende de la BD)
   metodosDisponibles = [
     { banco: 'Banco Pichincha', detalles: 'Cta. Corriente #123456789 - Nova Cuisine S.A.' },
-    { banco: 'PayPal / Tarjeta', detalles: 'pagos@novacuisine.edu.ec (Link de pago directo)' }
+    { banco: 'Transferencia / Depósito', detalles: 'Reportar pago con comprobante al administrador.' }
   ];
 
-  constructor(private cobrosService: CobrosService) { }
+  constructor(private cobrosService: CobrosService, private notif: NotificacionService) {}
 
   ngOnInit(): void {
     this.cargarEstadoCuenta();
@@ -56,46 +55,43 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
   }
 
   private calcularResumen(obligaciones: any[]): void {
-    const totalPagado = obligaciones.reduce((acc, o) => acc + Number(o.monto_pagado), 0);
-    const saldoPendiente = obligaciones.reduce((acc, o) => acc + Number(o.saldo_pendiente), 0);
+    const totalPagado    = obligaciones.reduce((acc, o) => acc + Number(o.monto_pagado   ?? 0), 0);
+    const saldoPendiente = obligaciones.reduce((acc, o) => acc + Number(o.saldo_pendiente ?? 0), 0);
 
-    const pendientesOVencidas = obligaciones.filter(o => o.estado_calculado !== 'PAGADO');
-    const proximaFecha = pendientesOVencidas.length > 0
-      ? pendientesOVencidas
+    // FIX: el backend devuelve el campo "estado" (no "estado_calculado")
+    // Calculamos aquí el estado real comparando fechas y montos
+    const pendientes = obligaciones.filter(o => this.estadoReal(o) !== 'PAGADO');
+
+    const proximaFecha = pendientes.length > 0
+      ? pendientes
           .map(o => new Date(o.fecha_vencimiento))
           .sort((a, b) => a.getTime() - b.getTime())[0]
       : null;
 
-    let estadoGeneral = 'Al día';
-    if (obligaciones.some(o => o.estado_calculado === 'VENCIDO')) {
-      estadoGeneral = 'Vencido';
-    } else if (obligaciones.some(o => o.estado_calculado === 'PENDIENTE')) {
-      estadoGeneral = 'Pendiente';
-    }
+    const hayVencidos   = obligaciones.some(o => this.estadoReal(o) === 'VENCIDO');
+    const hayPendientes = obligaciones.some(o => this.estadoReal(o) === 'PENDIENTE');
 
     this.resumen = {
       totalPagado,
       saldoPendiente,
       proximoVencimiento: proximaFecha,
-      estadoGeneral
+      estadoGeneral: hayVencidos ? 'Vencido' : hayPendientes ? 'Pendiente' : 'Al día'
     };
   }
 
-  /**
-   * Acción para simular el reporte de un pago realizado
-   */
-  reportarPago(): void {
-    const confirmacion = confirm('¿Desea adjuntar un comprobante de pago ahora?');
-    if (confirmacion) {
-      alert('Funcionalidad de carga de archivos disponible próximamente.');
-    } else {
-      alert('Por favor, conserve su comprobante físico para cualquier reclamo.');
-    }
+  // Calcula el estado real de una obligación basándose en los datos del backend
+  estadoReal(o: any): string {
+    const estado = (o.estado || '').toUpperCase();
+    if (estado === 'PAGADO') return 'PAGADO';
+    if (new Date(o.fecha_vencimiento) < new Date()) return 'VENCIDO';
+    if (Number(o.monto_pagado) > 0) return 'PARCIAL';
+    return 'PENDIENTE';
   }
 
-  /**
-   * Genera un reporte en PDF de los movimientos (simulado con la función de impresión)
-   */
+  reportarPago(): void {
+    this.notif.info('Para reportar tu pago, comunícate con la administración del instituto y presenta tu comprobante.');
+  }
+
   descargarEstadoCuenta(): void {
     window.print();
   }

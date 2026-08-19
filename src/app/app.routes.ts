@@ -17,10 +17,13 @@ import { HorarioClaseComponent } from './modules/components/estudiantes/horario-
  import { RecetarioMaestroComponent } from './modules/components/docente/recetario-maestro/recetario-maestro.component';
 import { TitulacionesComponent } from './modules/components/titulaciones/titulaciones.component';
 import { GestionHorariosComponent } from './modules/components/docente/gestion-horarios/gestion-horarios.component';
+import { authGuard } from './guards/auth.guard';
+import { noAuthGuard } from './guards/no-auth.guard';
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
   {
     path: 'dashboard',
+    canActivate: [authGuard],
     component: DashboardComponent,
     children: [
       { path: 'inicio', component: InicioGeneralComponent },

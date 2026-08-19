@@ -1,74 +1,82 @@
 <div class="reportes-container">
-    <div class="header-reportes">
-      <h2>📊 Panel de Reportes Estadísticos</h2>
-      <button class="btn-print" (click)="imprimirReporte()">🖨️ Generar PDF / Imprimir</button>
-    </div>
-  
-    <hr>
-  
+  <div class="header-reportes">
+    <h2>📊 Panel de Reportes Financieros</h2>
+    <button class="btn-print" (click)="imprimirReporte()">🖨️ Imprimir / PDF</button>
+  </div>
+
+  <hr>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p *ngIf="error" style="color: #c62828; font-weight: 500;">{{ error }}</p>
+
+  <ng-container *ngIf="!loading && !error && resumen">
+    <!-- KPIs -->
     <div class="dashboard-grid">
       <div class="card kpi">
         <span class="icon">💰</span>
         <div class="data">
-          <h3>{{ resumen.totalRecaudado | currency:'USD' }}</h3>
+          <h3>{{ resumen.total_recaudado | currency:'USD' }}</h3>
           <p>Total Recaudado</p>
         </div>
       </div>
-  
+
       <div class="card kpi danger">
         <span class="icon">⚠️</span>
         <div class="data">
-          <h3>{{ resumen.totalPendiente | currency:'USD' }}</h3>
+          <h3>{{ resumen.total_pendiente | currency:'USD' }}</h3>
           <p>Total por Cobrar</p>
         </div>
       </div>
-  
+
       <div class="card kpi warning">
         <span class="icon">👥</span>
         <div class="data">
-          <h3>{{ resumen.estudiantesMorosos }}</h3>
-          <p>Estudiantes con Deuda</p>
+          <h3>{{ resumen.estudiantes_morosos }}</h3>
+          <p>Estudiantes Vencidos</p>
         </div>
       </div>
-  
+
       <div class="card kpi success">
         <span class="icon">📈</span>
         <div class="data">
-          <h3>{{ resumen.efectividadCobro }}%</h3>
+          <h3>{{ resumen.efectividad_cobro }}%</h3>
           <p>Efectividad de Cobro</p>
         </div>
       </div>
     </div>
-  
+
+    <!-- Tabla de pagos recientes -->
     <div class="details-grid">
       <div class="card table-card">
         <h4>Últimos Pagos Registrados</h4>
-        <table>
+        <table *ngIf="pagosRecientes.length > 0">
           <thead>
             <tr>
               <th>Fecha</th>
               <th>Estudiante</th>
+              <th>Código</th>
               <th>Monto</th>
-              <th>Concepto</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let pago of pagosRecientes">
-              <td>{{ pago.fecha | date:'shortDate' }}</td>
+              <td>{{ pago.fecha_pago | date:'shortDate' }}</td>
               <td>{{ pago.estudiante }}</td>
+              <td>{{ pago.codigo_estudiante }}</td>
               <td class="text-success">{{ pago.monto | currency:'USD' }}</td>
-              <td>{{ pago.concepto }}</td>
             </tr>
           </tbody>
         </table>
+        <p *ngIf="pagosRecientes.length === 0" style="color:#999; padding: 1rem 0;">
+          Aún no se han registrado pagos.
+        </p>
       </div>
-  
+
       <div class="card action-card">
         <h4>Exportar Reportes</h4>
-        <p>Seleccione el tipo de reporte que desea descargar:</p>
-        <button class="btn-export">📄 Reporte de Morosidad (PDF)</button>
-        <button class="btn-export">Excel de Ingresos Mensuales</button>
-        <button class="btn-export">Inventario de Recetas Asignadas</button>
+        <p>Selecciona el tipo de reporte a descargar:</p>
+        <button class="btn-export" (click)="imprimirReporte()">📄 Reporte Completo (PDF)</button>
       </div>
     </div>
-  </div>
+  </ng-container>
+</div>

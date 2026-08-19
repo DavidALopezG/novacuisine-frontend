@@ -1,161 +1,121 @@
-.grupos-container {
-    padding: 2rem;
+.grupos-container { padding: 2rem; }
+
+.header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 
-.header-section h2 {
+.header-actions h2 {
     color: #1a1a1a;
-    border-bottom: 3px solid #b8860b;
-    display: inline-block;
-    margin-bottom: 10px;
+    border-left: 5px solid #b8860b;
+    padding-left: 15px;
+    margin: 0;
 }
+
+.no-results { color: #999; padding: 2rem 0; }
 
 .grupos-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
-    margin-top: 2rem;
+    gap: 1.5rem;
 }
 
 .grupo-card {
-    background: #fff;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    border-top: 5px solid #1a1a1a;
-    transition: transform 0.3s ease;
-}
-
-.grupo-card:hover {
-    transform: translateY(-5px);
-}
-
-.card-header {
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #fdfaf3;
-}
-
-.paralelo-badge {
-    background: #b8860b;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-
-.cocina-tag {
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.card-body {
-    padding: 20px;
-}
-
-.card-body h3 {
-    margin: 0 0 10px;
-    color: #1a1a1a;
-}
-
-.horario {
-    font-size: 0.9rem;
-    color: #888;
-    margin-bottom: 20px;
-}
-
-.stats {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-}
-
-.stat-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
     display: flex;
     flex-direction: column;
+    gap: 12px;
 }
 
-.stat-item strong {
-    font-size: 1.2rem;
-    color: #1a1a1a;
+.grupo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
 }
 
-.stat-item span {
+.grupo-header h3 { margin: 0; color: #1a1a1a; font-size: 1.1rem; }
+
+.badge-titulacion {
+    background: #f3e5c0;
+    color: #b8860b;
+    padding: 3px 10px;
+    border-radius: 20px;
     font-size: 0.75rem;
-    color: #aaa;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.grupo-info p { margin: 4px 0; font-size: 0.9rem; color: #555; }
+
+.btn-ver-estudiantes {
+    background: #b8860b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+    margin-top: auto;
+}
+
+.btn-ver-estudiantes:hover { background: #1a1a1a; }
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-box h3 { margin: 0 0 1rem 0; color: #1a1a1a; }
+
+.tabla-estudiantes {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tabla-estudiantes th {
+    background: #f8f9fa;
+    padding: 10px;
+    text-align: left;
+    color: #666;
+    font-size: 0.8rem;
     text-transform: uppercase;
 }
 
-.progress-container {
-    height: 8px;
-    background: #eee;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: #b8860b;
-}
-
-.card-footer {
-    padding: 15px 20px;
-    display: flex;
-    gap: 10px;
-    border-top: 1px solid #f5f5f5;
-}
-
-.btn-primary {
-    flex: 1;
-    background: #1a1a1a;
-    color: white;
-    border: none;
+.tabla-estudiantes td {
     padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
+    border-bottom: 1px solid #f1f1f1;
 }
 
-.btn-outline {
-    flex: 1;
-    background: transparent;
-    border: 1.5px solid #1a1a1a;
-    color: #1a1a1a;
-    padding: 10px;
-    border-radius: 6px;
+.modal-actions { display: flex; justify-content: flex-end; margin-top: 1.5rem; }
+
+.btn-cerrar {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 8px;
     cursor: pointer;
 }
-
-.btn-primary:hover { background: #b8860b; }
-.btn-outline:hover { background: #1a1a1a; color: #fff; }
-
-
-/*Cambios Boostrap*/
-/* Utilidades de fuentes y tracking */
-.fs-8 {
-    font-size: 0.75rem;
-  }
-  .tracking-wider {
-    letter-spacing: 0.05rem;
-  }
-  
-  /* Efecto hover suave para las tarjetas */
-  .transition-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .transition-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important;
-  }
-  
-  /* Forzar bordes redondeados consistentes en elementos internos de Bootstrap */
-  .card {
-    border-radius: 12px;
-  }
-  .card-header {
-    border-top-left-radius: 12px !important;
-    border-top-right-radius: 12px !important;
-  }

@@ -3,7 +3,7 @@
       <h2>🧾 Estado de Cuenta</h2>
     </div>
 
-    <p *ngIf="loading">Cargando tu estado de cuenta...</p>
+    <app-spinner [visible]="loading"></app-spinner>
     <p *ngIf="error" class="no-results">{{ error }}</p>
 
     <ng-container *ngIf="!loading && !error">
@@ -44,8 +44,8 @@
                 <td>{{ item.monto_total | currency }}</td>
                 <td>{{ item.saldo_pendiente | currency }}</td>
                 <td>
-                  <span class="status-pill" [ngClass]="item.estado_calculado.toLowerCase()">
-                    {{ item.estado_calculado }}
+                  <span class="status-pill" [ngClass]="estadoReal(item).toLowerCase()">
+                    {{ estadoReal(item) }}
                   </span>
                 </td>
               </tr>

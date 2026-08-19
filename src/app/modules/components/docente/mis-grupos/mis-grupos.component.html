@@ -1,42 +1,63 @@
 <div class="grupos-container">
-    <div class="header-section">
-      <h2 class="h3 m-0 d-flex align-items-center gap-2 text-dark fw-semibold">
-        <i class="bi bi-people-fill text-primary"></i> Mis Grupos Asignados
-      </h2>
-            <p>Bienvenido, <strong>{{ docenteInfo.nombre }}</strong>. Tienes {{ grupos.length }} grupos activos este ciclo.</p>
+  <div class="header-actions">
+    <h2>👥 Mis Grupos</h2>
+  </div>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p *ngIf="!loading && !error && grupos.length === 0" class="no-results">
+    Aún no tienes grupos asignados. Pide al Administrador que asigne bloques de horario a tu nombre.
+  </p>
+
+  <div class="grupos-grid" *ngIf="!loading && !error && grupos.length > 0">
+    <div class="grupo-card" *ngFor="let g of grupos">
+      <div class="grupo-header">
+        <h3>{{ g.nombre_asignatura }}</h3>
+        <span class="badge-titulacion">{{ g.nombre_titulacion || 'Sin titulación' }}</span>
+      </div>
+      <div class="grupo-info">
+        <p><strong>📅 Horario:</strong> {{ g.horario_resumen || 'Sin bloques registrados' }}</p>
+        <p><strong>👩‍🎓 Estudiantes:</strong> {{ g.total_estudiantes }}</p>
+      </div>
+      <button class="btn-ver-estudiantes" (click)="verEstudiantes(g)">
+        Ver lista de estudiantes
+      </button>
     </div>
-  
-    <div class="grupos-grid">
-      <div class="grupo-card" *ngFor="let grupo of grupos">
-        <div class="card-header">
-          <span class="paralelo-badge">Paralelo {{ grupo.paralelo }}</span>
-          <span class="cocina-tag">📍 {{ grupo.cocina }}</span>
-        </div>
-        
-        <div class="card-body">
-          <h3>{{ grupo.nombre }}</h3>
-          <p class="horario"><i class="icon-clock"></i> {{ grupo.horario }}</p>
-          
-          <div class="stats">
-            <div class="stat-item">
-              <strong>{{ grupo.alumnosCount }}</strong>
-              <span>Estudiantes</span>
-            </div>
-            <div class="stat-item">
-              <strong>{{ grupo.progreso }}%</strong>
-              <span>Progreso</span>
-            </div>
-          </div>
-  
-          <div class="progress-container">
-            <div class="progress-bar" [style.width.%]="grupo.progreso"></div>
-          </div>
-        </div>
-  
-        <div class="card-footer">
-          <button class="btn-primary" (click)="verDetallesGrupo(grupo.id)">Ver Lista de Clase</button>
-          <button class="btn-outline">Pasar Asistencia</button>
-        </div>
+  </div>
+
+  <!-- Modal: Lista de estudiantes del grupo -->
+  <div class="modal-overlay" *ngIf="mostrarModalEstudiantes">
+    <div class="modal-box">
+      <h3>👩‍🎓 Estudiantes — {{ grupoSeleccionado?.nombre_asignatura }}</h3>
+
+      <app-spinner [visible]="cargandoEstudiantes" texto="Cargando estudiantes..."></app-spinner>
+
+      <table class="tabla-estudiantes" *ngIf="!cargandoEstudiantes && estudiantesGrupo.length > 0">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Recetas asignadas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let est of estudiantesGrupo">
+            <td>{{ est.codigo_estudiante }}</td>
+            <td>{{ est.nombre }}</td>
+            <td>{{ est.apellido }}</td>
+            <td>{{ est.total_recetas_asignadas }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p *ngIf="!cargandoEstudiantes && estudiantesGrupo.length === 0" class="no-results">
+        No hay estudiantes en esta titulación todavía.
+      </p>
+
+      <div class="modal-actions">
+        <button class="btn-cerrar" (click)="cerrarModalEstudiantes()">Cerrar</button>
       </div>
     </div>
   </div>
+</div>

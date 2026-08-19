@@ -6,8 +6,8 @@
       </div>
     </div>
 
-    <p *ngIf="loading">Cargando tu horario...</p>
-    <p *ngIf="error" class="note">{{ error }}</p>
+    <app-spinner [visible]="loading"></app-spinner>
+    <p *ngIf="error" class="no-results">{{ error }}</p>
 
     <div class="card calendar-card" *ngIf="!loading && !error && horarios.length > 0">
       <div class="table-responsive">

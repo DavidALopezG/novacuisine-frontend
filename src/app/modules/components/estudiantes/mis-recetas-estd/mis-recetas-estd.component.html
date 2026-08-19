@@ -2,7 +2,7 @@
   <h2>👨‍🍳 Mi Recetario Personal</h2>
   <p>Aquí encontrarás las técnicas y platillos asignados por tus docentes.</p>
 
-  <p *ngIf="loading">Cargando tus recetas...</p>
+  <app-spinner [visible]="loading"></app-spinner>
   <p *ngIf="error" class="no-results">{{ error }}</p>
   <p *ngIf="!loading && !error && recetas.length === 0">
     Aún no tienes recetas asignadas por tus docentes.

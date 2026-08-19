@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../../../services/usuarios/usuarios.service';
 import { TitulacionesService } from '../../../../services/titulaciones/titulaciones.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SpinnerComponent],
   templateUrl: './usuarios-form.component.html',
   styleUrls: ['./usuarios-form.component.css']
 })
@@ -19,6 +20,10 @@ export class UsuariosComponent implements OnInit {
   mostrarForm = false;
   editando = false;
   usuarioSeleccionadoId: string | null = null;
+
+  // Variables para la gestión de carga y errores del spinner
+  loading: boolean = false;
+  error: string | null = null;
 
   // Filtros básicos de la tabla
   filtroTexto: string = '';
@@ -59,9 +64,19 @@ export class UsuariosComponent implements OnInit {
   }
 
   cargarUsuarios() {
+    this.loading = true;
+    this.error = null;
+
     this.usuariosService.getUsuarios().subscribe({
-      next: (res) => (this.usuarios = res),
-      error: (err) => console.error('Error cargando usuarios', err)
+      next: (res) => {
+        this.usuarios = res;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando usuarios', err);
+        this.error = 'Ocurrió un error al cargar la lista de usuarios. Intente de nuevo.';
+        this.loading = false;
+      }
     });
   }
 

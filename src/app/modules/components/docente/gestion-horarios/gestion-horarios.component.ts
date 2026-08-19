@@ -5,11 +5,13 @@ import { HorariosService } from '../../../../services/horarios/horarios.service'
 import { AsignaturasService } from '../../../../services/asignaturas/asignaturas.service';
 import { UsuariosService } from '../../../../services/usuarios/usuarios.service';
 import { AuthService } from '../../../../services/auth.service';
+import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
+import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-gestion-horarios',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SpinnerComponent],
   templateUrl: './gestion-horarios.component.html',
   styleUrl: './gestion-horarios.component.css'
 })
@@ -41,7 +43,7 @@ export class GestionHorariosComponent implements OnInit {
     private asignaturasService: AsignaturasService,
     private usuariosService: UsuariosService,
     private authService: AuthService
-  ) { }
+  , private notif: NotificacionService) { }
 
   ngOnInit(): void {
     this.esAdmin = this.authService.getRoleFromToken() === 1;
@@ -101,17 +103,17 @@ export class GestionHorariosComponent implements OnInit {
 
   guardarHorario(): void {
     if (!this.formHorario.asignatura_id || !this.formHorario.hora_inicio || !this.formHorario.hora_fin) {
-      alert('Selecciona la asignatura y completa la hora de inicio y fin.');
+      this.notif.info('Selecciona la asignatura y completa la hora de inicio y fin.');
       return;
     }
 
     this.horariosService.crearHorario(this.formHorario).subscribe({
       next: () => {
-        alert('✅ Horario creado correctamente.');
+        this.notif.exito('Horario creado correctamente.');
         this.cerrarModal();
         this.cargarHorarios();
       },
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo crear el horario.'))
+      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo crear el horario.'))
     });
   }
 
@@ -120,7 +122,7 @@ export class GestionHorariosComponent implements OnInit {
 
     this.horariosService.eliminarHorario(horario.horario_id).subscribe({
       next: () => this.cargarHorarios(),
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo eliminar el horario.'))
+      error: (err) => this.notif.error('' + (err?.error?.error || 'No se pudo eliminar el horario.'))
     });
   }
 }
