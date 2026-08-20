@@ -265,3 +265,41 @@ td button:disabled {
     border-width: 2px !important;
   }
 
+
+
+  .gestion-cobros-container {
+    padding: 24px 28px;
+  }
+  
+  /* ---------------------------------------------------------------------
+     Toolbar Estándar NovaCuisine
+  --------------------------------------------------------------------- */
+  .nova-toolbar-icon {
+    font-size: 1.6rem;
+    color: var(--nova-gold, #b8860b);
+    background: rgba(184, 134, 11, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .nova-toolbar-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--nova-black, #1a1a1a);
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .nova-toolbar-subtitle {
+    margin: 2px 0 0;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+  }
+  
+  /* ---------------------------------------------------------------------
+     Estructura y Formularios
+  --------------------------------------------------------------------- */
+  .form-field {
+    display: flex;
+    flex-direction: column;
+  }

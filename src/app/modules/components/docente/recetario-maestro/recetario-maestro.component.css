@@ -1,325 +1,251 @@
 .recetario-container {
-    padding: 2rem;
+  padding: 24px 28px;
 }
 
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+/* ---------------------------------------------------------------------
+   Toolbar (mismo patrón que Reportes)
+--------------------------------------------------------------------- */
+.nova-toolbar-icon {
+  font-size: 1.6rem;
+  color: var(--nova-gold);
+  background: rgba(184, 134, 11, 0.1);
+  padding: 12px;
+  border-radius: 12px;
 }
 
-.header-actions h2 {
-    color: #1a1a1a;
-    border-left: 5px solid #b8860b;
-    padding-left: 15px;
-    margin: 0;
+.nova-toolbar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--nova-black);
+  font-family: 'Playfair Display', serif;
 }
 
-.btn-gold {
-    background: #b8860b;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+.nova-toolbar-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
 }
 
-.btn-gold:hover { background: #1a1a1a; }
-
-/* Filtros */
+/* ---------------------------------------------------------------------
+   Filtros
+--------------------------------------------------------------------- */
 .filter-bar {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 1.5rem;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
-.search-input {
-    flex: 2;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    outline: none;
+::ng-deep .filter-bar .p-inputtext {
+  width: 100%;
 }
 
-.category-select {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
+::ng-deep .category-select {
+  min-width: 220px;
 }
 
-/* Tabla */
-.table-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    overflow-x: auto;
-}
-
-.master-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.master-table th {
-    text-align: left;
-    padding: 15px;
-    background: #f8f9fa;
-    color: #666;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-}
-
-.master-table td {
-    padding: 15px;
-    border-bottom: 1px solid #f1f1f1;
-    font-size: 0.95rem;
-}
-
+/* ---------------------------------------------------------------------
+   Tabla
+--------------------------------------------------------------------- */
 .recipe-name {
-    font-weight: 600;
-    color: #1a1a1a;
+  font-weight: 600;
+  color: var(--nova-black);
 }
-
-.badge-category {
-    background: #fdfaf3;
-    color: #b8860b;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-
-/* Colores de Dificultad */
-.diff-alta { color: #e74c3c; font-weight: bold; }
-.diff-media { color: #f39c12; font-weight: bold; }
-.diff-baja { color: #27ae60; font-weight: bold; }
 
 .actions-cell {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
 }
 
-.btn-icon {
-    background: #f8f9fa;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.2s;
+.empty-state {
+  text-align: center;
+  color: #9a9a9a;
+  padding: 2.5rem 0;
 }
 
-.btn-icon:hover { background: #eee; }
-.btn-icon.delete:hover { background: #ffebee; color: #c62828; }
-
-.no-results {
-    text-align: center;
-    padding: 3rem !important;
-    color: #999;
+.empty-state i {
+  display: block;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  color: #cfcfcf;
 }
 
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+::ng-deep .nova-table .p-datatable-thead > tr > th {
+  background: var(--nova-black);
+  color: var(--nova-white);
 }
 
-.modal-box {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 420px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+/* ---------------------------------------------------------------------
+   Contenido de los modales (p-dialog)
+--------------------------------------------------------------------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.modal-box h3 {
-    margin: 0 0 10px 0;
-    color: #1a1a1a;
+.tw-col-span-2 {
+  grid-column: span 2 / span 2;
 }
 
-.modal-box label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 8px;
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 1.5rem;
+.form-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
 }
 
-/* Ingredientes */
-.ingredientes-box {
-    margin-top: 1.2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px 0;
+  color: var(--nova-black);
+  font-size: 1rem;
 }
 
-.ingredientes-box h4 {
-    margin: 0 0 8px 0;
-    color: #1a1a1a;
+.section-title i {
+  color: var(--nova-gold);
+}
+
+.contador-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #2e7d32;
+  background: #eaf5ea;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
 .hint-text {
-    font-size: 0.8rem;
-    color: #888;
-    margin: 4px 0 8px 0;
+  font-size: 0.82rem;
+  color: #888;
+  margin: 4px 0 10px 0;
 }
 
+/* Ingredientes */
 .lista-ingredientes {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 10px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .lista-ingredientes li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f7f7f7;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-}
-
-.btn-quitar {
-    background: none;
-    border: none;
-    color: #c62828;
-    cursor: pointer;
-    font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f7f7f7;
+  padding: 6px 6px 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
 }
 
 .selector-ingrediente {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.cantidad-input {
-    max-width: 100px;
+::ng-deep .cantidad-input {
+  max-width: 120px;
 }
 
-.cantidad-input:disabled {
-    background: #eee;
-    color: #999;
+::ng-deep .cantidad-input .p-inputnumber-input {
+  width: 100%;
 }
 
 .checkbox-al-gusto {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: #555;
-    margin: -4px 0 10px 0;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #555;
+  margin: 0 0 14px 0;
+}
+
+.checkbox-al-gusto label {
+  cursor: pointer;
 }
 
 .nuevo-insumo-details {
-    margin-top: 6px;
-    font-size: 0.8rem;
-    color: #666;
+  margin: 6px 0 4px;
+  font-size: 0.82rem;
+  color: #666;
+}
+
+.nuevo-insumo-details summary {
+  cursor: pointer;
+  color: var(--nova-gold);
+  font-weight: 500;
 }
 
 .nuevo-insumo-form {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
-}
-/* ── Fix UX ingredientes ────────────────────────────────── */
-.btn-agregar {
-    background: #2e7d32;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-.btn-agregar:hover {
-    background: #1b5e20;
-}
-
-.contador-ingredientes {
-    font-size: 0.8rem;
-    font-weight: normal;
-    color: #2e7d32;
-    margin-left: 6px;
-}
-
-/* ── Pasos de preparación ────────────────────────────────── */
+/* Pasos de preparación */
 .lista-pasos {
-    list-style: none;
-    counter-reset: paso-counter;
-    padding: 0;
-    margin: 0 0 10px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  list-style: none;
+  counter-reset: paso-counter;
+  padding: 0;
+  margin: 0 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .lista-pasos li {
-    counter-increment: paso-counter;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 8px;
-    background: #f7f7f7;
-    padding: 8px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
+  counter-increment: paso-counter;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  background: #f7f7f7;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
 }
 
 .lista-pasos li::before {
-    content: counter(paso-counter) ".";
-    font-weight: bold;
-    color: #EDB833;
-    margin-right: 6px;
-    flex-shrink: 0;
+  content: counter(paso-counter) ".";
+  font-weight: bold;
+  color: var(--nova-gold);
+  margin-right: 6px;
+  flex-shrink: 0;
 }
 
 .paso-texto {
-    flex: 1;
-    white-space: pre-wrap;
+  flex: 1;
+  white-space: pre-wrap;
 }
 
 .paso-acciones {
-    display: flex;
-    gap: 4px;
-    flex-shrink: 0;
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
 }
 
 .selector-paso {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .selector-paso textarea {
-    resize: vertical;
-    font-family: inherit;
+  resize: vertical;
+  font-family: inherit;
 }

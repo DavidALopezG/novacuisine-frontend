@@ -1,4 +1,21 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* ==========================================================================
+   Integración Tailwind + PrimeNG
+   Orden de capas coordinado con app.config.ts (providePrimeNG -> cssLayer.order)
+   Esto evita que las utilidades de Tailwind o el CSS "legacy" de abajo
+   ganen por accidente a los estilos internos de los componentes PrimeNG.
+   ========================================================================== */
+@layer tailwind-base, primeng, tailwind-utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind utilities;
+}
+
 /* Paleta de Colores Nova Cuisine */
 :root {
     --nova-black: #1a1a1a;
@@ -6,7 +23,25 @@
     --nova-silver: #cccccc;
     --nova-white: #f6f5f7;
   }
-  
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+  }
+
+  /* ------------------------------------------------------------------------
+     Estilos "legacy" de la pantalla de Login/Registro.
+     Se dejan intencionalmente SCOPEADOS a .login-container para que no
+     compitan con los botones/inputs/tipografía de PrimeNG en el resto
+     de la app (dashboard, modales, tablas, etc).
+     ---------------------------------------------------------------------- */
   .login-container {
     display: flex;
     justify-content: center;
@@ -15,19 +50,15 @@
     background: var(--nova-white);
     font-family: 'Roboto', sans-serif;
   }
-  
-  * {
-    box-sizing: border-box;
-  }
-  
-  h1 {
+
+  .login-container h1 {
     font-weight: bold;
     margin: 0;
     color: var(--nova-black);
     font-family: 'Playfair Display', serif;
   }
-  
-  p {
+
+  .login-container p {
     font-size: 14px;
     font-weight: 100;
     line-height: 20px;
@@ -35,15 +66,15 @@
     margin: 20px 0 30px;
     color: var(--nova-black);
   }
-  
-  a {
+
+  .login-container a {
     color: var(--nova-gold);
     font-size: 14px;
     text-decoration: none;
     margin: 15px 0;
   }
-  
-  button {
+
+  .login-container button {
     border-radius: 20px;
     border: 1px solid var(--nova-gold);
     background-color: var(--nova-gold);
@@ -56,28 +87,28 @@
     transition: transform 80ms ease-in;
     cursor: pointer;
   }
-  
-  button:disabled {
+
+  .login-container button:disabled {
     background-color: var(--nova-silver);
     border-color: var(--nova-silver);
     cursor: not-allowed;
   }
-  
-  button:active:not(:disabled) {
+
+  .login-container button:active:not(:disabled) {
     transform: scale(0.95);
   }
-  
-  button:focus {
+
+  .login-container button:focus {
     outline: none;
   }
-  
-  button.ghost {
+
+  .login-container button.ghost {
     background-color: transparent;
     border-color: var(--nova-white);
     color: var(--nova-white);
   }
-  
-  form {
+
+  .login-container form {
     background-color: var(--nova-white);
     display: flex;
     align-items: center;
@@ -87,8 +118,9 @@
     height: 100%;
     text-align: center;
   }
-  
-  input, select {
+
+  .login-container input,
+  .login-container select {
     background-color: #eee;
     border: none;
     padding: 12px 15px;
@@ -263,11 +295,18 @@
     }
   }
 
-
   html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* Evita scrolls dobles */
+    overflow: hidden; /* Evita scrolls dobles: el scroll real vive en .content del dashboard */
+  }
+
+  /* ------------------------------------------------------------------------
+     Ajustes finos de PrimeNG para que combine con la identidad Nova Cuisine
+     (además del preset de color en theme/nova-preset.ts)
+     ---------------------------------------------------------------------- */
+  .p-component {
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .nova-toolbar .p-inputtext {
+    min-width: 220px;
   }

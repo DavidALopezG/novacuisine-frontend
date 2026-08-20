@@ -1,265 +1,344 @@
 <div class="recetario-container">
-  <div class="header-actions">
-    <div>
-      <h2>📖 Recetario Maestro</h2>
-      <p>Gestión global de fichas técnicas y procedimientos.</p>
-    </div>
-    <button class="btn-gold" (click)="abrirModalNuevaReceta()">+ Crear Nueva Receta</button>
-  </div>
 
-  <!-- Barra de Filtros -->
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-book nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Recetario Maestro</h2>
+          <p class="nova-toolbar-subtitle">Gestión global de fichas técnicas y procedimientos.</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Nueva Receta" icon="pi pi-plus" (onClick)="abrirModalNuevaReceta()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Barra de filtros -->
   <div class="filter-bar">
-    <input
-      type="text"
-      placeholder="Buscar receta por nombre..."
-      [(ngModel)]="searchTerm"
-      class="search-input"
-    >
-    <select [(ngModel)]="categoriaSeleccionada" class="category-select">
-      <option value="Todas">Todas</option>
-      <option *ngFor="let asig of asignaturas" [value]="asig.nombre_asignatura">
-        {{ asig.nombre_asignatura }}
-      </option>
-    </select>
+    <p-iconfield iconPosition="left" styleClass="tw-flex-1">
+      <p-inputicon class="pi pi-search"></p-inputicon>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar receta por nombre..."
+        [(ngModel)]="searchTerm"
+        class="tw-w-full"
+      >
+    </p-iconfield>
+
+    <p-select
+      [options]="categoriaOptions"
+      [(ngModel)]="categoriaSeleccionada"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="category-select"
+      appendTo="body">
+    </p-select>
   </div>
 
   <!-- Estados de carga / error -->
-  <p *ngIf="loading">Cargando recetas...</p>
-  <p *ngIf="error" class="no-results">{{ error }}</p>
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
   <!-- Tabla de Recetas -->
-  <div class="card table-card" *ngIf="!loading && !error">
-    <table class="master-table">
-      <thead>
-        <tr>
-          <th>Nombre de la Receta</th>
-          <th>Categoría</th>
-          <th>Estado</th>
-          <th>Tiempo Est.</th>
-          <th>Costo</th>
-          <th>Autor</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let receta of recetasFiltradas">
-          <td class="recipe-name">{{ receta.nombre }}</td>
-          <td><span class="badge-category">{{ receta.nombre_asignatura || 'Sin asignatura' }}</span></td>
-          <td>
-            <span [ngClass]="{
-              'diff-alta': receta.estado_version === 'BORRADOR',
-              'diff-baja': receta.estado_version === 'APROBADA'
-            }">{{ receta.estado_version || 'Sin versión' }}</span>
-          </td>
-          <td>{{ receta.tiempo_prep_min ? receta.tiempo_prep_min + ' min' : '-' }}</td>
-          <td>{{ receta.costo_unitario ? ('$' + receta.costo_unitario) : '-' }}</td>
-          <td>{{ receta.autor }}</td>
-          <td class="actions-cell">
-            <button class="btn-icon" (click)="editarReceta(receta)" title="Editar datos básicos">✏️</button>
-            <button class="btn-icon" (click)="abrirModalIngredientes(receta)" title="Gestionar ingredientes (nueva versión)">🧂</button>
-            <button
-              class="btn-icon"
-              (click)="aprobarVersionReceta(receta)"
-              *ngIf="receta.estado_version === 'BORRADOR'"
-              title="Aprobar versión">✅</button>
-            <button class="btn-icon" (click)="abrirModalAsignar(receta)" title="Asignar a estudiante">👩‍🎓</button>
-            <button class="btn-icon delete" (click)="eliminarReceta(receta)" title="Eliminar">🗑️</button>
-          </td>
-        </tr>
-        <tr *ngIf="recetasFiltradas.length === 0">
-          <td colspan="7" class="no-results">No se encontraron recetas con esos criterios.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="recetasFiltradas"
+    [paginator]="recetasFiltradas.length > 10"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    styleClass="p-datatable-sm nova-table"
+    responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Nombre de la Receta</th>
+        <th>Categoría</th>
+        <th>Estado</th>
+        <th>Tiempo Est.</th>
+        <th>Costo</th>
+        <th>Autor</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-receta>
+      <tr>
+        <td class="recipe-name">{{ receta.nombre }}</td>
+        <td><p-tag severity="info" [value]="receta.nombre_asignatura || 'Sin asignatura'"></p-tag></td>
+        <td><p-tag [severity]="estadoSeverity(receta.estado_version)" [value]="receta.estado_version || 'Sin versión'"></p-tag></td>
+        <td>{{ receta.tiempo_prep_min ? receta.tiempo_prep_min + ' min' : '-' }}</td>
+        <td>{{ receta.costo_unitario ? ('$' + receta.costo_unitario) : '-' }}</td>
+        <td>{{ receta.autor }}</td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-rounded"
+            pTooltip="Editar datos básicos" tooltipPosition="top" (click)="editarReceta(receta)"></button>
+          <button pButton type="button" icon="pi pi-sliders-h" class="p-button-text p-button-rounded"
+            pTooltip="Gestionar ingredientes (nueva versión)" tooltipPosition="top" (click)="abrirModalIngredientes(receta)"></button>
+          <button *ngIf="receta.estado_version === 'BORRADOR'" pButton type="button" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success"
+            pTooltip="Aprobar versión" tooltipPosition="top" (click)="aprobarVersionReceta(receta)"></button>
+          <button pButton type="button" icon="pi pi-user-plus" class="p-button-text p-button-rounded"
+            pTooltip="Asignar a estudiante" tooltipPosition="top" (click)="abrirModalAsignar(receta)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
+            pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarReceta(receta)"></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          No se encontraron recetas con esos criterios.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 
   <!-- ============================================================
        MODAL 1: Crear / Editar receta
        (al crear, incluye sección de ingredientes)
        ============================================================ -->
-  <div class="modal-overlay" *ngIf="mostrarModalReceta">
-    <div class="modal-box">
-      <h3>{{ modoEdicion ? 'Editar Receta' : 'Nueva Receta' }}</h3>
+  <p-dialog
+    [(visible)]="mostrarModalReceta"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="modoEdicion ? 'Editar Receta' : 'Nueva Receta'"
+    (onHide)="cerrarModal()">
 
-      <label>Nombre</label>
-      <input type="text" [(ngModel)]="formReceta.nombre" class="search-input" placeholder="Nombre de la receta">
-
-      <label>Porciones</label>
-      <input type="number" [(ngModel)]="formReceta.porciones" class="search-input" min="1">
-
-      <label>Tiempo de preparación (min)</label>
-      <input type="number" [(ngModel)]="formReceta.tiempo_prep_min" class="search-input" min="0">
-
-      <label>Asignatura</label>
-      <select [(ngModel)]="formReceta.asignatura_id" class="category-select">
-        <option [ngValue]="null">Sin asignatura</option>
-        <option *ngFor="let asig of asignaturas" [ngValue]="asig.asignatura_id">
-          {{ asig.nombre_asignatura }}
-        </option>
-      </select>
-
-      <!-- Sección de ingredientes: solo al crear una receta nueva -->
-      <div class="ingredientes-box" *ngIf="!modoEdicion">
-        <h4>🧂 Ingredientes de la receta <span class="contador-ingredientes" *ngIf="ingredientesNuevaReceta.length > 0">({{ ingredientesNuevaReceta.length }} agregado(s))</span></h4>
-
-        <ul class="lista-ingredientes" *ngIf="ingredientesNuevaReceta.length > 0">
-          <li *ngFor="let ing of ingredientesNuevaReceta; let i = index">
-            <ng-container *ngIf="ing.cantidad > 0; else alGustoNueva">{{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}</ng-container>
-            <ng-template #alGustoNueva>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
-            <button class="btn-quitar" (click)="quitarIngrediente('nueva', i)">✕</button>
-          </li>
-        </ul>
-        <p *ngIf="ingredientesNuevaReceta.length === 0" class="hint-text">Aún no has agregado ingredientes.</p>
-
-        <div class="selector-ingrediente">
-          <select [(ngModel)]="selectorInsumoId" class="category-select">
-            <option [ngValue]="null">Selecciona un insumo...</option>
-            <option *ngFor="let ins of catalogoInsumos" [ngValue]="ins.insumo_id">
-              {{ ins.nombre_insumo }} ({{ ins.unidad_medida }})
-            </option>
-          </select>
-          <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad" [disabled]="selectorAlGusto">
-          <button class="btn-agregar" (click)="agregarIngrediente('nueva')" title="Agregar ingrediente a la lista">✚ Agregar</button>
-        </div>
-        <label class="checkbox-al-gusto">
-          <input type="checkbox" [(ngModel)]="selectorAlGusto">
-          Cantidad al gusto / c/n (ej. canela, aceite para freír)
-        </label>
-
-        <details class="nuevo-insumo-details">
-          <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
-          <div class="nuevo-insumo-form">
-            <input type="text" [(ngModel)]="nuevoInsumoNombre" placeholder="Nombre del insumo" class="search-input">
-            <input type="number" [(ngModel)]="nuevoInsumoCosto" placeholder="Costo unitario" min="0" step="0.01" class="search-input">
-            <input type="text" [(ngModel)]="nuevoInsumoUnidad" placeholder="Unidad (g, ml, unidad...)" class="search-input">
-            <button class="btn-icon" (click)="crearInsumoRapido('nueva')">Crear insumo</button>
-          </div>
-        </details>
-
-        <h4>📋 Pasos de preparación <span class="contador-ingredientes" *ngIf="pasosNuevaReceta.length > 0">({{ pasosNuevaReceta.length }} paso(s))</span></h4>
-
-        <ol class="lista-pasos" *ngIf="pasosNuevaReceta.length > 0">
-          <li *ngFor="let paso of pasosNuevaReceta; let i = index">
-            <span class="paso-texto">{{ paso }}</span>
-            <span class="paso-acciones">
-              <button class="btn-icon" (click)="moverPaso('nueva', i, -1)" [disabled]="i === 0" title="Subir">↑</button>
-              <button class="btn-icon" (click)="moverPaso('nueva', i, 1)" [disabled]="i === pasosNuevaReceta.length - 1" title="Bajar">↓</button>
-              <button class="btn-quitar" (click)="quitarPaso('nueva', i)">✕</button>
-            </span>
-          </li>
-        </ol>
-        <p *ngIf="pasosNuevaReceta.length === 0" class="hint-text">Aún no has agregado pasos de preparación.</p>
-
-        <div class="selector-paso">
-          <textarea [(ngModel)]="nuevoPasoTextoNueva" class="search-input" rows="2"
-            placeholder="Describe el siguiente paso (ej. Cernir la harina junto con la sal y el polvo de hornear)."></textarea>
-          <button class="btn-agregar" (click)="agregarPaso('nueva')" title="Agregar paso a la lista">✚ Agregar paso</button>
-        </div>
+    <div class="form-grid">
+      <div class="form-field tw-col-span-2">
+        <label>Nombre</label>
+        <input type="text" pInputText [(ngModel)]="formReceta.nombre" placeholder="Nombre de la receta" class="tw-w-full">
       </div>
 
-      <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn-gold" (click)="guardarReceta()">Guardar</button>
+      <div class="form-field">
+        <label>Porciones</label>
+        <p-inputnumber [(ngModel)]="formReceta.porciones" [min]="1" styleClass="tw-w-full" inputStyleClass="tw-w-full"></p-inputnumber>
+      </div>
+
+      <div class="form-field">
+        <label>Tiempo de preparación (min)</label>
+        <p-inputnumber [(ngModel)]="formReceta.tiempo_prep_min" [min]="0" styleClass="tw-w-full" inputStyleClass="tw-w-full"></p-inputnumber>
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Asignatura</label>
+        <p-select
+          [options]="asignaturaOptions"
+          [(ngModel)]="formReceta.asignatura_id"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="tw-w-full"
+          appendTo="body">
+        </p-select>
       </div>
     </div>
-  </div>
+
+    <!-- Sección de ingredientes: solo al crear una receta nueva -->
+    <ng-container *ngIf="!modoEdicion">
+      <p-divider></p-divider>
+
+      <h4 class="section-title">
+        <i class="pi pi-shopping-bag"></i> Ingredientes de la receta
+        <span class="contador-chip" *ngIf="ingredientesNuevaReceta.length > 0">{{ ingredientesNuevaReceta.length }} agregado(s)</span>
+      </h4>
+
+      <ul class="lista-ingredientes" *ngIf="ingredientesNuevaReceta.length > 0">
+        <li *ngFor="let ing of ingredientesNuevaReceta; let i = index">
+          <span>
+            <ng-container *ngIf="ing.cantidad > 0; else alGustoNueva">{{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}</ng-container>
+            <ng-template #alGustoNueva>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
+          </span>
+          <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm p-button-danger" (click)="quitarIngrediente('nueva', i)"></button>
+        </li>
+      </ul>
+      <p *ngIf="ingredientesNuevaReceta.length === 0" class="hint-text">Aún no has agregado ingredientes.</p>
+
+      <div class="selector-ingrediente">
+        <p-select
+          [options]="insumoOptions"
+          [(ngModel)]="selectorInsumoId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona un insumo..."
+          styleClass="tw-flex-1"
+          appendTo="body">
+        </p-select>
+        <p-inputnumber [(ngModel)]="selectorCantidad" [min]="0.01" [step]="0.01" [minFractionDigits]="0" [maxFractionDigits]="2"
+          placeholder="Cantidad" [disabled]="selectorAlGusto" styleClass="cantidad-input"></p-inputnumber>
+        <button pButton type="button" icon="pi pi-plus" label="Agregar" class="p-button-outlined" (click)="agregarIngrediente('nueva')"></button>
+      </div>
+      <div class="checkbox-al-gusto">
+        <p-checkbox [(ngModel)]="selectorAlGusto" [binary]="true" inputId="alGustoNueva"></p-checkbox>
+        <label for="alGustoNueva">Cantidad al gusto / c/n (ej. canela, aceite para freír)</label>
+      </div>
+
+      <details class="nuevo-insumo-details">
+        <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
+        <div class="nuevo-insumo-form">
+          <input type="text" pInputText [(ngModel)]="nuevoInsumoNombre" placeholder="Nombre del insumo" class="tw-w-full">
+          <p-inputnumber [(ngModel)]="nuevoInsumoCosto" placeholder="Costo unitario" [min]="0" [step]="0.01" styleClass="tw-w-full" inputStyleClass="tw-w-full"></p-inputnumber>
+          <input type="text" pInputText [(ngModel)]="nuevoInsumoUnidad" placeholder="Unidad (g, ml, unidad...)" class="tw-w-full">
+          <button pButton type="button" label="Crear insumo" icon="pi pi-plus-circle" class="p-button-outlined" (click)="crearInsumoRapido('nueva')"></button>
+        </div>
+      </details>
+
+      <p-divider></p-divider>
+
+      <h4 class="section-title">
+        <i class="pi pi-list-check"></i> Pasos de preparación
+        <span class="contador-chip" *ngIf="pasosNuevaReceta.length > 0">{{ pasosNuevaReceta.length }} paso(s)</span>
+      </h4>
+
+      <ol class="lista-pasos" *ngIf="pasosNuevaReceta.length > 0">
+        <li *ngFor="let paso of pasosNuevaReceta; let i = index">
+          <span class="paso-texto">{{ paso }}</span>
+          <span class="paso-acciones">
+            <button pButton type="button" icon="pi pi-arrow-up" class="p-button-text p-button-rounded p-button-sm" [disabled]="i === 0" pTooltip="Subir" (click)="moverPaso('nueva', i, -1)"></button>
+            <button pButton type="button" icon="pi pi-arrow-down" class="p-button-text p-button-rounded p-button-sm" [disabled]="i === pasosNuevaReceta.length - 1" pTooltip="Bajar" (click)="moverPaso('nueva', i, 1)"></button>
+            <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm p-button-danger" (click)="quitarPaso('nueva', i)"></button>
+          </span>
+        </li>
+      </ol>
+      <p *ngIf="pasosNuevaReceta.length === 0" class="hint-text">Aún no has agregado pasos de preparación.</p>
+
+      <div class="selector-paso">
+        <textarea pTextarea [(ngModel)]="nuevoPasoTextoNueva" rows="2" class="tw-w-full"
+          placeholder="Describe el siguiente paso (ej. Cernir la harina junto con la sal y el polvo de hornear)."></textarea>
+        <button pButton type="button" icon="pi pi-plus" label="Agregar paso" class="p-button-outlined" (click)="agregarPaso('nueva')"></button>
+      </div>
+    </ng-container>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Guardar" icon="pi pi-check" (click)="guardarReceta()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- ============================================================
        MODAL 2: Gestionar ingredientes de una receta existente
        (crea una nueva versión: 1.0 -> 1.1)
        ============================================================ -->
-  <div class="modal-overlay" *ngIf="mostrarModalIngredientes">
-    <div class="modal-box">
-      <h3>🧂 Ingredientes — {{ recetaIngredientesNombre }}</h3>
-      <p class="hint-text">
-        Versión actual: {{ numeroVersionActual || 'N/A' }}. Guardar creará la versión
-        {{ numeroVersionActual ? (numeroVersionActual + ' → siguiente') : '1.0' }}, en estado BORRADOR hasta que la apruebes.
-      </p>
+  <p-dialog
+    [(visible)]="mostrarModalIngredientes"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="'Ingredientes — ' + recetaIngredientesNombre"
+    (onHide)="cerrarModalIngredientes()">
 
-      <ul class="lista-ingredientes" *ngIf="ingredientesVersion.length > 0">
-        <li *ngFor="let ing of ingredientesVersion; let i = index">
+    <p class="hint-text">
+      Versión actual: {{ numeroVersionActual || 'N/A' }}. Guardar creará la versión
+      {{ numeroVersionActual ? (numeroVersionActual + ' → siguiente') : '1.0' }}, en estado BORRADOR hasta que la apruebes.
+    </p>
+
+    <ul class="lista-ingredientes" *ngIf="ingredientesVersion.length > 0">
+      <li *ngFor="let ing of ingredientesVersion; let i = index">
+        <span>
           <ng-container *ngIf="ing.cantidad > 0; else alGustoVersion">{{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}</ng-container>
           <ng-template #alGustoVersion>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
-          <button class="btn-quitar" (click)="quitarIngrediente('version', i)">✕</button>
-        </li>
-      </ul>
-      <p *ngIf="ingredientesVersion.length === 0" class="hint-text">Esta receta aún no tiene ingredientes registrados.</p>
+        </span>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm p-button-danger" (click)="quitarIngrediente('version', i)"></button>
+      </li>
+    </ul>
+    <p *ngIf="ingredientesVersion.length === 0" class="hint-text">Esta receta aún no tiene ingredientes registrados.</p>
 
-      <div class="selector-ingrediente">
-        <select [(ngModel)]="selectorInsumoId" class="category-select">
-          <option [ngValue]="null">Selecciona un insumo...</option>
-          <option *ngFor="let ins of catalogoInsumos" [ngValue]="ins.insumo_id">
-            {{ ins.nombre_insumo }} ({{ ins.unidad_medida }})
-          </option>
-        </select>
-        <input type="number" [(ngModel)]="selectorCantidad" min="0.01" step="0.01" class="search-input cantidad-input" placeholder="Cantidad" [disabled]="selectorAlGusto">
-        <button class="btn-agregar" (click)="agregarIngrediente('version')" title="Agregar ingrediente a la lista">✚ Agregar</button>
-      </div>
-      <label class="checkbox-al-gusto">
-        <input type="checkbox" [(ngModel)]="selectorAlGusto">
-        Cantidad al gusto / c/n (ej. canela, aceite para freír)
-      </label>
-
-      <details class="nuevo-insumo-details">
-        <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
-        <div class="nuevo-insumo-form">
-          <input type="text" [(ngModel)]="nuevoInsumoNombre" placeholder="Nombre del insumo" class="search-input">
-          <input type="number" [(ngModel)]="nuevoInsumoCosto" placeholder="Costo unitario" min="0" step="0.01" class="search-input">
-          <input type="text" [(ngModel)]="nuevoInsumoUnidad" placeholder="Unidad (g, ml, unidad...)" class="search-input">
-          <button class="btn-icon" (click)="crearInsumoRapido('version')">Crear insumo</button>
-        </div>
-      </details>
-
-      <h4>📋 Pasos de preparación <span class="contador-ingredientes" *ngIf="pasosVersion.length > 0">({{ pasosVersion.length }} paso(s))</span></h4>
-
-      <ol class="lista-pasos" *ngIf="pasosVersion.length > 0">
-        <li *ngFor="let paso of pasosVersion; let i = index">
-          <span class="paso-texto">{{ paso }}</span>
-          <span class="paso-acciones">
-            <button class="btn-icon" (click)="moverPaso('version', i, -1)" [disabled]="i === 0" title="Subir">↑</button>
-            <button class="btn-icon" (click)="moverPaso('version', i, 1)" [disabled]="i === pasosVersion.length - 1" title="Bajar">↓</button>
-            <button class="btn-quitar" (click)="quitarPaso('version', i)">✕</button>
-          </span>
-        </li>
-      </ol>
-      <p *ngIf="pasosVersion.length === 0" class="hint-text">Esta receta aún no tiene pasos de preparación registrados.</p>
-
-      <div class="selector-paso">
-        <textarea [(ngModel)]="nuevoPasoTextoVersion" class="search-input" rows="2"
-          placeholder="Describe el siguiente paso..."></textarea>
-        <button class="btn-agregar" (click)="agregarPaso('version')" title="Agregar paso a la lista">✚ Agregar paso</button>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModalIngredientes()">Cancelar</button>
-        <button class="btn-gold" (click)="guardarNuevaVersion()" [disabled]="guardandoVersion">
-          {{ guardandoVersion ? 'Guardando...' : 'Guardar nueva versión' }}
-        </button>
-      </div>
+    <div class="selector-ingrediente">
+      <p-select
+        [options]="insumoOptions"
+        [(ngModel)]="selectorInsumoId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona un insumo..."
+        styleClass="tw-flex-1"
+        appendTo="body">
+      </p-select>
+      <p-inputnumber [(ngModel)]="selectorCantidad" [min]="0.01" [step]="0.01" [minFractionDigits]="0" [maxFractionDigits]="2"
+        placeholder="Cantidad" [disabled]="selectorAlGusto" styleClass="cantidad-input"></p-inputnumber>
+      <button pButton type="button" icon="pi pi-plus" label="Agregar" class="p-button-outlined" (click)="agregarIngrediente('version')"></button>
     </div>
-  </div>
+    <div class="checkbox-al-gusto">
+      <p-checkbox [(ngModel)]="selectorAlGusto" [binary]="true" inputId="alGustoVersion"></p-checkbox>
+      <label for="alGustoVersion">Cantidad al gusto / c/n (ej. canela, aceite para freír)</label>
+    </div>
+
+    <details class="nuevo-insumo-details">
+      <summary>¿El insumo no existe en el catálogo? Crear uno nuevo</summary>
+      <div class="nuevo-insumo-form">
+        <input type="text" pInputText [(ngModel)]="nuevoInsumoNombre" placeholder="Nombre del insumo" class="tw-w-full">
+        <p-inputnumber [(ngModel)]="nuevoInsumoCosto" placeholder="Costo unitario" [min]="0" [step]="0.01" styleClass="tw-w-full" inputStyleClass="tw-w-full"></p-inputnumber>
+        <input type="text" pInputText [(ngModel)]="nuevoInsumoUnidad" placeholder="Unidad (g, ml, unidad...)" class="tw-w-full">
+        <button pButton type="button" label="Crear insumo" icon="pi pi-plus-circle" class="p-button-outlined" (click)="crearInsumoRapido('version')"></button>
+      </div>
+    </details>
+
+    <p-divider></p-divider>
+
+    <h4 class="section-title">
+      <i class="pi pi-list-check"></i> Pasos de preparación
+      <span class="contador-chip" *ngIf="pasosVersion.length > 0">{{ pasosVersion.length }} paso(s)</span>
+    </h4>
+
+    <ol class="lista-pasos" *ngIf="pasosVersion.length > 0">
+      <li *ngFor="let paso of pasosVersion; let i = index">
+        <span class="paso-texto">{{ paso }}</span>
+        <span class="paso-acciones">
+          <button pButton type="button" icon="pi pi-arrow-up" class="p-button-text p-button-rounded p-button-sm" [disabled]="i === 0" pTooltip="Subir" (click)="moverPaso('version', i, -1)"></button>
+          <button pButton type="button" icon="pi pi-arrow-down" class="p-button-text p-button-rounded p-button-sm" [disabled]="i === pasosVersion.length - 1" pTooltip="Bajar" (click)="moverPaso('version', i, 1)"></button>
+          <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm p-button-danger" (click)="quitarPaso('version', i)"></button>
+        </span>
+      </li>
+    </ol>
+    <p *ngIf="pasosVersion.length === 0" class="hint-text">Esta receta aún no tiene pasos de preparación registrados.</p>
+
+    <div class="selector-paso">
+      <textarea pTextarea [(ngModel)]="nuevoPasoTextoVersion" rows="2" class="tw-w-full"
+        placeholder="Describe el siguiente paso..."></textarea>
+      <button pButton type="button" icon="pi pi-plus" label="Agregar paso" class="p-button-outlined" (click)="agregarPaso('version')"></button>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModalIngredientes()"></button>
+      <button pButton type="button" [label]="guardandoVersion ? 'Guardando...' : 'Guardar nueva versión'" icon="pi pi-check"
+        [disabled]="guardandoVersion" (click)="guardarNuevaVersion()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- ============================================================
        MODAL 3: Asignar receta a un estudiante
        ============================================================ -->
-  <div class="modal-overlay" *ngIf="mostrarModalAsignar">
-    <div class="modal-box">
-      <h3>👩‍🎓 Asignar "{{ recetaAsignarNombre }}"</h3>
+  <p-dialog
+    [(visible)]="mostrarModalAsignar"
+    [modal]="true"
+    [style]="{ width: '460px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="'Asignar \'' + recetaAsignarNombre + '\''"
+    (onHide)="cerrarModalAsignar()">
 
+    <div class="form-field">
       <label>Estudiante</label>
-      <select [(ngModel)]="estudianteSeleccionadoId" class="category-select">
-        <option [ngValue]="null">Selecciona un estudiante...</option>
-        <option *ngFor="let est of estudiantes" [ngValue]="est.estudiante_id">
-          {{ est.nombre }} {{ est.apellido }} ({{ est.codigo_estudiante }})
-        </option>
-      </select>
-
-      <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModalAsignar()">Cancelar</button>
-        <button class="btn-gold" (click)="confirmarAsignacion()" [disabled]="asignando">
-          {{ asignando ? 'Asignando...' : 'Asignar' }}
-        </button>
-      </div>
+      <p-select
+        [options]="estudianteOptions"
+        [(ngModel)]="estudianteSeleccionadoId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona un estudiante..."
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
     </div>
-  </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModalAsignar()"></button>
+      <button pButton type="button" [label]="asignando ? 'Asignando...' : 'Asignar'" icon="pi pi-check"
+        [disabled]="asignando" (click)="confirmarAsignacion()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '420px' }" [closable]="false"></p-confirmDialog>
 </div>

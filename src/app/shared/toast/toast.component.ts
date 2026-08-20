@@ -11,9 +11,11 @@ import { NotificacionService } from '../../services/notificacion/notificacion.se
     <div class="toast-contenedor">
       @for (t of notif.toasts(); track t.id) {
         <div class="toast toast-{{ t.tipo }}">
-          <span class="toast-icono">{{ iconos[t.tipo] }}</span>
+          <i class="toast-icono pi" [ngClass]="iconos[t.tipo]"></i>
           <span class="toast-msg">{{ t.mensaje }}</span>
-          <button class="toast-cerrar" (click)="notif.cerrar(t.id)">✕</button>
+          <button class="toast-cerrar" (click)="notif.cerrar(t.id)" aria-label="Cerrar">
+            <i class="pi pi-times"></i>
+          </button>
         </div>
       }
     </div>
@@ -56,7 +58,7 @@ import { NotificacionService } from '../../services/notificacion/notificacion.se
       border: none;
       color: rgba(255,255,255,0.8);
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.85rem;
       padding: 0 4px;
       flex-shrink: 0;
     }
@@ -66,6 +68,6 @@ import { NotificacionService } from '../../services/notificacion/notificacion.se
 export class ToastComponent {
   notif  = inject(NotificacionService);
   iconos: Record<string, string> = {
-    exito: '✅', error: '❌', advertencia: '⚠️', info: 'ℹ️'
+    exito: 'pi-check-circle', error: 'pi-times-circle', advertencia: 'pi-exclamation-triangle', info: 'pi-info-circle'
   };
 }

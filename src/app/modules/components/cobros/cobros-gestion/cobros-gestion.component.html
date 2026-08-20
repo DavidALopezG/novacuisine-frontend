@@ -1,137 +1,244 @@
-<div class="gestion-cobros">
-  <h2>💰 Gestión de Cobros y Obligaciones</h2>
+<div class="gestion-cobros-container">
 
-  <div *ngIf="deudaCritica" class="alert-critica">
-    ⚠️ ALERTA: Hay estudiantes con **3 o más** pagos vencidos.
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-wallet nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Gestión de Cobros y Obligaciones</h2>
+          <p class="nova-toolbar-subtitle">Administración de cuotas, registros de pago e importación masiva.</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="tw-flex tw-gap-2">
+        <p-button label="Nueva Obligación" icon="pi pi-plus" (onClick)="abrirModalNuevaObligacion()"></p-button>
+        <p-button label="Importar Excel" icon="pi pi-file-excel" severity="success" (onClick)="abrirModalImportar()"></p-button>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
+  <p-message 
+    *ngIf="deudaCritica" 
+    severity="warn" 
+    icon="pi pi-exclamation-triangle"
+    text="ALERTA: Existen estudiantes con 3 o más pagos vencidos acumulados." 
+    styleClass="tw-w-full tw-mb-4 animate-pulse">
+  </p-message>
+
+  <div class="filter-bar tw-flex tw-gap-3 tw-mb-4">
+    <p-iconfield iconPosition="left" styleClass="tw-flex-1">
+      <p-inputicon class="pi pi-search"></p-inputicon>
+      <input 
+        type="text" 
+        pInputText 
+        placeholder="Buscar por estudiante o código..." 
+        [(ngModel)]="filtroTexto" 
+        class="tw-w-full"
+      />
+    </p-iconfield>
+
+    <p-select 
+      [options]="estadoOptions" 
+      [(ngModel)]="filtroEstado" 
+      optionLabel="label" 
+      optionValue="value" 
+      styleClass="tw-w-60" 
+      appendTo="body">
+    </p-select>
   </div>
-
-  <button class="btn-create" (click)="abrirModalNuevaObligacion()">+ Crear Nueva Obligación</button>
-  <button class="btn-create" (click)="abrirModalImportar()">📥 Importar desde Excel</button>
-
-  <hr>
-
-  <!-- Filtros de búsqueda -->
-  <div class="filtros-cobros">
-    <input type="text" [(ngModel)]="filtroTexto" placeholder="Buscar por nombre o código..." class="filtro-input">
-    <select [(ngModel)]="filtroEstado" class="filtro-select">
-      <option value="">Todos los estados</option>
-      <option value="PENDIENTE">Pendiente</option>
-      <option value="PARCIAL">Parcial</option>
-      <option value="PAGADO">Pagado</option>
-      <option value="VENCIDO">Vencido</option>
-    </select>
-  </div>
-
-
 
   <app-spinner [visible]="loading"></app-spinner>
-    <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p-message *ngIf="error" severity="error" icon="pi pi-times-circle" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
+  <p-table 
+    *ngIf="!loading && !error" 
+    [value]="obligacionesFiltradas" 
+    [paginator]="obligacionesFiltradas.length > 10" 
+    [rows]="10" 
+    [rowsPerPageOptions]="[10, 20, 50]" 
+    styleClass="p-datatable-sm nova-table" 
+    responsiveLayout="scroll">
 
-  <div *ngIf="!loading && !error && obligaciones.length > 0" class="tabla-container">
-    <table>
-      <thead>
-        <tr>
-          <th>ID Obligación</th>
-          <th>Estudiante</th>
-          <th>Vencimiento</th>
-          <th>Total</th>
-          <th>Pagado</th>
-          <th>Pendiente</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let o of obligacionesFiltradas" [class.vencida]="esVencida(o)" [class.pagado]="o.estado === 'PAGADO'">
-          <td>{{ o.obligacion_id }}</td>
-          <td>{{ o.nombre ? (o.nombre + " " + o.apellido) : o.estudiante_id }}<br><small style="color:#999">{{ o.codigo_estudiante }}</small></td>
-          <td>{{ o.fecha_vencimiento | date: 'mediumDate' }}</td>
-          <td>{{ o.monto_total | currency: 'USD' }}</td>
-          <td>{{ o.monto_pagado | currency: 'USD' }}</td>
-          <td>{{ o.monto_total - o.monto_pagado | currency: 'USD' }}</td>
-          <td><span [class]="'estado-' + o.estado.toLowerCase()">{{ o.estado }}</span></td>
-          <td>
-            <button (click)="abrirModalPago(o)" [disabled]="o.estado === 'PAGADO'">Registrar Pago</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <ng-template pTemplate="header">
+      <tr>
+        <th>ID</th>
+        <th>Estudiante</th>
+        <th>Vencimiento</th>
+        <th>Total</th>
+        <th>Pagado</th>
+        <th>Pendiente</th>
+        <th>Estado</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
 
-  <div *ngIf="!loading && !error && obligacionesFiltradas.length === 0" class="no-data-message">
-    No hay obligaciones de cobro registradas.
-  </div>
-</div>
+    <ng-template pTemplate="body" let-o>
+      <tr>
+        <td><strong>#{{ o.obligacion_id }}</strong></td>
+        <td>
+          <div class="tw-flex tw-flex-col">
+            <span class="tw-font-semibold tw-text-gray-800">{{ o.apellido }} {{ o.nombre }}</span>
+            <span class="tw-text-xs tw-text-gray-500">{{ o.codigo_estudiante || 'Sin código' }}</span>
+          </div>
+        </td>
+        <td>{{ o.fecha_vencimiento | date:'dd/MM/yyyy' }}</td>
+        <td>${{ o.monto_total | number:'1.2-2' }}</td>
+        <td class="tw-text-green-600">${{ o.monto_pagado | number:'1.2-2' }}</td>
+        <td class="tw-text-red-600 tw-font-semibold">${{ (o.monto_total - o.monto_pagado) | number:'1.2-2' }}</td>
+        <td>
+          <p-tag 
+            [severity]="estadoSeverity(o.estado, o)" 
+            [value]="esVencida(o) ? 'VENCIDO' : (o.estado | uppercase)">
+          </p-tag>
+        </td>
+        <td class="tw-text-right">
+          <button 
+            *ngIf="o.estado !== 'PAGADO'" 
+            pButton 
+            type="button" 
+            icon="pi pi-dollar" 
+            class="p-button-text p-button-rounded p-button-success" 
+            pTooltip="Registrar Pago" 
+            tooltipPosition="top" 
+            (click)="abrirModalPago(o)">
+          </button>
+        </td>
+      </tr>
+    </ng-template>
 
-<!-- 🔹 Modal Registrar Pago -->
-<div class="modal" *ngIf="mostrarModalPago">
-  <div class="modal-content">
-    <h3>Registrar Pago</h3>
-    <p><strong>Obligación:</strong> #{{ obligacionSeleccionada?.obligacion_id }}</p>
-    <p>
-      <strong>Pendiente:</strong>
-      ${{ (obligacionSeleccionada?.monto_total || 0) - (obligacionSeleccionada?.monto_pagado || 0) }}
-    </p>  
-    <label>Monto del pago:</label>
-    <input type="number" [(ngModel)]="montoPago" min="1" step="0.01" />
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="8" class="tw-text-center tw-py-8 tw-text-gray-400">
+          <i class="pi pi-inbox tw-text-2xl tw-block tw-mb-2"></i>
+          No se encontraron obligaciones de cobro registradas.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 
-    <div class="modal-actions">
-      <button (click)="confirmarPago()">💾 Registrar</button>
-      <button (click)="cerrarModal()">❌ Cancelar</button>
+  <p-dialog 
+    [(visible)]="mostrarModalPago" 
+    [modal]="true" 
+    [style]="{ width: '400px' }" 
+    header="Registrar Pago de Cuota" 
+    (onHide)="cerrarModal()">
+
+    <div *ngIf="obligacionSeleccionada" class="tw-flex tw-flex-col tw-gap-4 tw-mt-2">
+      <div class="tw-bg-gray-50 tw-p-3 tw-rounded-lg">
+        <p class="tw-text-sm tw-text-gray-600">Estudiante: <strong>{{ obligacionSeleccionada.nombre }} {{ obligacionSeleccionada.apellido }}</strong></p>
+        <p class="tw-text-sm tw-text-gray-600">Monto Pendiente: <strong class="tw-text-red-600">${{ (obligacionSeleccionada.monto_total - obligacionSeleccionada.monto_pagado) | number:'1.2-2' }}</strong></p>
+      </div>
+
+      <div class="form-field tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-font-medium tw-text-sm">Monto a Pagar ($)</label>
+        <p-inputNumber 
+          [(ngModel)]="montoPago" 
+          mode="decimal" 
+          [minFractionDigits]="2" 
+          [maxFractionDigits]="2" 
+          [min]="0.01" 
+          [max]="obligacionSeleccionada.monto_total - obligacionSeleccionada.monto_pagado" 
+          styleClass="tw-w-full">
+        </p-inputNumber>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- 🔹 Modal Crear Nueva Obligación -->
-<div class="modal" *ngIf="mostrarModalObligacion">
-  <div class="modal-content">
-    <h3>Crear Nueva Obligación</h3>
-    <label>Estudiante</label>
-    <select [(ngModel)]="nuevaObligacion.estudiante_id" class="form-control">
-      <option [ngValue]="null" disabled>Selecciona un estudiante...</option>
-      <option *ngFor="let est of estudiantes" [ngValue]="est.estudiante_id">
-        {{ est.nombre }} {{ est.apellido }} — {{ est.codigo_estudiante }}
-      </option>
-    </select>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Confirmar Pago" icon="pi pi-check" (click)="confirmarPago()"></button>
+    </ng-template>
+  </p-dialog>
 
-    <label>Monto Total (USD):</label>
-    <input type="number" [(ngModel)]="nuevaObligacion.monto_total" step="0.01" />
+  <p-dialog 
+    [(visible)]="mostrarModalObligacion" 
+    [modal]="true" 
+    [style]="{ width: '450px' }" 
+    header="Crear Nueva Obligación" 
+    (onHide)="cerrarModal()">
 
-    <label>Fecha de Vencimiento:</label>
-    <input type="date" [(ngModel)]="nuevaObligacion.fecha_vencimiento" />
+    <div class="tw-flex tw-flex-col tw-gap-4 tw-mt-2">
+      <div class="form-field tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-font-medium tw-text-sm">Estudiante</label>
+        <p-select 
+          [options]="estudianteOptions" 
+          [(ngModel)]="nuevaObligacion.estudiante_id" 
+          optionLabel="label" 
+          optionValue="value" 
+          placeholder="Selecciona un estudiante..." 
+          styleClass="tw-w-full" 
+          appendTo="body">
+        </p-select>
+      </div>
 
-    <div class="modal-actions">
-      <button (click)="crearObligacion()">✅ Crear</button>
-      <button (click)="cerrarModal()">❌ Cancelar</button>
+      <div class="form-field tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-font-medium tw-text-sm">Monto Total ($)</label>
+        <p-inputNumber 
+          [(ngModel)]="nuevaObligacion.monto_total" 
+          mode="decimal" 
+          [minFractionDigits]="2" 
+          [maxFractionDigits]="2" 
+          [min]="0.01" 
+          styleClass="tw-w-full">
+        </p-inputNumber>
+      </div>
+
+      <div class="form-field tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-font-medium tw-text-sm">Fecha de Vencimiento</label>
+        <input type="date" pInputText [(ngModel)]="nuevaObligacion.fecha_vencimiento" class="tw-w-full" />
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- 🔹 Modal Importar desde Excel -->
-<div class="modal" *ngIf="mostrarModalImportar">
-  <div class="modal-content">
-    <h3>📥 Importar Obligaciones desde Excel</h3>
-    <p style="font-size: 0.85rem; color: #666;">
-      El archivo debe tener las columnas <strong>estudiante_id</strong> y <strong>monto_total</strong>
-      en la primera fila (encabezados). La columna <strong>fecha_vencimiento</strong> es opcional.
-    </p>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Crear Obligación" icon="pi pi-check" (click)="crearObligacion()"></button>
+    </ng-template>
+  </p-dialog>
 
-    <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" />
+  <p-dialog 
+    [(visible)]="mostrarModalImportar" 
+    [modal]="true" 
+    [style]="{ width: '500px' }" 
+    header="Importar Obligaciones desde Excel" 
+    (onHide)="cerrarModal()">
 
-    <div *ngIf="resumenImportacion" style="margin-top: 1rem;">
-      <p><strong>{{ resumenImportacion.message }}</strong></p>
-      <p *ngIf="resumenImportacion.errores.length > 0" style="color: #c62828;">
-        Filas con error:
-        <span *ngFor="let e of resumenImportacion.errores">[Fila {{ e.fila }}: {{ e.motivo }}] </span>
+    <div class="tw-flex tw-flex-col tw-gap-4 tw-mt-2">
+      <p class="tw-text-sm tw-text-gray-600">
+        El archivo debe contener las columnas <strong>estudiante_id</strong> y <strong>monto_total</strong> en la primera fila. 
+        <em>fecha_vencimiento</em> es opcional.
       </p>
+
+      <input type="file" accept=".xlsx,.xls" (change)="onArchivoSeleccionado($event)" class="tw-text-sm" />
+
+      <div *ngIf="resumenImportacion" class="tw-bg-gray-50 tw-p-3 tw-rounded-lg tw-text-xs">
+        <p class="tw-font-bold tw-text-green-700 tw-flex tw-items-center tw-gap-1">
+          <i class="pi pi-check-circle"></i> {{ resumenImportacion.message }}
+        </p>
+        <p class="tw-mt-1">Procesadas: {{ resumenImportacion.total_filas }} | Insertadas: {{ resumenImportacion.insertadas.length }}</p>
+        <div *ngIf="resumenImportacion.errores.length > 0" class="tw-text-red-600 tw-mt-2">
+          <p class="tw-font-semibold tw-flex tw-items-center tw-gap-1">
+            <i class="pi pi-exclamation-circle"></i> Filas con Error:
+          </p>
+          <ul class="tw-list-disc tw-pl-4">
+            <li *ngFor="let err of resumenImportacion.errores">
+              Fila {{ err.fila }}: {{ err.error }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
-    <div class="modal-actions">
-      <button (click)="importarExcel()" [disabled]="importando">
-        {{ importando ? 'Importando...' : '✅ Importar' }}
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="cerrarModal()"></button>
+      <button 
+        pButton 
+        type="button" 
+        [label]="importando ? 'Procesando...' : 'Cargar Archivo'" 
+        [icon]="importando ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" 
+        [disabled]="importando || !archivoSeleccionado" 
+        (click)="importarExcel()">
       </button>
-      <button (click)="cerrarModalImportar()">❌ Cerrar</button>
-    </div>
-  </div>
+    </ng-template>
+  </p-dialog>
+
 </div>

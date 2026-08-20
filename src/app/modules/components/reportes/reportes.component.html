@@ -1,82 +1,134 @@
 <div class="reportes-container">
-  <div class="header-reportes">
-    <h2>📊 Panel de Reportes Financieros</h2>
-    <button class="btn-print" (click)="imprimirReporte()">🖨️ Imprimir / PDF</button>
-  </div>
 
-  <hr>
+  <!-- Barra superior estandarizada (Toolbar de PrimeNG) -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-6">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-chart-bar nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Panel de Reportes Financieros</h2>
+          <p class="nova-toolbar-subtitle">Resumen de cobros, pendientes y efectividad de recaudación</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button
+        label="Imprimir / PDF"
+        icon="pi pi-print"
+        (onClick)="imprimirReporte()">
+      </p-button>
+    </ng-template>
+  </p-toolbar>
 
   <app-spinner [visible]="loading"></app-spinner>
-  <p *ngIf="error" style="color: #c62828; font-weight: 500;">{{ error }}</p>
+
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
   <ng-container *ngIf="!loading && !error && resumen">
+
     <!-- KPIs -->
-    <div class="dashboard-grid">
-      <div class="card kpi">
-        <span class="icon">💰</span>
-        <div class="data">
-          <h3>{{ resumen.total_recaudado | currency:'USD' }}</h3>
-          <p>Total Recaudado</p>
+    <div class="kpi-grid">
+      <p-card styleClass="kpi-card">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--gold">
+            <i class="pi pi-wallet"></i>
+          </div>
+          <div class="kpi-data">
+            <h3>{{ resumen.total_recaudado | currency:'USD' }}</h3>
+            <p>Total Recaudado</p>
+          </div>
         </div>
-      </div>
+      </p-card>
 
-      <div class="card kpi danger">
-        <span class="icon">⚠️</span>
-        <div class="data">
-          <h3>{{ resumen.total_pendiente | currency:'USD' }}</h3>
-          <p>Total por Cobrar</p>
+      <p-card styleClass="kpi-card kpi-card--danger">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--danger">
+            <i class="pi pi-exclamation-triangle"></i>
+          </div>
+          <div class="kpi-data">
+            <h3>{{ resumen.total_pendiente | currency:'USD' }}</h3>
+            <p>Total por Cobrar</p>
+          </div>
         </div>
-      </div>
+      </p-card>
 
-      <div class="card kpi warning">
-        <span class="icon">👥</span>
-        <div class="data">
-          <h3>{{ resumen.estudiantes_morosos }}</h3>
-          <p>Estudiantes Vencidos</p>
+      <p-card styleClass="kpi-card kpi-card--warning">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--warning">
+            <i class="pi pi-users"></i>
+          </div>
+          <div class="kpi-data">
+            <h3>{{ resumen.estudiantes_morosos }}</h3>
+            <p>Estudiantes Vencidos</p>
+          </div>
         </div>
-      </div>
+      </p-card>
 
-      <div class="card kpi success">
-        <span class="icon">📈</span>
-        <div class="data">
-          <h3>{{ resumen.efectividad_cobro }}%</h3>
-          <p>Efectividad de Cobro</p>
+      <p-card styleClass="kpi-card kpi-card--success">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--success">
+            <i class="pi pi-chart-line"></i>
+          </div>
+          <div class="kpi-data">
+            <h3>{{ resumen.efectividad_cobro }}%</h3>
+            <p>Efectividad de Cobro</p>
+          </div>
         </div>
-      </div>
+      </p-card>
     </div>
 
-    <!-- Tabla de pagos recientes -->
+    <!-- Tabla de pagos recientes + panel de exportación -->
     <div class="details-grid">
-      <div class="card table-card">
-        <h4>Últimos Pagos Registrados</h4>
-        <table *ngIf="pagosRecientes.length > 0">
-          <thead>
+
+      <p-card styleClass="table-card" header="Últimos Pagos Registrados">
+        <p-table
+          [value]="pagosRecientes"
+          [paginator]="pagosRecientes.length > 8"
+          [rows]="8"
+          [rowsPerPageOptions]="[8, 15, 30]"
+          styleClass="p-datatable-sm nova-table"
+          responsiveLayout="scroll">
+
+          <ng-template pTemplate="header">
             <tr>
               <th>Fecha</th>
               <th>Estudiante</th>
               <th>Código</th>
-              <th>Monto</th>
+              <th class="tw-text-right">Monto</th>
             </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let pago of pagosRecientes">
+          </ng-template>
+
+          <ng-template pTemplate="body" let-pago>
+            <tr>
               <td>{{ pago.fecha_pago | date:'shortDate' }}</td>
               <td>{{ pago.estudiante }}</td>
               <td>{{ pago.codigo_estudiante }}</td>
-              <td class="text-success">{{ pago.monto | currency:'USD' }}</td>
+              <td class="tw-text-right">
+                <p-tag severity="success" [value]="(pago.monto | currency:'USD')!"></p-tag>
+              </td>
             </tr>
-          </tbody>
-        </table>
-        <p *ngIf="pagosRecientes.length === 0" style="color:#999; padding: 1rem 0;">
-          Aún no se han registrado pagos.
-        </p>
-      </div>
+          </ng-template>
 
-      <div class="card action-card">
-        <h4>Exportar Reportes</h4>
-        <p>Selecciona el tipo de reporte a descargar:</p>
-        <button class="btn-export" (click)="imprimirReporte()">📄 Reporte Completo (PDF)</button>
-      </div>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="empty-state">
+                <i class="pi pi-inbox"></i>
+                Aún no se han registrado pagos.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+
+      <p-card styleClass="action-card" header="Exportar Reportes">
+        <p class="action-hint">Selecciona el tipo de reporte a descargar:</p>
+        <p-button
+          label="Reporte Completo (PDF)"
+          icon="pi pi-file-pdf"
+          styleClass="p-button-outlined tw-w-full"
+          (onClick)="imprimirReporte()">
+        </p-button>
+      </p-card>
     </div>
   </ng-container>
 </div>
