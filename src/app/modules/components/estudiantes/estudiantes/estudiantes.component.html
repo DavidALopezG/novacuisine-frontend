@@ -71,6 +71,9 @@
   </div>
 </div>
 
+<!-- ============================================================
+     MODAL: Expediente del estudiante (ya existía)
+     ============================================================ -->
 <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content shadow-lg border-0">
@@ -139,6 +142,66 @@
       
       <div class="modal-footer border-0 bg-light">
         <button type="button" class="btn btn-secondary px-4" (click)="cerrarModal()">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Registrar nuevo estudiante (FALTABA — este era el bug)
+     ============================================================ -->
+<div class="custom-modal-backdrop" *ngIf="mostrarModalNuevoEstudiante">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0">
+
+      <div class="modal-header bg-light">
+        <h5 class="modal-title d-flex align-items-center gap-2 fw-semibold">
+          <i class="bi bi-person-plus-fill text-primary"></i> Registrar Nuevo Estudiante
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label small text-muted">Código de estudiante *</label>
+          <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.codigo_estudiante"
+                 placeholder="Ej: EST-00012" name="codigo_estudiante">
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small text-muted">Nombre *</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.nombre"
+                   placeholder="Nombre" name="nombre">
+          </div>
+          <div class="col-6">
+            <label class="form-label small text-muted">Apellido</label>
+            <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.apellido"
+                   placeholder="Apellido" name="apellido">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small text-muted">Email</label>
+          <input type="email" class="form-control" [(ngModel)]="nuevoEstudiante.email"
+                 placeholder="correo@ejemplo.com" name="email">
+        </div>
+
+        <div class="mb-1">
+          <label class="form-label small text-muted">Titulación</label>
+          <select class="form-select" [(ngModel)]="nuevoEstudiante.titulacion_id" name="titulacion_id">
+            <option [ngValue]="null" disabled>Selecciona una titulación</option>
+            <option *ngFor="let t of titulaciones" [ngValue]="t.titulacion_id">{{ t.nombre_titulacion }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 bg-light">
+        <button type="button" class="btn btn-secondary px-4" (click)="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary px-4" (click)="crearEstudiante()">
+          <i class="bi bi-check-circle me-1"></i> Registrar
+        </button>
       </div>
 
     </div>

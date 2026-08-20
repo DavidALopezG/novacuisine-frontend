@@ -2,13 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TitulacionesService } from '../../../services/titulaciones/titulaciones.service';
-import { NotificacionService } from '../../../services/notificacion/notificacion.service';
-import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-titulaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpinnerComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './titulaciones.component.html',
   styleUrl: './titulaciones.component.css'
 })
@@ -22,8 +20,12 @@ export class TitulacionesComponent implements OnInit {
   modoEdicion = false;
   titulacionSeleccionadaId: number | null = null;
   nombreTitulacion = '';
+  tipoTitulacion: string = 'Titulación';
+  duracionMeses: number | null = null;
 
-  constructor(private titulacionesService: TitulacionesService, private notif: NotificacionService) { }
+  tiposDisponibles = ['Titulación', 'Certificación'];
+
+  constructor(private titulacionesService: TitulacionesService) { }
 
   ngOnInit(): void {
     this.cargarTitulaciones();
@@ -50,6 +52,8 @@ export class TitulacionesComponent implements OnInit {
     this.modoEdicion = false;
     this.titulacionSeleccionadaId = null;
     this.nombreTitulacion = '';
+    this.tipoTitulacion = 'Titulación';
+    this.duracionMeses = null;
     this.mostrarModal = true;
   }
 
@@ -57,6 +61,8 @@ export class TitulacionesComponent implements OnInit {
     this.modoEdicion = true;
     this.titulacionSeleccionadaId = titulacion.titulacion_id;
     this.nombreTitulacion = titulacion.nombre_titulacion;
+    this.tipoTitulacion = titulacion.tipo || 'Titulación';
+    this.duracionMeses = titulacion.duracion_meses;
     this.mostrarModal = true;
   }
 
@@ -66,11 +72,15 @@ export class TitulacionesComponent implements OnInit {
 
   guardarTitulacion(): void {
     if (!this.nombreTitulacion.trim()) {
-      this.notif.info('El nombre de la titulación es obligatorio.');
+      alert('El nombre de la titulación es obligatorio.');
       return;
     }
 
-    const payload = { nombre_titulacion: this.nombreTitulacion };
+    const payload = {
+      nombre_titulacion: this.nombreTitulacion,
+      tipo: this.tipoTitulacion,
+      duracion_meses: this.duracionMeses
+    };
 
     const accion = this.modoEdicion && this.titulacionSeleccionadaId
       ? this.titulacionesService.actualizarTitulacion(this.titulacionSeleccionadaId, payload)
@@ -78,11 +88,11 @@ export class TitulacionesComponent implements OnInit {
 
     accion.subscribe({
       next: () => {
-        this.notif.exito(this.modoEdicion ? 'Titulación actualizada con éxito.' : 'Titulación creada con éxito.');
+        alert(this.modoEdicion ? '✅ Titulación actualizada.' : '✅ Titulación creada.');
         this.cerrarModal();
         this.cargarTitulaciones();
       },
-      error: (err) => this.notif.error(err?.error?.error || 'No se pudo guardar la titulación.')
+      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo guardar la titulación.'))
     });
   }
 
@@ -91,10 +101,9 @@ export class TitulacionesComponent implements OnInit {
 
     this.titulacionesService.eliminarTitulacion(titulacion.titulacion_id).subscribe({
       next: () => {
-        this.notif.exito('Titulación eliminada correctamente.');
         this.cargarTitulaciones();
       },
-      error: (err) => this.notif.error(err?.error?.error || 'No se pudo eliminar la titulación.')
+      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo eliminar la titulación.'))
     });
   }
 }

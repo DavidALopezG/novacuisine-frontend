@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EstudiantesService } from './../../../../services/estudiantes/estudiantes.service';
 import { RecetasService } from './../../../../services/recetas/recetas.service';
+import { TitulacionesService } from './../../../../services/titulaciones/titulaciones.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
@@ -18,6 +19,7 @@ export class EstudiantesComponent implements OnInit {
   listaEstudiantes: any[] = [];
   recetasDelEstudiante: any[] = [];
   estudianteSeleccionado: any = null;
+  titulaciones: any[] = []; // ← catálogo para el <select> del modal de registro
   
   // UI State
   loading: boolean = false;
@@ -40,11 +42,13 @@ export class EstudiantesComponent implements OnInit {
   constructor(
     private estudiantesService: EstudiantesService,
     private recetasService: RecetasService,
+    private titulacionesService: TitulacionesService,
     private notif: NotificacionService
   ) {}
 
   ngOnInit(): void {
     this.cargarEstudiantes();
+    this.cargarTitulaciones();
   }
 
   // --- CARGA DE DATOS ---
@@ -62,6 +66,13 @@ export class EstudiantesComponent implements OnInit {
         this.error = 'No se pudo conectar con el servidor.';
         this.loading = false;
       }
+    });
+  }
+
+  cargarTitulaciones(): void {
+    this.titulacionesService.obtenerTitulaciones().subscribe({
+      next: (data) => (this.titulaciones = data),
+      error: (err) => console.error('Error al cargar titulaciones', err)
     });
   }
 

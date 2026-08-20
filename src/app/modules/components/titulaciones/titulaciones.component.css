@@ -80,6 +80,21 @@
     color: #999;
 }
 
+.badge-tipo {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    background: #fff3cd;
+    color: #b8860b;
+}
+
+.badge-tipo.badge-certificacion {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
 .modal-overlay {
     position: fixed;
     inset: 0;

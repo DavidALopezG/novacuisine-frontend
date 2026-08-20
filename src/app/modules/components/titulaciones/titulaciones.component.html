@@ -4,7 +4,7 @@
     <button class="btn-gold" (click)="abrirModalNueva()">+ Nueva Titulación</button>
   </div>
 
-  <app-spinner [visible]="loading"></app-spinner>
+  <p *ngIf="loading">Cargando titulaciones...</p>
   <p *ngIf="error" class="no-results">{{ error }}</p>
 
   <div class="card table-card" *ngIf="!loading && !error">
@@ -13,6 +13,8 @@
         <tr>
           <th>ID</th>
           <th>Nombre de la Titulación</th>
+          <th>Tipo</th>
+          <th>Duración</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -20,13 +22,19 @@
         <tr *ngFor="let t of titulaciones">
           <td>{{ t.titulacion_id }}</td>
           <td>{{ t.nombre_titulacion }}</td>
+          <td>
+            <span class="badge-tipo" [class.badge-certificacion]="t.tipo === 'Certificación'">
+              {{ t.tipo || '—' }}
+            </span>
+          </td>
+          <td>{{ t.duracion_meses ? t.duracion_meses + ' meses' : '—' }}</td>
           <td class="actions-cell">
             <button class="btn-icon" (click)="editarTitulacion(t)" title="Editar">✏️</button>
             <button class="btn-icon delete" (click)="eliminarTitulacion(t)" title="Eliminar">🗑️</button>
           </td>
         </tr>
         <tr *ngIf="titulaciones.length === 0">
-          <td colspan="3" class="no-results">No hay titulaciones registradas todavía.</td>
+          <td colspan="5" class="no-results">No hay titulaciones registradas todavía.</td>
         </tr>
       </tbody>
     </table>
@@ -38,6 +46,14 @@
 
       <label>Nombre</label>
       <input type="text" [(ngModel)]="nombreTitulacion" class="search-input" placeholder="Ej: Alta Pastelería">
+
+      <label>Tipo</label>
+      <select [(ngModel)]="tipoTitulacion" class="search-input">
+        <option *ngFor="let tipo of tiposDisponibles" [value]="tipo">{{ tipo }}</option>
+      </select>
+
+      <label>Duración (meses)</label>
+      <input type="number" [(ngModel)]="duracionMeses" min="1" class="search-input" placeholder="Ej: 12">
 
       <div class="modal-actions">
         <button class="btn-icon" style="background-color: black;" (click)="cerrarModal()">Cancelar</button>

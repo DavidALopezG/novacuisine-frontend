@@ -1,62 +1,81 @@
 <div class="grupos-container">
-  <div class="header-actions">
-    <h2>👥 Mis Grupos</h2>
+  <div class="header-section">
+    <h2 class="h3 m-0 d-flex align-items-center gap-2 text-dark fw-semibold">
+      <i class="bi bi-people-fill text-primary"></i> Mis Grupos Asignados
+    </h2>
+    <p *ngIf="!loading && !error">
+      Tienes <strong>{{ grupos.length }}</strong> grupo(s) activo(s) este ciclo
+      <span *ngIf="totalEstudiantes > 0"> · ~{{ totalEstudiantes }} estudiantes en total (estimado)</span>.
+    </p>
+    <button class="btn-crear-grupo" (click)="abrirModalNuevo()">➕ Crear nuevo grupo</button>
   </div>
 
-  <app-spinner [visible]="loading"></app-spinner>
-  <p *ngIf="error" class="no-results">{{ error }}</p>
-  <p *ngIf="!loading && !error && grupos.length === 0" class="no-results">
-    Aún no tienes grupos asignados. Pide al Administrador que asigne bloques de horario a tu nombre.
+  <p *ngIf="loading" class="hint-text">Cargando tus grupos...</p>
+  <p *ngIf="error" class="error-text">{{ error }}</p>
+
+  <p *ngIf="!loading && !error && grupos.length === 0" class="hint-text">
+    Aún no tienes grupos configurados. Usa "Crear nuevo grupo" para asignar tu primer bloque de clase.
   </p>
 
-  <div class="grupos-grid" *ngIf="!loading && !error && grupos.length > 0">
-    <div class="grupo-card" *ngFor="let g of grupos">
-      <div class="grupo-header">
-        <h3>{{ g.nombre_asignatura }}</h3>
-        <span class="badge-titulacion">{{ g.nombre_titulacion || 'Sin titulación' }}</span>
+  <div class="grupos-grid" *ngIf="!loading && !error">
+    <div class="grupo-card" *ngFor="let grupo of grupos">
+      <div class="card-header">
+        <span class="paralelo-badge">{{ grupo.dia_semana }}</span>
+        <span class="cocina-tag" *ngIf="grupo.aula">📍 {{ grupo.aula }}</span>
       </div>
-      <div class="grupo-info">
-        <p><strong>📅 Horario:</strong> {{ g.horario_resumen || 'Sin bloques registrados' }}</p>
-        <p><strong>👩‍🎓 Estudiantes:</strong> {{ g.total_estudiantes }}</p>
+
+      <div class="card-body">
+        <h3>{{ grupo.nombre_asignatura }}</h3>
+        <p class="horario"><i class="icon-clock"></i> {{ grupo.hora_inicio }} - {{ grupo.hora_fin }}</p>
+
+        <div class="stats">
+          <div class="stat-item">
+            <strong>{{ grupo.alumnos_estimados }}</strong>
+            <span>Estudiantes (est.)</span>
+          </div>
+        </div>
       </div>
-      <button class="btn-ver-estudiantes" (click)="verEstudiantes(g)">
-        Ver lista de estudiantes
-      </button>
+
+      <div class="card-footer">
+        <button class="btn-outline" (click)="abrirModalEditar(grupo)">⚙️ Configurar</button>
+        <button class="btn-outline btn-danger" (click)="eliminarGrupo(grupo)">🗑️ Eliminar</button>
+      </div>
     </div>
   </div>
 
-  <!-- Modal: Lista de estudiantes del grupo -->
-  <div class="modal-overlay" *ngIf="mostrarModalEstudiantes">
-    <div class="modal-box">
-      <h3>👩‍🎓 Estudiantes — {{ grupoSeleccionado?.nombre_asignatura }}</h3>
+  <!-- Modal crear/editar grupo -->
+  <div class="modal-overlay" *ngIf="mostrarModal" (click)="cerrarModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3>{{ editandoId ? 'Configurar grupo' : 'Crear nuevo grupo' }}</h3>
 
-      <app-spinner [visible]="cargandoEstudiantes" texto="Cargando estudiantes..."></app-spinner>
+      <label>Asignatura</label>
+      <select [(ngModel)]="formGrupo.asignatura_id" class="search-input">
+        <option [ngValue]="null" disabled>Selecciona una asignatura</option>
+        <option *ngFor="let a of asignaturas" [ngValue]="a.asignatura_id">{{ a.nombre_asignatura }}</option>
+      </select>
 
-      <table class="tabla-estudiantes" *ngIf="!cargandoEstudiantes && estudiantesGrupo.length > 0">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Recetas asignadas</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let est of estudiantesGrupo">
-            <td>{{ est.codigo_estudiante }}</td>
-            <td>{{ est.nombre }}</td>
-            <td>{{ est.apellido }}</td>
-            <td>{{ est.total_recetas_asignadas }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <label>Día</label>
+      <select [(ngModel)]="formGrupo.dia_semana" class="search-input">
+        <option *ngFor="let d of diasSemana" [value]="d">{{ d }}</option>
+      </select>
 
-      <p *ngIf="!cargandoEstudiantes && estudiantesGrupo.length === 0" class="no-results">
-        No hay estudiantes en esta titulación todavía.
-      </p>
+      <div class="fila-horas">
+        <div>
+          <label>Hora inicio</label>
+          <input type="time" [(ngModel)]="formGrupo.hora_inicio" class="search-input">
+        </div>
+        <div>
+          <label>Hora fin</label>
+          <input type="time" [(ngModel)]="formGrupo.hora_fin" class="search-input">
+        </div>
+      </div>
+
+      <label>Aula / Cocina (opcional)</label>
+      <input type="text" [(ngModel)]="formGrupo.aula" placeholder="Ej. Cocina Principal, Taller de Fríos" class="search-input">
 
       <div class="modal-actions">
-        <button class="btn-cerrar" (click)="cerrarModalEstudiantes()">Cerrar</button>
+        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-gold" (click)="guardarGrupo()">{{ editandoId ? 'Guardar cambios' : 'Crear grupo' }}</button>
       </div>
     </div>
   </div>
