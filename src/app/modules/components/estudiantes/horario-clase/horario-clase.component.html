@@ -1,47 +1,58 @@
 <div class="horario-container">
-    <div class="header-section">
-      <h2>📅 Mi Horario de Clases</h2>
-      <div class="info-badge">
-        <span>{{ tituloHorario }}</span>
+
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-calendar nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Mi Horario de Clases</h2>
+          <p-tag severity="secondary" [value]="tituloHorario" styleClass="tw-mt-1"></p-tag>
+        </div>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button *ngIf="!loading && !error && horarios.length > 0" label="Imprimir Horario" icon="pi pi-print"
+        styleClass="p-button-outlined" (onClick)="imprimirHorario()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
+
+  <p-card styleClass="calendar-card" *ngIf="!loading && !error && horarios.length > 0">
+    <div class="table-responsive">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th *ngFor="let dia of diasSemana">{{ dia }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let bloque of horarios">
+            <td class="time-col">{{ bloque.hora }}</td>
+            <td *ngFor="let dia of diasSemana">
+              <!-- Usamos el método auxiliar para renderizar el contenido -->
+              <div class="class-box" *ngIf="getClase(dia, bloque.clases) as clase">
+                <span class="materia">{{ clase.materia }}</span>
+                <span class="chef"><i class="pi pi-user"></i> {{ clase.chef }}</span>
+                <span class="aula"><i class="pi pi-map-marker"></i> {{ clase.aula }}</span>
+              </div>
+              <div class="empty-box" *ngIf="!getClase(dia, bloque.clases)">-</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </p-card>
 
-    <app-spinner [visible]="loading"></app-spinner>
-    <p *ngIf="error" class="no-results">{{ error }}</p>
-
-    <div class="card calendar-card" *ngIf="!loading && !error && horarios.length > 0">
-      <div class="table-responsive">
-        <table class="schedule-table">
-          <thead>
-            <tr>
-              <th>Hora</th>
-              <th *ngFor="let dia of diasSemana">{{ dia }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let bloque of horarios">
-              <td class="time-col">{{ bloque.hora }}</td>
-              <td *ngFor="let dia of diasSemana">
-                <!-- Usamos el método auxiliar para renderizar el contenido -->
-                <div class="class-box" *ngIf="getClase(dia, bloque.clases) as clase">
-                  <span class="materia">{{ clase.materia }}</span>
-                  <span class="chef">{{ clase.chef }}</span>
-                  <span class="aula">{{ clase.aula }}</span>
-                </div>
-                <div class="empty-box" *ngIf="!getClase(dia, bloque.clases)">-</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <p *ngIf="!loading && !error && horarios.length === 0" class="note">
-      Aún no se han configurado horarios para tu titulación. Consulta con tu coordinación académica.
-    </p>
-
-    <div class="footer-actions" *ngIf="!loading && !error && horarios.length > 0">
-      <button class="btn-outline" onclick="window.print()">🖨️ Imprimir Horario</button>
-      <p class="note">* Los horarios pueden estar sujetos a cambios por eventos especiales del Instituto.</p>
-    </div>
+  <div class="empty-state" *ngIf="!loading && !error && horarios.length === 0">
+    <i class="pi pi-inbox"></i>
+    Aún no se han configurado horarios para tu titulación. Consulta con tu coordinación académica.
   </div>
+
+  <p class="note" *ngIf="!loading && !error && horarios.length > 0">
+    * Los horarios pueden estar sujetos a cambios por eventos especiales del Instituto.
+  </p>
+</div>

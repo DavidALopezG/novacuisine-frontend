@@ -1,64 +1,106 @@
 <div class="titulaciones-container">
-  <div class="header-actions">
-    <h2>🎓 Titulaciones</h2>
-    <button class="btn-gold" (click)="abrirModalNueva()">+ Nueva Titulación</button>
-  </div>
 
-  <p *ngIf="loading">Cargando titulaciones...</p>
-  <p *ngIf="error" class="no-results">{{ error }}</p>
-
-  <div class="card table-card" *ngIf="!loading && !error">
-    <table class="master-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre de la Titulación</th>
-          <th>Tipo</th>
-          <th>Duración</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let t of titulaciones">
-          <td>{{ t.titulacion_id }}</td>
-          <td>{{ t.nombre_titulacion }}</td>
-          <td>
-            <span class="badge-tipo" [class.badge-certificacion]="t.tipo === 'Certificación'">
-              {{ t.tipo || '—' }}
-            </span>
-          </td>
-          <td>{{ t.duracion_meses ? t.duracion_meses + ' meses' : '—' }}</td>
-          <td class="actions-cell">
-            <button class="btn-icon" (click)="editarTitulacion(t)" title="Editar">✏️</button>
-            <button class="btn-icon delete" (click)="eliminarTitulacion(t)" title="Eliminar">🗑️</button>
-          </td>
-        </tr>
-        <tr *ngIf="titulaciones.length === 0">
-          <td colspan="5" class="no-results">No hay titulaciones registradas todavía.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="modal-overlay" *ngIf="mostrarModal">
-    <div class="modal-box">
-      <h3>{{ modoEdicion ? 'Editar Titulación' : 'Nueva Titulación' }}</h3>
-
-      <label>Nombre</label>
-      <input type="text" [(ngModel)]="nombreTitulacion" class="search-input" placeholder="Ej: Alta Pastelería">
-
-      <label>Tipo</label>
-      <select [(ngModel)]="tipoTitulacion" class="search-input">
-        <option *ngFor="let tipo of tiposDisponibles" [value]="tipo">{{ tipo }}</option>
-      </select>
-
-      <label>Duración (meses)</label>
-      <input type="number" [(ngModel)]="duracionMeses" min="1" class="search-input" placeholder="Ej: 12">
-
-      <div class="modal-actions">
-        <button class="btn-icon" style="background-color: black;" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn-gold" (click)="guardarTitulacion()">Guardar</button>
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-verified nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Titulaciones</h2>
+          <p class="nova-toolbar-subtitle">Catálogo de titulaciones y certificaciones ofertadas.</p>
+        </div>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Nueva Titulación" icon="pi pi-plus" (onClick)="abrirModalNueva()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
+
+  <!-- Tabla de titulaciones -->
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="titulaciones"
+    [paginator]="titulaciones.length > 10"
+    [rows]="10"
+    styleClass="p-datatable-sm nova-table"
+    responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>ID</th>
+        <th>Nombre de la Titulación</th>
+        <th>Tipo</th>
+        <th>Duración</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-t>
+      <tr>
+        <td>{{ t.titulacion_id }}</td>
+        <td class="titulacion-name">{{ t.nombre_titulacion }}</td>
+        <td><p-tag [severity]="t.tipo === 'Certificación' ? 'info' : 'success'" [value]="t.tipo || 'Sin definir'"></p-tag></td>
+        <td>{{ t.duracion_meses ? t.duracion_meses + ' meses' : '—' }}</td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-rounded"
+            pTooltip="Editar" tooltipPosition="top" (click)="editarTitulacion(t)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
+            pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarTitulacion(t)"></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          No hay titulaciones registradas todavía.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- ============================================================
+       MODAL: Crear / Editar titulación
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModal"
+    [modal]="true"
+    [style]="{ width: '440px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="modoEdicion ? 'Editar Titulación' : 'Nueva Titulación'"
+    (onHide)="cerrarModal()">
+
+    <div class="form-field">
+      <label>Nombre</label>
+      <input type="text" pInputText [(ngModel)]="nombreTitulacion" placeholder="Ej: Alta Pastelería" class="tw-w-full">
     </div>
-  </div>
+
+    <div class="form-field">
+      <label>Tipo</label>
+      <p-select
+        [options]="tipoOptions"
+        [(ngModel)]="tipoTitulacion"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
+
+    <div class="form-field">
+      <label>Duración (meses)</label>
+      <p-inputnumber [(ngModel)]="duracionMeses" [min]="1" placeholder="Ej: 12" styleClass="tw-w-full" inputStyleClass="tw-w-full"></p-inputnumber>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Guardar" icon="pi pi-check" (click)="guardarTitulacion()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '420px' }" [closable]="false"></p-confirmDialog>
 </div>

@@ -3,10 +3,29 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { AvatarModule } from 'primeng/avatar';
+import { ToolbarModule } from 'primeng/toolbar';
+import { MessageModule } from 'primeng/message';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { DividerModule } from 'primeng/divider';
+
 @Component({
   selector: 'app-perfil-estd',
   standalone: true,
-  imports: [CommonModule, DatePipe, SpinnerComponent],
+  imports: [
+    CommonModule,
+    DatePipe,
+    SpinnerComponent,
+    CardModule,
+    TagModule,
+    AvatarModule,
+    ToolbarModule,
+    MessageModule,
+    ProgressBarModule,
+    DividerModule,
+  ],
   templateUrl: './perfil-estd.component.html',
   styleUrl: './perfil-estd.component.css'
 })

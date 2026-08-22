@@ -1,82 +1,165 @@
 <div class="grupos-container">
-  <div class="header-section">
-    <h2 class="h3 m-0 d-flex align-items-center gap-2 text-dark fw-semibold">
-      <i class="bi bi-people-fill text-primary"></i> Mis Grupos Asignados
-    </h2>
-    <p *ngIf="!loading && !error">
-      Tienes <strong>{{ grupos.length }}</strong> grupo(s) activo(s) este ciclo
-      <span *ngIf="totalEstudiantes > 0"> · ~{{ totalEstudiantes }} estudiantes en total (estimado)</span>.
-    </p>
-    <button class="btn-crear-grupo" (click)="abrirModalNuevo()">➕ Crear nuevo grupo</button>
+
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-users nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Mis Grupos Asignados</h2>
+          <p class="nova-toolbar-subtitle" *ngIf="!loading && !error">
+            Tienes <strong>{{ grupos.length }}</strong> grupo(s) activo(s) este ciclo
+            <span *ngIf="totalEstudiantes > 0"> · {{ totalEstudiantes }} estudiante(s) matriculado(s) en total</span>.
+          </p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Crear nuevo grupo" icon="pi pi-plus" (onClick)="abrirModalNuevo()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
+
+  <div class="empty-state" *ngIf="!loading && !error && grupos.length === 0">
+    <i class="pi pi-inbox"></i>
+    Aún no tienes grupos configurados. Usa "Crear nuevo grupo" para asignar tu primer bloque de clase.
   </div>
 
-  <p *ngIf="loading" class="hint-text">Cargando tus grupos...</p>
-  <p *ngIf="error" class="error-text">{{ error }}</p>
-
-  <p *ngIf="!loading && !error && grupos.length === 0" class="hint-text">
-    Aún no tienes grupos configurados. Usa "Crear nuevo grupo" para asignar tu primer bloque de clase.
-  </p>
-
+  <!-- Grid de tarjetas por grupo -->
   <div class="grupos-grid" *ngIf="!loading && !error">
-    <div class="grupo-card" *ngFor="let grupo of grupos">
+    <p-card styleClass="grupo-card" *ngFor="let grupo of grupos">
       <div class="card-header">
-        <span class="paralelo-badge">{{ grupo.dia_semana }}</span>
-        <span class="cocina-tag" *ngIf="grupo.aula">📍 {{ grupo.aula }}</span>
+        <p-tag severity="secondary" [value]="grupo.dia_semana"></p-tag>
+        <span class="aula-tag" *ngIf="grupo.aula"><i class="pi pi-map-marker"></i> {{ grupo.aula }}</span>
       </div>
 
-      <div class="card-body">
-        <h3>{{ grupo.nombre_asignatura }}</h3>
-        <p class="horario"><i class="icon-clock"></i> {{ grupo.hora_inicio }} - {{ grupo.hora_fin }}</p>
+      <h3 class="grupo-nombre">{{ grupo.nombre_asignatura }}</h3>
+      <p class="grupo-horario"><i class="pi pi-clock"></i> {{ grupo.hora_inicio }} - {{ grupo.hora_fin }}</p>
 
-        <div class="stats">
-          <div class="stat-item">
-            <strong>{{ grupo.alumnos_estimados }}</strong>
-            <span>Estudiantes (est.)</span>
-          </div>
-        </div>
+      <div class="grupo-stats">
+        <strong>{{ grupo.alumnos_matriculados }}</strong>
+        <span>Estudiantes matriculados</span>
       </div>
 
       <div class="card-footer">
-        <button class="btn-outline" (click)="abrirModalEditar(grupo)">⚙️ Configurar</button>
-        <button class="btn-outline btn-danger" (click)="eliminarGrupo(grupo)">🗑️ Eliminar</button>
+        <button pButton type="button" label="Estudiantes" icon="pi pi-users" class="p-button-outlined p-button-sm" (click)="abrirModalMatricula(grupo)"></button>
+        <div class="card-footer-right">
+          <button pButton type="button" icon="pi pi-cog" class="p-button-text p-button-rounded"
+            pTooltip="Configurar" tooltipPosition="top" (click)="abrirModalEditar(grupo)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
+            pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarGrupo(grupo)"></button>
+        </div>
       </div>
-    </div>
+    </p-card>
   </div>
 
-  <!-- Modal crear/editar grupo -->
-  <div class="modal-overlay" *ngIf="mostrarModal" (click)="cerrarModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <h3>{{ editandoId ? 'Configurar grupo' : 'Crear nuevo grupo' }}</h3>
+  <!-- ============================================================
+       MODAL: Crear / Configurar grupo
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModal"
+    [modal]="true"
+    [style]="{ width: '460px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="editandoId ? 'Configurar grupo' : 'Crear nuevo grupo'"
+    (onHide)="cerrarModal()">
 
+    <div class="form-field">
       <label>Asignatura</label>
-      <select [(ngModel)]="formGrupo.asignatura_id" class="search-input">
-        <option [ngValue]="null" disabled>Selecciona una asignatura</option>
-        <option *ngFor="let a of asignaturas" [ngValue]="a.asignatura_id">{{ a.nombre_asignatura }}</option>
-      </select>
+      <p-select
+        [options]="asignaturaOptions"
+        [(ngModel)]="formGrupo.asignatura_id"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona una asignatura..."
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
 
+    <div class="form-field">
       <label>Día</label>
-      <select [(ngModel)]="formGrupo.dia_semana" class="search-input">
-        <option *ngFor="let d of diasSemana" [value]="d">{{ d }}</option>
-      </select>
+      <p-select
+        [options]="diaOptions"
+        [(ngModel)]="formGrupo.dia_semana"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
 
-      <div class="fila-horas">
-        <div>
-          <label>Hora inicio</label>
-          <input type="time" [(ngModel)]="formGrupo.hora_inicio" class="search-input">
-        </div>
-        <div>
-          <label>Hora fin</label>
-          <input type="time" [(ngModel)]="formGrupo.hora_fin" class="search-input">
-        </div>
+    <div class="form-row">
+      <div class="form-field">
+        <label>Hora inicio</label>
+        <input type="time" pInputText [(ngModel)]="formGrupo.hora_inicio" class="tw-w-full">
       </div>
-
-      <label>Aula / Cocina (opcional)</label>
-      <input type="text" [(ngModel)]="formGrupo.aula" placeholder="Ej. Cocina Principal, Taller de Fríos" class="search-input">
-
-      <div class="modal-actions">
-        <button class="btn-icon" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn-gold" (click)="guardarGrupo()">{{ editandoId ? 'Guardar cambios' : 'Crear grupo' }}</button>
+      <div class="form-field">
+        <label>Hora fin</label>
+        <input type="time" pInputText [(ngModel)]="formGrupo.hora_fin" class="tw-w-full">
       </div>
     </div>
-  </div>
+
+    <div class="form-field">
+      <label>Aula / Cocina (opcional)</label>
+      <input type="text" pInputText [(ngModel)]="formGrupo.aula" placeholder="Ej. Cocina Principal, Taller de Fríos" class="tw-w-full">
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" [label]="editandoId ? 'Guardar cambios' : 'Crear grupo'" icon="pi pi-check" (click)="guardarGrupo()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '420px' }" [closable]="false"></p-confirmDialog>
+
+  <!-- ============================================================
+       MODAL: Matricular estudiantes en este grupo
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModalMatricula"
+    [modal]="true"
+    [style]="{ width: '520px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="'Estudiantes — ' + horarioMatriculaNombre"
+    (onHide)="cerrarModalMatricula()">
+
+    <app-spinner [visible]="cargandoMatricula" texto="Cargando matrícula..."></app-spinner>
+
+    <ng-container *ngIf="!cargandoMatricula">
+      <ul class="lista-matriculados" *ngIf="estudiantesMatriculados.length > 0">
+        <li *ngFor="let e of estudiantesMatriculados">
+          <span>{{ e.apellido }}, {{ e.nombre }} <small>({{ e.codigo_estudiante }})</small></span>
+          <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm p-button-danger"
+            pTooltip="Retirar del grupo" (click)="retirarEstudianteDelGrupo(e)"></button>
+        </li>
+      </ul>
+      <p class="hint-text" *ngIf="estudiantesMatriculados.length === 0">
+        Aún no hay estudiantes matriculados en este grupo.
+      </p>
+
+      <div class="selector-matricula">
+        <p-select
+          [options]="estudiantesDisponiblesOptions"
+          [(ngModel)]="estudianteAMatricular"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona un estudiante para matricular..."
+          styleClass="tw-flex-1"
+          appendTo="body">
+        </p-select>
+        <button pButton type="button" icon="pi pi-plus" label="Matricular" class="p-button-outlined"
+          [disabled]="guardandoMatricula" (click)="matricularEstudianteSeleccionado()"></button>
+      </div>
+      <p class="hint-text" *ngIf="estudiantesDisponiblesOptions.length === 0 && estudiantes.length > 0">
+        No hay más estudiantes de esta titulación disponibles para matricular.
+      </p>
+    </ng-container>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrarModalMatricula()"></button>
+    </ng-template>
+  </p-dialog>
 </div>

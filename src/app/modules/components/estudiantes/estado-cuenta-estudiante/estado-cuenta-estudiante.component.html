@@ -1,76 +1,111 @@
 <div class="cuenta-container">
-    <div class="header-section">
-      <h2>🧾 Estado de Cuenta</h2>
-    </div>
 
-    <app-spinner [visible]="loading"></app-spinner>
-    <p *ngIf="error" class="no-results">{{ error }}</p>
-
-    <ng-container *ngIf="!loading && !error">
-      <!-- Tarjetas de Resumen Rápido -->
-      <div class="summary-grid">
-        <div class="summary-card paid">
-          <small>Total Pagado</small>
-          <h3>{{ resumen.totalPagado | currency }}</h3>
-        </div>
-        <div class="summary-card pending">
-          <small>Saldo Pendiente</small>
-          <h3>{{ resumen.saldoPendiente | currency }}</h3>
-        </div>
-        <div class="summary-card status">
-          <small>Próximo Vencimiento</small>
-          <p>{{ resumen.proximoVencimiento ? (resumen.proximoVencimiento | date:'mediumDate') : 'Sin pendientes' }}</p>
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-6">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-file nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Estado de Cuenta</h2>
+          <p class="nova-toolbar-subtitle">Historial de pagos y obligaciones pendientes.</p>
         </div>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Descargar / Imprimir" icon="pi pi-print" (onClick)="descargarEstadoCuenta()"></p-button>
+    </ng-template>
+  </p-toolbar>
 
-      <div class="main-grid">
-        <!-- Tabla de Movimientos -->
-        <div class="card table-card">
-          <h4>Detalle de Pagos y Cobros</h4>
-          <table class="custom-table" *ngIf="historialPagos.length > 0">
-            <thead>
-              <tr>
-                <th>Obligación</th>
-                <th>Vencimiento</th>
-                <th>Monto Total</th>
-                <th>Saldo Pendiente</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of historialPagos">
-                <td>#{{ item.obligacion_id }}</td>
-                <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
-                <td>{{ item.monto_total | currency }}</td>
-                <td>{{ item.saldo_pendiente | currency }}</td>
-                <td>
-                  <span class="status-pill" [ngClass]="estadoReal(item).toLowerCase()">
-                    {{ estadoReal(item) }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p *ngIf="historialPagos.length === 0" class="no-results">
-            No tienes obligaciones de cobro registradas.
-          </p>
-        </div>
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
-        <!-- Panel Lateral: Métodos de Pago -->
-        <div class="side-panel">
-          <div class="card methods-card">
-            <h4>💳 Métodos de Pago</h4>
-            <p class="help-text">Puedes realizar tus pagos mediante:</p>
+  <ng-container *ngIf="!loading && !error">
 
-            <div class="method-item" *ngFor="let m of metodosDisponibles">
-              <strong>{{ m.banco }}</strong>
-              <p>{{ m.banco }}</p>
-              <small>{{ m.detalles }}</small>
-            </div>
-
-            <button class="btn-reportar" (click)="reportarPago()">Reportar Pago Realizado</button>
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <p-card styleClass="kpi-card kpi-card--success">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--success"><i class="pi pi-check-circle"></i></div>
+          <div class="kpi-data">
+            <h3>{{ resumen.totalPagado | currency }}</h3>
+            <p>Total Pagado</p>
           </div>
         </div>
-      </div>
-    </ng-container>
-  </div>
+      </p-card>
+
+      <p-card styleClass="kpi-card kpi-card--warning">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--warning"><i class="pi pi-wallet"></i></div>
+          <div class="kpi-data">
+            <h3>{{ resumen.saldoPendiente | currency }}</h3>
+            <p>Saldo Pendiente</p>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card styleClass="kpi-card">
+        <div class="kpi-body">
+          <div class="kpi-icon kpi-icon--gold"><i class="pi pi-calendar"></i></div>
+          <div class="kpi-data">
+            <h3 class="kpi-data--text">{{ resumen.proximoVencimiento ? (resumen.proximoVencimiento | date:'mediumDate') : 'Sin pendientes' }}</h3>
+            <p>Próximo Vencimiento</p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <div class="details-grid">
+      <!-- Tabla de movimientos -->
+      <p-card styleClass="table-card" header="Detalle de Pagos y Cobros">
+        <p-table
+          [value]="historialPagos"
+          [paginator]="historialPagos.length > 8"
+          [rows]="8"
+          styleClass="p-datatable-sm nova-table"
+          responsiveLayout="scroll">
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Obligación</th>
+              <th>Vencimiento</th>
+              <th>Monto Total</th>
+              <th>Saldo Pendiente</th>
+              <th>Estado</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td>#{{ item.obligacion_id }}</td>
+              <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
+              <td>{{ item.monto_total | currency }}</td>
+              <td>{{ item.saldo_pendiente | currency }}</td>
+              <td><p-tag [severity]="estadoSeverity(item)" [value]="estadoReal(item)"></p-tag></td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="empty-state">
+                <i class="pi pi-inbox"></i>
+                No tienes obligaciones de cobro registradas.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+
+      <!-- Panel lateral: métodos de pago -->
+      <p-card styleClass="action-card" header="Métodos de Pago">
+        <p class="action-hint">Puedes realizar tus pagos mediante:</p>
+
+        <div class="method-item" *ngFor="let m of metodosDisponibles">
+          <strong>{{ m.banco }}</strong>
+          <small>{{ m.detalles }}</small>
+        </div>
+
+        <p-button label="Reportar Pago Realizado" icon="pi pi-send" styleClass="p-button-outlined tw-w-full tw-mt-3" (onClick)="reportarPago()"></p-button>
+      </p-card>
+    </div>
+  </ng-container>
+</div>

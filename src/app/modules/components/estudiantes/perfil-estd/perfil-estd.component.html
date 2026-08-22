@@ -1,19 +1,28 @@
 <div class="perfil-container">
-  <div class="header-section">
-    <h2>👤 Mi Perfil Académico</h2>
-  </div>
+
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-user nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Mi Perfil Académico</h2>
+          <p class="nova-toolbar-subtitle">Datos personales y progreso en el ciclo actual.</p>
+        </div>
+      </div>
+    </ng-template>
+  </p-toolbar>
 
   <app-spinner [visible]="loading"></app-spinner>
-  <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
   <div class="perfil-grid" *ngIf="!loading && !error && perfil">
-    <!-- Columna Izquierda: Tarjeta Principal -->
-    <div class="card profile-main">
+
+    <!-- Columna izquierda: tarjeta principal -->
+    <p-card styleClass="profile-main">
       <div class="avatar-section">
-        <div class="avatar-circle">
-          <span>{{ perfil.nombre[0] }}{{ perfil.apellido[0] }}</span>
-        </div>
-        <span class="badge-estado">{{ perfil.activo ? 'Activo' : 'Inactivo' }}</span>
+        <p-avatar [label]="(perfil.nombre[0] + perfil.apellido[0]).toUpperCase()" size="xlarge" shape="circle" styleClass="nova-avatar"></p-avatar>
+        <p-tag [severity]="perfil.activo ? 'success' : 'secondary'" [value]="perfil.activo ? 'Activo' : 'Inactivo'"></p-tag>
       </div>
 
       <div class="user-info">
@@ -22,7 +31,7 @@
         <p class="codigo">{{ perfil.codigo_estudiante }}</p>
       </div>
 
-      <hr>
+      <p-divider></p-divider>
 
       <div class="contact-info">
         <div class="info-item">
@@ -34,37 +43,34 @@
           <p>{{ perfil.fecha_ingreso ? (perfil.fecha_ingreso | date:'longDate') : 'No registrada' }}</p>
         </div>
       </div>
-    </div>
+    </p-card>
 
-    <!-- Columna Derecha: Progreso real por asignatura -->
+    <!-- Columna derecha: progreso -->
     <div class="details-column">
-      <div class="card">
-        <h4>📚 Recetas por Asignatura</h4>
+      <p-card header="Recetas por Asignatura">
         <div class="inscripciones-list" *ngIf="progresoPorAsignatura.length > 0">
           <div class="inscripcion-item" *ngFor="let a of progresoPorAsignatura">
-            <div class="dot" [ngClass]="{'completado': a.recetas_aprobadas === a.total_recetas}"></div>
+            <i class="pi" [ngClass]="a.recetas_aprobadas === a.total_recetas ? 'pi-check-circle dot-completado' : 'pi-circle dot-pendiente'"></i>
             <div class="insc-text">
               <strong>{{ a.nombre_asignatura || 'Sin asignatura' }}</strong>
               <small>{{ a.recetas_aprobadas }} de {{ a.total_recetas }} recetas aprobadas</small>
             </div>
           </div>
         </div>
-        <p *ngIf="progresoPorAsignatura.length === 0" class="no-results">
+        <div class="empty-state empty-state--inline" *ngIf="progresoPorAsignatura.length === 0">
+          <i class="pi pi-inbox"></i>
           Aún no tienes recetas asignadas por tus docentes.
-        </p>
-      </div>
+        </div>
+      </p-card>
 
-      <div class="card status-card" *ngIf="resumenAcademico">
-        <h4>🚀 Progreso General</h4>
-        <p>
+      <p-card header="Progreso General" *ngIf="resumenAcademico" styleClass="status-card">
+        <p class="progreso-texto">
           Tienes <strong>{{ resumenAcademico.recetas_aprobadas }}</strong> de
           <strong>{{ resumenAcademico.total_recetas }}</strong> recetas asignadas ya aprobadas.
         </p>
-        <div class="progress-bar">
-          <div class="progress-fill" [style.width.%]="resumenAcademico.porcentaje_avance"></div>
-        </div>
+        <p-progressbar [value]="resumenAcademico.porcentaje_avance" [showValue]="false" styleClass="tw-mb-2"></p-progressbar>
         <small>{{ resumenAcademico.porcentaje_avance }}% de avance</small>
-      </div>
+      </p-card>
     </div>
   </div>
 </div>

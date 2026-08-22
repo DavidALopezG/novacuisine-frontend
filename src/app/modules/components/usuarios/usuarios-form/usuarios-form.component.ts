@@ -1,16 +1,51 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UsuariosService } from '../../../../services/usuarios/usuarios.service';
 import { TitulacionesService } from '../../../../services/titulaciones/titulaciones.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
+import { ConfirmationService } from 'primeng/api';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { ToolbarModule } from 'primeng/toolbar';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { PasswordModule } from 'primeng/password';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { MessageModule } from 'primeng/message';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
+
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, SpinnerComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    SpinnerComponent,
+    TableModule,
+    TagModule,
+    ButtonModule,
+    DialogModule,
+    ToolbarModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule,
+    SelectModule,
+    PasswordModule,
+    ToggleSwitchModule,
+    MessageModule,
+    ConfirmDialogModule,
+    TooltipModule,
+  ],
+  providers: [ConfirmationService],
   templateUrl: './usuarios-form.component.html',
   styleUrls: ['./usuarios-form.component.css']
 })
@@ -22,22 +57,39 @@ export class UsuariosComponent implements OnInit {
   editando = false;
   usuarioSeleccionadoId: string | null = null;
 
-  // Variables para la gestión de carga y errores del spinner
-  loading: boolean = false;
+  loading = false;
   error: string | null = null;
 
   // Filtros básicos de la tabla
-  filtroTexto: string = '';
-  filtroRol: string = 'Todos';
+  filtroTexto = '';
+  filtroRol = 'Todos';
+
+  rolOptions = [
+    { label: 'Administrador', value: 1 },
+    { label: 'Profesor', value: 2 },
+    { label: 'Estudiante', value: 3 }
+  ];
+
+  filtroRolOptions = [
+    { label: 'Todos los roles', value: 'Todos' },
+    { label: 'Administrador', value: 'Administrador' },
+    { label: 'Profesor', value: 'Profesor' },
+    { label: 'Estudiante', value: 'Estudiante' }
+  ];
 
   // Catálogo de titulaciones (solo se usa cuando el rol elegido es Estudiante)
   titulaciones: any[] = [];
+
+  get titulacionOptions(): { label: string; value: number }[] {
+    return this.titulaciones.map(t => ({ label: t.nombre_titulacion, value: t.titulacion_id }));
+  }
 
   constructor(
     private fb: FormBuilder,
     private usuariosService: UsuariosService,
     private titulacionesService: TitulacionesService,
-    private notif: NotificacionService
+    private notif: NotificacionService,
+    private confirmacion: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -153,19 +205,28 @@ export class UsuariosComponent implements OnInit {
   // Activa o desactiva un usuario directamente desde la tabla (sin abrir el modal)
   toggleActivo(usuario: any) {
     const accion = usuario.activo ? 'desactivar' : 'activar';
-    if (!confirm(`¿Seguro que deseas ${accion} a ${usuario.nombre_completo}?`)) return;
-
-    this.usuariosService.updateUsuario(usuario.usuario_id, {
-      nombre_completo: usuario.nombre_completo,
-      email: usuario.email,
-      rol_id: usuario.rol_id,
-      activo: !usuario.activo
-    }).subscribe({
-      next: () => {
-        this.notif.exito(`Usuario ${usuario.activo ? 'desactivado' : 'activado'} correctamente`);
-        this.cargarUsuarios();
-      },
-      error: (err) => this.notif.error(err?.error?.error || 'No se pudo cambiar el estado del usuario.')
+    this.confirmacion.confirm({
+      header: usuario.activo ? 'Desactivar usuario' : 'Activar usuario',
+      message: `¿Seguro que deseas ${accion} a ${usuario.nombre_completo}?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: usuario.activo ? 'Desactivar' : 'Activar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: usuario.activo ? 'p-button-danger' : 'p-button-success',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.usuariosService.updateUsuario(usuario.usuario_id, {
+          nombre_completo: usuario.nombre_completo,
+          email: usuario.email,
+          rol_id: usuario.rol_id,
+          activo: !usuario.activo
+        }).subscribe({
+          next: () => {
+            this.notif.exito(`Usuario ${usuario.activo ? 'desactivado' : 'activado'} correctamente`);
+            this.cargarUsuarios();
+          },
+          error: (err) => this.notif.error(err?.error?.error || 'No se pudo cambiar el estado del usuario.')
+        });
+      }
     });
   }
 
@@ -182,6 +243,15 @@ export class UsuariosComponent implements OnInit {
       case 2: return 'Profesor';
       case 3: return 'Estudiante';
       default: return 'Desconocido';
+    }
+  }
+
+  rolSeverity(rolId: number): 'danger' | 'warn' | 'info' | 'secondary' {
+    switch (rolId) {
+      case 1: return 'danger';   // Administrador
+      case 2: return 'warn';     // Profesor
+      case 3: return 'info';     // Estudiante
+      default: return 'secondary';
     }
   }
 }

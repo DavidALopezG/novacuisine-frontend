@@ -4,6 +4,12 @@ import { HorariosService } from '../../../../services/horarios/horarios.service'
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { ToolbarModule } from 'primeng/toolbar';
+import { MessageModule } from 'primeng/message';
+
 interface BloqueHorario {
   hora: string;
   clases: { dia: string; materia: string; chef: string; aula: string }[];
@@ -12,7 +18,15 @@ interface BloqueHorario {
 @Component({
   selector: 'app-horario-clase',
   standalone: true,
-  imports: [CommonModule, SpinnerComponent],
+  imports: [
+    CommonModule,
+    SpinnerComponent,
+    CardModule,
+    TagModule,
+    ButtonModule,
+    ToolbarModule,
+    MessageModule,
+  ],
   templateUrl: './horario-clase.component.html',
   styleUrl: './horario-clase.component.css'
 })
@@ -96,5 +110,9 @@ export class HorarioClaseComponent implements OnInit {
   // Función auxiliar para encontrar la clase según el día y hora
   getClase(dia: string, clasesDelBloque: any[]) {
     return clasesDelBloque.find(c => c.dia === dia);
+  }
+
+  imprimirHorario(): void {
+    window.print();
   }
 }

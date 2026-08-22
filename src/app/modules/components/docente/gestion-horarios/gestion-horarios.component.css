@@ -1,127 +1,110 @@
 .horarios-container {
-    padding: 2rem;
+  padding: 24px 28px;
 }
 
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+.nova-toolbar-icon {
+  font-size: 1.6rem;
+  color: var(--nova-gold);
+  background: rgba(184, 134, 11, 0.1);
+  padding: 12px;
+  border-radius: 12px;
 }
 
-.header-actions h2 {
-    color: #1a1a1a;
-    border-left: 5px solid #b8860b;
-    padding-left: 15px;
-    margin: 0;
+.nova-toolbar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--nova-black);
+  font-family: 'Playfair Display', serif;
 }
 
-.btn-gold {
-    background: #b8860b;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+.nova-toolbar-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
 }
 
-.btn-gold:hover { background: #1a1a1a; }
-
-.table-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    overflow-x: auto;
-}
-
-.master-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.master-table th {
-    text-align: left;
-    padding: 15px;
-    background: #f8f9fa;
-    color: #666;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-}
-
-.master-table td {
-    padding: 15px;
-    border-bottom: 1px solid #f1f1f1;
-    font-size: 0.95rem;
+.recipe-name {
+  font-weight: 600;
+  color: var(--nova-black);
 }
 
 .actions-cell {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.btn-icon {
-    background: #f8f9fa;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.2s;
+.empty-state {
+  text-align: center;
+  color: #9a9a9a;
+  padding: 2.5rem 0;
 }
 
-.btn-icon:hover { background: #eee; }
-.btn-icon.delete:hover { background: #ffebee; color: #c62828; }
-
-.no-results {
-    text-align: center;
-    padding: 3rem !important;
-    color: #999;
+.empty-state i {
+  display: block;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  color: #cfcfcf;
 }
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+::ng-deep .nova-table .p-datatable-thead > tr > th {
+  background: var(--nova-black);
+  color: var(--nova-white);
 }
 
-.modal-box {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 420px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
-.modal-box h3 {
-    margin: 0 0 10px 0;
-    color: #1a1a1a;
+.form-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
 }
 
-.modal-box label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 8px;
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.search-input {
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    outline: none;
+/* Modal de matrícula */
+.lista-matriculados {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
 }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 1.5rem;
+.lista-matriculados li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f7f7f7;
+  padding: 6px 6px 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.lista-matriculados small {
+  color: #999;
+}
+
+.hint-text {
+  font-size: 0.82rem;
+  color: #888;
+  margin: 4px 0 10px 0;
+}
+
+.selector-matricula {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }

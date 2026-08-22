@@ -4,6 +4,14 @@ import { RecetasService } from '../../../../services/recetas/recetas.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { ToolbarModule } from 'primeng/toolbar';
+import { MessageModule } from 'primeng/message';
+import { DividerModule } from 'primeng/divider';
+
 interface RecetaAsignada {
   receta_id: number;
   nombre: string;
@@ -20,7 +28,17 @@ interface RecetaAsignada {
 @Component({
   selector: 'app-mis-recetas-estd',
   standalone: true,
-  imports: [CommonModule, SpinnerComponent],
+  imports: [
+    CommonModule,
+    SpinnerComponent,
+    CardModule,
+    TagModule,
+    ButtonModule,
+    DialogModule,
+    ToolbarModule,
+    MessageModule,
+    DividerModule,
+  ],
   templateUrl: './mis-recetas-estd.component.html',
   styleUrl: './mis-recetas-estd.component.css'
 })

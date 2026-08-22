@@ -1,38 +1,68 @@
 <div class="reportes-container">
 
-  <!-- Barra superior estandarizada (Toolbar de PrimeNG) -->
-  <p-toolbar styleClass="nova-toolbar tw-mb-6">
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
     <ng-template pTemplate="start">
       <div class="tw-flex tw-items-center tw-gap-3">
         <i class="pi pi-chart-bar nova-toolbar-icon"></i>
         <div>
           <h2 class="nova-toolbar-title">Panel de Reportes Financieros</h2>
-          <p class="nova-toolbar-subtitle">Resumen de cobros, pendientes y efectividad de recaudación</p>
+          <p class="nova-toolbar-subtitle">Cobros, pendientes, efectividad de recaudación y morosidad.</p>
         </div>
       </div>
     </ng-template>
     <ng-template pTemplate="end">
-      <p-button
-        label="Imprimir / PDF"
-        icon="pi pi-print"
-        (onClick)="imprimirReporte()">
-      </p-button>
+      <button pButton type="button" [label]="exportando === 'excel' ? 'Generando...' : 'Excel'" icon="pi pi-file-excel"
+        class="p-button-outlined" [disabled]="exportando !== null" (click)="exportarExcel()"></button>
+      <button pButton type="button" [label]="exportando === 'pdf' ? 'Generando...' : 'PDF'" icon="pi pi-file-pdf"
+        [disabled]="exportando !== null" (click)="exportarPdf()"></button>
     </ng-template>
   </p-toolbar>
 
-  <app-spinner [visible]="loading"></app-spinner>
+  <!-- Filtros dinámicos -->
+  <p-card styleClass="filtros-card tw-mb-5">
+    <div class="filtros-grid">
+      <div class="filtro-item">
+        <label>Desde</label>
+        <p-datepicker [(ngModel)]="fechaInicio" dateFormat="dd/mm/yy" showIcon iconDisplay="input" styleClass="tw-w-full" appendTo="body"></p-datepicker>
+      </div>
+      <div class="filtro-item">
+        <label>Hasta</label>
+        <p-datepicker [(ngModel)]="fechaFin" dateFormat="dd/mm/yy" showIcon iconDisplay="input" styleClass="tw-w-full" appendTo="body"></p-datepicker>
+      </div>
+      <div class="filtro-item">
+        <label>Titulación</label>
+        <p-select [options]="titulacionOptions" [(ngModel)]="titulacionId" optionLabel="label" optionValue="value"
+          placeholder="Todas" showClear styleClass="tw-w-full" appendTo="body"></p-select>
+      </div>
+      <div class="filtro-item">
+        <label>Estado</label>
+        <p-select [options]="estadoOptions" [(ngModel)]="estado" optionLabel="label" optionValue="value"
+          styleClass="tw-w-full" appendTo="body"></p-select>
+      </div>
+      <div class="filtro-item filtro-busqueda">
+        <label>Buscar estudiante</label>
+        <p-iconfield iconPosition="left" styleClass="tw-w-full">
+          <p-inputicon class="pi pi-search"></p-inputicon>
+          <input type="text" pInputText placeholder="Nombre o código..." [(ngModel)]="busqueda" (keyup.enter)="aplicarFiltros()" class="tw-w-full">
+        </p-iconfield>
+      </div>
+      <div class="filtro-acciones">
+        <button pButton type="button" label="Aplicar" icon="pi pi-filter" (click)="aplicarFiltros()"></button>
+        <button pButton type="button" label="Limpiar" icon="pi pi-filter-slash" class="p-button-text" (click)="limpiarFiltros()"></button>
+      </div>
+    </div>
+  </p-card>
 
   <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
-  <ng-container *ngIf="!loading && !error && resumen">
-
-    <!-- KPIs -->
+  <!-- KPIs -->
+  <app-spinner [visible]="loadingResumen"></app-spinner>
+  <ng-container *ngIf="!loadingResumen && !error && resumen">
     <div class="kpi-grid">
       <p-card styleClass="kpi-card">
         <div class="kpi-body">
-          <div class="kpi-icon kpi-icon--gold">
-            <i class="pi pi-wallet"></i>
-          </div>
+          <div class="kpi-icon kpi-icon--gold"><i class="pi pi-wallet"></i></div>
           <div class="kpi-data">
             <h3>{{ resumen.total_recaudado | currency:'USD' }}</h3>
             <p>Total Recaudado</p>
@@ -42,9 +72,7 @@
 
       <p-card styleClass="kpi-card kpi-card--danger">
         <div class="kpi-body">
-          <div class="kpi-icon kpi-icon--danger">
-            <i class="pi pi-exclamation-triangle"></i>
-          </div>
+          <div class="kpi-icon kpi-icon--danger"><i class="pi pi-exclamation-triangle"></i></div>
           <div class="kpi-data">
             <h3>{{ resumen.total_pendiente | currency:'USD' }}</h3>
             <p>Total por Cobrar</p>
@@ -54,21 +82,17 @@
 
       <p-card styleClass="kpi-card kpi-card--warning">
         <div class="kpi-body">
-          <div class="kpi-icon kpi-icon--warning">
-            <i class="pi pi-users"></i>
-          </div>
+          <div class="kpi-icon kpi-icon--warning"><i class="pi pi-users"></i></div>
           <div class="kpi-data">
             <h3>{{ resumen.estudiantes_morosos }}</h3>
-            <p>Estudiantes Vencidos</p>
+            <p>Estudiantes Morosos</p>
           </div>
         </div>
       </p-card>
 
       <p-card styleClass="kpi-card kpi-card--success">
         <div class="kpi-body">
-          <div class="kpi-icon kpi-icon--success">
-            <i class="pi pi-chart-line"></i>
-          </div>
+          <div class="kpi-icon kpi-icon--success"><i class="pi pi-chart-line"></i></div>
           <div class="kpi-data">
             <h3>{{ resumen.efectividad_cobro }}%</h3>
             <p>Efectividad de Cobro</p>
@@ -77,58 +101,68 @@
       </p-card>
     </div>
 
-    <!-- Tabla de pagos recientes + panel de exportación -->
-    <div class="details-grid">
-
-      <p-card styleClass="table-card" header="Últimos Pagos Registrados">
-        <p-table
-          [value]="pagosRecientes"
-          [paginator]="pagosRecientes.length > 8"
-          [rows]="8"
-          [rowsPerPageOptions]="[8, 15, 30]"
-          styleClass="p-datatable-sm nova-table"
-          responsiveLayout="scroll">
-
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Fecha</th>
-              <th>Estudiante</th>
-              <th>Código</th>
-              <th class="tw-text-right">Monto</th>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-pago>
-            <tr>
-              <td>{{ pago.fecha_pago | date:'shortDate' }}</td>
-              <td>{{ pago.estudiante }}</td>
-              <td>{{ pago.codigo_estudiante }}</td>
-              <td class="tw-text-right">
-                <p-tag severity="success" [value]="(pago.monto | currency:'USD')!"></p-tag>
-              </td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="4" class="empty-state">
-                <i class="pi pi-inbox"></i>
-                Aún no se han registrado pagos.
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+    <!-- Gráficos en tiempo real -->
+    <div class="graficos-grid">
+      <p-card header="Recaudado vs. Pendiente por Mes" styleClass="grafico-card grafico-card--ancho">
+        <p-chart type="line" [data]="dataSerieMensual" [options]="opcionesLineales" height="260px" *ngIf="dataSerieMensual"></p-chart>
       </p-card>
 
-      <p-card styleClass="action-card" header="Exportar Reportes">
-        <p class="action-hint">Selecciona el tipo de reporte a descargar:</p>
-        <p-button
-          label="Reporte Completo (PDF)"
-          icon="pi pi-file-pdf"
-          styleClass="p-button-outlined tw-w-full"
-          (onClick)="imprimirReporte()">
-        </p-button>
+      <p-card header="Distribución por Estado" styleClass="grafico-card">
+        <p-chart type="doughnut" [data]="dataPorEstado" [options]="opcionesDona" height="260px" *ngIf="dataPorEstado"></p-chart>
+      </p-card>
+
+      <p-card header="Recaudado vs. Pendiente por Titulación" styleClass="grafico-card grafico-card--ancho">
+        <p-chart type="bar" [data]="dataPorTitulacion" [options]="opcionesBarras" height="260px" *ngIf="dataPorTitulacion"></p-chart>
       </p-card>
     </div>
+
+    <!-- Tabla de obligaciones (filtrable, paginada desde el backend) -->
+    <p-card styleClass="table-card" header="Detalle de Obligaciones">
+      <p-table
+        [value]="obligaciones"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="rowsPorPagina"
+        [totalRecords]="totalRegistros"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [loading]="loadingTabla"
+        (onPage)="onPageChange($event)"
+        styleClass="p-datatable-sm nova-table"
+        responsiveLayout="scroll">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Estudiante</th>
+            <th>Titulación</th>
+            <th>Vencimiento</th>
+            <th class="tw-text-right">Total</th>
+            <th class="tw-text-right">Pagado</th>
+            <th class="tw-text-right">Saldo</th>
+            <th>Estado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-o>
+          <tr>
+            <td>{{ o.nombre }} {{ o.apellido }} <small class="codigo">({{ o.codigo_estudiante }})</small></td>
+            <td>{{ o.nombre_titulacion || 'Sin titulación' }}</td>
+            <td>{{ o.fecha_vencimiento | date:'shortDate' }}</td>
+            <td class="tw-text-right">{{ o.monto_total | currency:'USD' }}</td>
+            <td class="tw-text-right">{{ o.monto_pagado | currency:'USD' }}</td>
+            <td class="tw-text-right">{{ o.saldo_pendiente | currency:'USD' }}</td>
+            <td><p-tag [severity]="estadoSeverity(o.estado)" [value]="o.estado"></p-tag></td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="empty-state">
+              <i class="pi pi-inbox"></i>
+              No hay obligaciones que coincidan con estos filtros.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
   </ng-container>
 </div>

@@ -1,110 +1,160 @@
 <div class="gestion-usuarios">
 
-  <div class="header-actions">
-    <h2>Gestión de Usuarios</h2>
-    <button class="btn-primary" (click)="abrirModalNuevoUsuario()">+ Nuevo Usuario</button>
-  </div>
-
-  <div *ngIf="mostrarForm" class="modal-overlay"> 
-    <div class="form-container"> 
-      <h3>{{ editando ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
-
-      <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()">
-
-        <label>ID Usuario</label>
-        <input formControlName="usuario_id" placeholder="Cédula" [readonly]="editando">
-
-        <label>Nombre completo</label>
-        <input formControlName="nombre_completo" placeholder="Nombre completo">
-
-        <label>Email</label>
-        <input formControlName="email" placeholder="Email">
-
-        <label>Contraseña{{ editando ? ' (dejar en blanco para no cambiarla)' : '' }}</label>
-        <input formControlName="contrasena" type="password" placeholder="Contraseña">
-
-        <label>Rol</label>
-        <select formControlName="rol_id">
-          <option value="1">Administrador</option>
-          <option value="2">Profesor</option>
-          <option value="3">Estudiante</option>
-        </select>
-
-        <ng-container *ngIf="usuarioForm.value.rol_id == 3">
-          <label>Titulación</label>
-          <select formControlName="titulacion_id">
-            <option [ngValue]="null">Selecciona una titulación...</option>
-            <option *ngFor="let t of titulaciones" [ngValue]="t.titulacion_id">
-              {{ t.nombre_titulacion }}
-            </option>
-          </select>
-        </ng-container>
-
-        <label class="switch-label">
-          <span>Usuario Activo</span>
-          <label class="switch">
-            <input type="checkbox" formControlName="activo">
-            <span class="slider"></span>
-          </label>
-        </label>
-
-        <div class="form-actions"> 
-          <button type="submit" class="btn-primary">{{ editando ? 'Guardar Cambios' : 'Crear Usuario' }}</button>
-          <button type="button" (click)="cerrarFormulario()" class="btn-secondary">Cancelar</button>
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-users nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Gestión de Usuarios</h2>
+          <p class="nova-toolbar-subtitle">Administradores, docentes y estudiantes del sistema.</p>
         </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Nuevo Usuario" icon="pi pi-plus" (onClick)="abrirModalNuevoUsuario()"></p-button>
+    </ng-template>
+  </p-toolbar>
 
-      </form>
-    </div>
-  </div>
-
+  <!-- Barra de filtros -->
   <div class="filter-bar">
-    <input type="text" placeholder="Buscar por nombre, email o ID..." [(ngModel)]="filtroTexto" class="search-input">
-    <select [(ngModel)]="filtroRol" class="category-select">
-      <option value="Todos">Todos los roles</option>
-      <option value="Administrador">Administrador</option>
-      <option value="Profesor">Profesor</option>
-      <option value="Estudiante">Estudiante</option>
-    </select>
+    <p-iconfield iconPosition="left" styleClass="tw-flex-1">
+      <p-inputicon class="pi pi-search"></p-inputicon>
+      <input type="text" pInputText placeholder="Buscar por nombre, email o ID..." [(ngModel)]="filtroTexto" class="tw-w-full">
+    </p-iconfield>
+
+    <p-select
+      [options]="filtroRolOptions"
+      [(ngModel)]="filtroRol"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="category-select"
+      appendTo="body">
+    </p-select>
   </div>
 
   <app-spinner [visible]="loading"></app-spinner>
-  <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
-  <div class="tabla-container" *ngIf="!loading && !error">
-      <table>
-          <thead>
-              <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Email</th>
-                  <th>Rol</th>
-                  <th>Activo</th>
-                  <th>Acciones</th>
-              </tr>
-          </thead>
+  <!-- Tabla de usuarios -->
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="usuariosFiltrados"
+    [paginator]="usuariosFiltrados.length > 10"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    styleClass="p-datatable-sm nova-table"
+    responsiveLayout="scroll">
 
-          <tbody>
-              <tr *ngFor="let u of usuariosFiltrados">
-                  <td>{{ u.usuario_id }}</td>
-                  <td>{{ u.nombre_completo }}</td>
-                  <td>{{ u.email }}</td>
-                  <td>{{ obtenerRolNombre(u.rol_id) }}</td>
-                  <td>
-                      <span [class.estado-activo]="u.activo" [class.estado-inactivo]="!u.activo">
-                          {{ u.activo ? 'Activo' : 'Inactivo' }}
-                      </span>
-                  </td>
-                  <td>
-                      <button class="btn-edit" (click)="editarUsuario(u)">Editar</button>
-                      <button class="btn-delete" (click)="toggleActivo(u)">{{ u.activo ? 'Desactivar' : 'Activar' }}</button>
-                  </td>
-              </tr>
-          </tbody>
-      </table>
+    <ng-template pTemplate="header">
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
 
-      <p *ngIf="usuariosFiltrados.length === 0" class="no-results">
-        No se encontraron usuarios cargados.
-      </p>
-  </div>
+    <ng-template pTemplate="body" let-u>
+      <tr>
+        <td>{{ u.usuario_id }}</td>
+        <td class="user-name">{{ u.nombre_completo }}</td>
+        <td>{{ u.email }}</td>
+        <td><p-tag [severity]="rolSeverity(u.rol_id)" [value]="obtenerRolNombre(u.rol_id)"></p-tag></td>
+        <td>
+          <p-tag [severity]="u.activo ? 'success' : 'secondary'" [value]="u.activo ? 'Activo' : 'Inactivo'"></p-tag>
+        </td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-rounded"
+            pTooltip="Editar" tooltipPosition="top" (click)="editarUsuario(u)"></button>
+          <button pButton type="button" [icon]="u.activo ? 'pi pi-user-minus' : 'pi pi-user-plus'"
+            class="p-button-text p-button-rounded" [class.p-button-danger]="u.activo" [class.p-button-success]="!u.activo"
+            [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="toggleActivo(u)"></button>
+        </td>
+      </tr>
+    </ng-template>
 
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          No se encontraron usuarios cargados.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- ============================================================
+       MODAL: Crear / Editar usuario
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarForm"
+    [modal]="true"
+    [style]="{ width: '520px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="editando ? 'Editar Usuario' : 'Nuevo Usuario'"
+    (onHide)="cerrarFormulario()">
+
+    <form [formGroup]="usuarioForm" (ngSubmit)="guardarUsuario()" class="form-grid">
+
+      <div class="form-field tw-col-span-2">
+        <label>ID Usuario (cédula)</label>
+        <input type="text" pInputText formControlName="usuario_id" placeholder="Cédula" [readonly]="editando" class="tw-w-full">
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Nombre completo</label>
+        <input type="text" pInputText formControlName="nombre_completo" placeholder="Nombre completo" class="tw-w-full">
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Email</label>
+        <input type="email" pInputText formControlName="email" placeholder="Email" class="tw-w-full">
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Contraseña{{ editando ? ' (dejar en blanco para no cambiarla)' : '' }}</label>
+        <p-password formControlName="contrasena" placeholder="Contraseña" [toggleMask]="true" [feedback]="false" styleClass="tw-w-full" inputStyleClass="tw-w-full"></p-password>
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Rol</label>
+        <p-select
+          [options]="rolOptions"
+          formControlName="rol_id"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="tw-w-full"
+          appendTo="body">
+        </p-select>
+      </div>
+
+      <div class="form-field tw-col-span-2" *ngIf="usuarioForm.value.rol_id == 3">
+        <label>Titulación</label>
+        <p-select
+          [options]="titulacionOptions"
+          formControlName="titulacion_id"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona una titulación..."
+          styleClass="tw-w-full"
+          appendTo="body">
+        </p-select>
+      </div>
+
+      <div class="form-field tw-col-span-2 toggle-row">
+        <label>Usuario activo</label>
+        <p-toggleswitch formControlName="activo"></p-toggleswitch>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarFormulario()"></button>
+      <button pButton type="button" [label]="editando ? 'Guardar Cambios' : 'Crear Usuario'" icon="pi pi-check" (click)="guardarUsuario()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '420px' }" [closable]="false"></p-confirmDialog>
 </div>

@@ -4,10 +4,28 @@ import { CobrosService } from '../../../../services/cobros/cobros.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
+import { CardModule } from 'primeng/card';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { ToolbarModule } from 'primeng/toolbar';
+import { MessageModule } from 'primeng/message';
+
 @Component({
   selector: 'app-estado-cuenta-estudiante',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, SpinnerComponent],
+  imports: [
+    CommonModule,
+    CurrencyPipe,
+    DatePipe,
+    SpinnerComponent,
+    CardModule,
+    TableModule,
+    TagModule,
+    ButtonModule,
+    ToolbarModule,
+    MessageModule,
+  ],
   templateUrl: './estado-cuenta-estudiante.component.html',
   styleUrl: './estado-cuenta-estudiante.component.css'
 })
@@ -86,6 +104,15 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
     if (new Date(o.fecha_vencimiento) < new Date()) return 'VENCIDO';
     if (Number(o.monto_pagado) > 0) return 'PARCIAL';
     return 'PENDIENTE';
+  }
+
+  estadoSeverity(o: any): 'success' | 'warn' | 'danger' | 'info' {
+    switch (this.estadoReal(o)) {
+      case 'PAGADO': return 'success';
+      case 'PARCIAL': return 'warn';
+      case 'VENCIDO': return 'danger';
+      default: return 'info';
+    }
   }
 
   reportarPago(): void {

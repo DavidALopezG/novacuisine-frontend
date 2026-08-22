@@ -30,4 +30,17 @@ export class HorariosService {
   eliminarHorario(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  // 👥 Matrícula de estudiantes por grupo/horario
+  obtenerEstudiantesDeHorario(horarioId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${horarioId}/estudiantes`);
+  }
+
+  matricularEstudiante(horarioId: number, estudianteId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${horarioId}/estudiantes`, { estudiante_id: estudianteId });
+  }
+
+  retirarEstudiante(horarioId: number, estudianteId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${horarioId}/estudiantes/${estudianteId}`);
+  }
 }

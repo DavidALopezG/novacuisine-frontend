@@ -1,209 +1,215 @@
-<div class="container-fluid py-4 class-gestion-estudiantes">
-  
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-    <h2 class="h3 m-0 d-flex align-items-center gap-2 text-dark fw-semibold">
-      <i class="bi bi-mortarboard-fill text-primary"></i> Gestión de Estudiantes y Expedientes
-    </h2>
-    
-    <div class="d-flex flex-wrap gap-2 align-items-center">
-      <div class="input-group search-box" style="max-width: 320px;">
-        <span class="input-group-text bg-white border-end-0 text-muted">
-          <i class="bi bi-search"></i>
-        </span>
-        <input type="text" class="form-control border-start-0" placeholder="Buscar por nombre, código..." [(ngModel)]="filtro">
-      </div>
-      
-      <button class="btn btn-primary d-flex align-items-center gap-2" (click)="abrirModalNuevoEstudiante()">
-        <i class="bi bi-person-plus-fill"></i> Registrar Estudiante
-      </button>
-    </div>
-  </div>
+<div class="gestion-estudiantes">
 
-  <hr class="text-secondary my-4">
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-graduation-cap nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Gestión de Estudiantes</h2>
+          <p class="nova-toolbar-subtitle">Expedientes académicos y estado de cuenta.</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Registrar Estudiante" icon="pi pi-user-plus" (onClick)="abrirModalNuevoEstudiante()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Buscador -->
+  <div class="filter-bar">
+    <p-iconfield iconPosition="left" styleClass="tw-flex-1">
+      <p-inputicon class="pi pi-search"></p-inputicon>
+      <input type="text" pInputText placeholder="Buscar por nombre, código..." [(ngModel)]="filtro" class="tw-w-full">
+    </p-iconfield>
+  </div>
 
   <app-spinner [visible]="loading"></app-spinner>
-    <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
+  <!-- Tabla de estudiantes -->
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="estudiantesFiltrados"
+    [paginator]="estudiantesFiltrados.length > 10"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    styleClass="p-datatable-sm nova-table"
+    responsiveLayout="scroll">
 
-  <div *ngIf="!loading && listaEstudiantes.length > 0" class="card shadow-sm overflow-hidden">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light text-secondary text-uppercase fs-7">
-          <tr>
-            <th class="ps-4">Código</th>
-            <th>Nombre Completo</th>
-            <th>Email</th>
-            <th>Fecha Ingreso</th>
-            <th>Saldo Pendiente</th>
-            <th class="text-end pe-4">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let est of listaEstudiantes">
-            <td class="ps-4 fw-bold text-primary">{{ est.codigo_estudiante }}</td>
-            <td class="fw-medium text-dark">{{ est.apellido }}, {{ est.nombre }}</td>
-            <td class="text-muted">{{ est.email }}</td>
-            <td>{{ est.fecha_ingreso | date: 'mediumDate' }}</td>
-            <td>
-              <span class="badge rounded-pill px-3 py-2" 
-                    [ngClass]="{
-                      'bg-warning-subtle text-warning-dark border border-warning-subtle': est.saldo_pendiente > 0,
-                      'bg-success-subtle text-success border border-success-subtle': est.saldo_pendiente <= 0
-                    }">
-                <i class="bi me-1" [ngClass]="est.saldo_pendiente > 0 ? 'bi-exclamation-circle' : 'bi-check-circle'"></i>
-                {{ est.saldo_pendiente > 0 ? (est.saldo_pendiente | currency:'USD') : 'Al día' }}
-              </span>
-            </td>
-            <td class="text-end pe-4">
-              <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" (click)="verExpediente(est)">
-                <i class="bi bi-folder2-open"></i> Expediente
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Código</th>
+        <th>Nombre Completo</th>
+        <th>Email</th>
+        <th>Fecha Ingreso</th>
+        <th>Saldo Pendiente</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
 
-  <div *ngIf="!loading && listaEstudiantes.length === 0" class="text-center py-5 bg-light rounded-3 border border-dashed">
-    <i class="bi bi-people text-muted display-4"></i>
-    <p class="text-muted mt-2 mb-0">No se encontraron estudiantes registrados.</p>
-  </div>
-</div>
+    <ng-template pTemplate="body" let-est>
+      <tr>
+        <td class="student-code">{{ est.codigo_estudiante }}</td>
+        <td class="student-name">{{ est.apellido }}, {{ est.nombre }}</td>
+        <td>{{ est.email }}</td>
+        <td>{{ est.fecha_ingreso | date:'mediumDate' }}</td>
+        <td>
+          <p-tag [severity]="saldoSeverity(est.saldo_pendiente)"
+            [value]="est.saldo_pendiente > 0 ? (est.saldo_pendiente | currency:'USD')! : 'Al día'">
+          </p-tag>
+        </td>
+        <td class="actions-cell">
+          <button pButton type="button" label="Expediente" icon="pi pi-folder-open"
+            class="p-button-outlined p-button-sm" (click)="verExpediente(est)"></button>
+        </td>
+      </tr>
+    </ng-template>
 
-<!-- ============================================================
-     MODAL: Expediente del estudiante (ya existía)
-     ============================================================ -->
-<div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content shadow-lg border-0">
-      
-      <div class="modal-header bg-light">
-        <h5 class="modal-title d-flex align-items-center gap-2 fw-semibold">
-          <i class="bi bi-card-checklist text-primary"></i> Expediente de {{ estudianteSeleccionado?.nombre }} {{ estudianteSeleccionado?.apellido }}
-        </h5>
-        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          No se encontraron estudiantes registrados.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- ============================================================
+       MODAL: Expediente del estudiante
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModalDetalle"
+    [modal]="true"
+    [style]="{ width: '700px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="'Expediente de ' + (estudianteSeleccionado?.nombre || '') + ' ' + (estudianteSeleccionado?.apellido || '')"
+    (onHide)="cerrarModal()">
+
+    <div class="expediente-grid">
+      <div class="info-card">
+        <h4 class="section-title">Datos Generales</h4>
+        <div class="dato-item">
+          <label>Titulación ID</label>
+          <span>#{{ estudianteSeleccionado?.titulacion_id }}</span>
+        </div>
+        <div class="dato-item">
+          <label>Estado Financiero</label>
+          <p-tag [severity]="saldoSeverity(estudianteSeleccionado?.saldo_pendiente)"
+            [value]="(estudianteSeleccionado?.saldo_pendiente | currency:'USD') || '$0.00'">
+          </p-tag>
+        </div>
       </div>
-      
-      <div class="modal-body">
-        <div class="row g-3">
-          
-          <div class="col-md-5">
-            <div class="card h-100 bg-light border-0 p-3">
-              <h6 class="text-uppercase text-secondary fs-7 fw-bold mb-3">Datos Generales</h6>
-              
-              <div class="mb-3">
-                <label class="text-muted small d-block">Titulación ID</label>
-                <span class="fw-medium text-dark">#{{ estudianteSeleccionado?.titulacion_id }}</span>
-              </div>
-              
-              <div class="mb-2">
-                <label class="text-muted small d-block">Estado Financiero</label>
-                <span class="fs-5 fw-bold" [ngClass]="estudianteSeleccionado?.saldo_pendiente > 0 ? 'text-warning-dark' : 'text-success'">
-                  {{ estudianteSeleccionado?.saldo_pendiente | currency:'USD' }}
-                </span>
-              </div>
+
+      <div class="recetas-card">
+        <div class="recetas-card-header">
+          <h4 class="section-title">Recetas del Ciclo</h4>
+          <button pButton type="button" label="Asignar" icon="pi pi-plus" class="p-button-text p-button-sm" (click)="abrirModalAsignarReceta()"></button>
+        </div>
+
+        <ul class="lista-recetas" *ngIf="recetasDelEstudiante.length > 0">
+          <li *ngFor="let receta of recetasDelEstudiante">
+            <div>
+              <div class="receta-nombre">{{ receta.nombre_receta }}</div>
+              <p-tag severity="secondary" [value]="receta.categoria"></p-tag>
             </div>
-          </div>
+            <i class="pi pi-book"></i>
+          </li>
+        </ul>
 
-          <div class="col-md-7">
-            <div class="card h-100 border p-3 d-flex flex-column justify-content-between">
-              <div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <h6 class="text-uppercase text-secondary fs-7 fw-bold m-0">Recetas del Ciclo</h6>
-                  <button class="btn btn-sm btn-link text-decoration-none p-0 d-flex align-items-center gap-1" (click)="abrirModalAsignarReceta()">
-                    <i class="bi bi-plus-circle"></i> Asignar Receta
-                  </button>
-                </div>
-                
-                <div class="overflow-auto list-recetas-container" style="max-height: 200px;">
-                  <ul class="list-group list-group-flush" *ngIf="recetasDelEstudiante.length > 0">
-                    <li *ngFor="let receta of recetasDelEstudiante" class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-                      <div>
-                        <div class="fw-medium text-dark">{{ receta.nombre_receta }}</div>
-                        <span class="badge bg-secondary-subtle text-secondary fs-8">{{ receta.categoria }}</span>
-                      </div>
-                      <i class="bi bi-journal-text text-muted"></i>
-                    </li>
-                  </ul>
-
-                  <div *ngIf="recetasDelEstudiante.length === 0" class="text-center py-4 text-muted bg-light rounded mt-2">
-                    <i class="bi bi-egg text-muted fs-4"></i>
-                    <p class="small mb-0 mt-1">No hay recetas asignadas aún.</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
+        <div *ngIf="recetasDelEstudiante.length === 0" class="empty-state empty-state--inline">
+          <i class="pi pi-inbox"></i>
+          No hay recetas asignadas aún.
         </div>
       </div>
-      
-      <div class="modal-footer border-0 bg-light">
-        <button type="button" class="btn btn-secondary px-4" (click)="cerrarModal()">Cerrar</button>
-      </div>
-
     </div>
-  </div>
-</div>
 
-<!-- ============================================================
-     MODAL: Registrar nuevo estudiante (FALTABA — este era el bug)
-     ============================================================ -->
-<div class="custom-modal-backdrop" *ngIf="mostrarModalNuevoEstudiante">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow-lg border-0">
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrarModal()"></button>
+    </ng-template>
+  </p-dialog>
 
-      <div class="modal-header bg-light">
-        <h5 class="modal-title d-flex align-items-center gap-2 fw-semibold">
-          <i class="bi bi-person-plus-fill text-primary"></i> Registrar Nuevo Estudiante
-        </h5>
-        <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+  <!-- ============================================================
+       MODAL: Registrar nuevo estudiante
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModalNuevoEstudiante"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    header="Registrar Nuevo Estudiante"
+    (onHide)="cerrarModal()">
+
+    <div class="form-grid">
+      <div class="form-field tw-col-span-2">
+        <label>Código de estudiante *</label>
+        <input type="text" pInputText [(ngModel)]="nuevoEstudiante.codigo_estudiante" placeholder="Ej: EST-00012" class="tw-w-full">
       </div>
 
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label small text-muted">Código de estudiante *</label>
-          <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.codigo_estudiante"
-                 placeholder="Ej: EST-00012" name="codigo_estudiante">
-        </div>
-
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="form-label small text-muted">Nombre *</label>
-            <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.nombre"
-                   placeholder="Nombre" name="nombre">
-          </div>
-          <div class="col-6">
-            <label class="form-label small text-muted">Apellido</label>
-            <input type="text" class="form-control" [(ngModel)]="nuevoEstudiante.apellido"
-                   placeholder="Apellido" name="apellido">
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label small text-muted">Email</label>
-          <input type="email" class="form-control" [(ngModel)]="nuevoEstudiante.email"
-                 placeholder="correo@ejemplo.com" name="email">
-        </div>
-
-        <div class="mb-1">
-          <label class="form-label small text-muted">Titulación</label>
-          <select class="form-select" [(ngModel)]="nuevoEstudiante.titulacion_id" name="titulacion_id">
-            <option [ngValue]="null" disabled>Selecciona una titulación</option>
-            <option *ngFor="let t of titulaciones" [ngValue]="t.titulacion_id">{{ t.nombre_titulacion }}</option>
-          </select>
-        </div>
+      <div class="form-field">
+        <label>Nombre *</label>
+        <input type="text" pInputText [(ngModel)]="nuevoEstudiante.nombre" placeholder="Nombre" class="tw-w-full">
       </div>
 
-      <div class="modal-footer border-0 bg-light">
-        <button type="button" class="btn btn-secondary px-4" (click)="cerrarModal()">Cancelar</button>
-        <button type="button" class="btn btn-primary px-4" (click)="crearEstudiante()">
-          <i class="bi bi-check-circle me-1"></i> Registrar
-        </button>
+      <div class="form-field">
+        <label>Apellido</label>
+        <input type="text" pInputText [(ngModel)]="nuevoEstudiante.apellido" placeholder="Apellido" class="tw-w-full">
       </div>
 
+      <div class="form-field tw-col-span-2">
+        <label>Email</label>
+        <input type="email" pInputText [(ngModel)]="nuevoEstudiante.email" placeholder="correo@ejemplo.com" class="tw-w-full">
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Titulación</label>
+        <p-select
+          [options]="titulacionOptions"
+          [(ngModel)]="nuevoEstudiante.titulacion_id"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona una titulación..."
+          styleClass="tw-w-full"
+          appendTo="body">
+        </p-select>
+      </div>
     </div>
-  </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Registrar" icon="pi pi-check" (click)="crearEstudiante()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ============================================================
+       MODAL: Asignar receta al estudiante del expediente abierto
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModalAsignarReceta"
+    [modal]="true"
+    [style]="{ width: '440px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    header="Asignar Receta"
+    (onHide)="cerrarModalAsignarReceta()">
+
+    <div class="form-field">
+      <label>Receta</label>
+      <p-select
+        [options]="recetaOptions"
+        [(ngModel)]="recetaSeleccionadaId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona una receta..."
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModalAsignarReceta()"></button>
+      <button pButton type="button" [label]="asignandoReceta ? 'Asignando...' : 'Asignar'" icon="pi pi-check"
+        [disabled]="asignandoReceta" (click)="confirmarAsignarReceta()"></button>
+    </ng-template>
+  </p-dialog>
 </div>

@@ -1,142 +1,67 @@
 .titulaciones-container {
-    padding: 2rem;
+  padding: 24px 28px;
 }
 
-.header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+.nova-toolbar-icon {
+  font-size: 1.6rem;
+  color: var(--nova-gold);
+  background: rgba(184, 134, 11, 0.1);
+  padding: 12px;
+  border-radius: 12px;
 }
 
-.header-actions h2 {
-    color: #1a1a1a;
-    border-left: 5px solid #b8860b;
-    padding-left: 15px;
-    margin: 0;
+.nova-toolbar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--nova-black);
+  font-family: 'Playfair Display', serif;
 }
 
-.btn-gold {
-    background: #b8860b;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+.nova-toolbar-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
 }
 
-.btn-gold:hover { background: #1a1a1a; }
-
-.table-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    overflow-x: auto;
-}
-
-.master-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.master-table th {
-    text-align: left;
-    padding: 15px;
-    background: #f8f9fa;
-    color: #666;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-}
-
-.master-table td {
-    padding: 15px;
-    border-bottom: 1px solid #f1f1f1;
-    font-size: 0.95rem;
+.titulacion-name {
+  font-weight: 600;
+  color: var(--nova-black);
 }
 
 .actions-cell {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
 }
 
-.btn-icon {
-    background: #f8f9fa;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.2s;
+.empty-state {
+  text-align: center;
+  color: #9a9a9a;
+  padding: 2.5rem 0;
 }
 
-.btn-icon:hover { background: #eee; }
-.btn-icon.delete:hover { background: #ffebee; color: #c62828; }
-
-.no-results {
-    text-align: center;
-    padding: 3rem !important;
-    color: #999;
+.empty-state i {
+  display: block;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  color: #cfcfcf;
 }
 
-.badge-tipo {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    background: #fff3cd;
-    color: #b8860b;
+::ng-deep .nova-table .p-datatable-thead > tr > th {
+  background: var(--nova-black);
+  color: var(--nova-white);
 }
 
-.badge-tipo.badge-certificacion {
-    background: #e3f2fd;
-    color: #1565c0;
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-box {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 420px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.modal-box h3 {
-    margin: 0 0 10px 0;
-    color: #1a1a1a;
-}
-
-.modal-box label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 8px;
-}
-
-.search-input {
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    outline: none;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 1.5rem;
+.form-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
 }

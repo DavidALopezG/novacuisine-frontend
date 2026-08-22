@@ -1,78 +1,192 @@
 <div class="horarios-container">
-  <div class="header-actions">
-    <h2>📅 {{ esAdmin ? 'Gestión de Horarios' : 'Mi Horario de Clases' }}</h2>
-    <button class="btn-gold" (click)="abrirModalNuevo()">+ Agregar Horario</button>
-  </div>
+
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-calendar nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">{{ esAdmin ? 'Gestión de Horarios' : 'Mi Horario de Clases' }}</h2>
+          <p class="nova-toolbar-subtitle">Bloques de clase por asignatura, día y aula.</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Agregar Horario" icon="pi pi-plus" (onClick)="abrirModalNuevo()"></p-button>
+    </ng-template>
+  </p-toolbar>
 
   <app-spinner [visible]="loading"></app-spinner>
-  <p *ngIf="error" class="no-results">{{ error }}</p>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
 
-  <div class="card table-card" *ngIf="!loading && !error">
-    <table class="master-table">
-      <thead>
-        <tr>
-          <th>Asignatura</th>
-          <th>Día</th>
-          <th>Hora</th>
-          <th>Aula</th>
-          <th *ngIf="esAdmin">Docente</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let h of horarios">
-          <td class="recipe-name">{{ h.nombre_asignatura }}</td>
-          <td>{{ h.dia_semana }}</td>
-          <td>{{ h.hora_inicio?.slice(0,5) }} - {{ h.hora_fin?.slice(0,5) }}</td>
-          <td>{{ h.aula || '-' }}</td>
-          <td *ngIf="esAdmin">{{ h.docente_nombre || 'Sin asignar' }}</td>
-          <td class="actions-cell">
-            <button class="btn-icon delete" (click)="eliminarHorario(h)" title="Eliminar">🗑️</button>
-          </td>
-        </tr>
-        <tr *ngIf="horarios.length === 0">
-          <td [attr.colspan]="esAdmin ? 6 : 5" class="no-results">No hay bloques de horario registrados todavía.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- Tabla de horarios -->
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="horarios"
+    [paginator]="horarios.length > 10"
+    [rows]="10"
+    styleClass="p-datatable-sm nova-table"
+    responsiveLayout="scroll">
 
-  <div class="modal-overlay" *ngIf="mostrarModal">
-    <div class="modal-box">
-      <h3>Nuevo Bloque de Horario</h3>
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Asignatura</th>
+        <th>Día</th>
+        <th>Hora</th>
+        <th>Aula</th>
+        <th *ngIf="esAdmin">Docente</th>
+        <th>Estudiantes</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
 
+    <ng-template pTemplate="body" let-h>
+      <tr>
+        <td class="recipe-name">{{ h.nombre_asignatura }}</td>
+        <td><p-tag severity="secondary" [value]="h.dia_semana"></p-tag></td>
+        <td>{{ h.hora_inicio?.slice(0,5) }} - {{ h.hora_fin?.slice(0,5) }}</td>
+        <td>{{ h.aula || '-' }}</td>
+        <td *ngIf="esAdmin">{{ h.docente_nombre || 'Sin asignar' }}</td>
+        <td>
+          <button pButton type="button" [label]="h.alumnos_matriculados + ' matriculado(s)'" icon="pi pi-users"
+            class="p-button-text p-button-sm" (click)="abrirModalMatricula(h)"></button>
+        </td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
+            pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarHorario(h)"></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="esAdmin ? 7 : 6" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          No hay bloques de horario registrados todavía.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- ============================================================
+       MODAL: Nuevo bloque de horario
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModal"
+    [modal]="true"
+    [style]="{ width: '460px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    header="Nuevo Bloque de Horario"
+    (onHide)="cerrarModal()">
+
+    <div class="form-field">
       <label>Asignatura</label>
-      <select [(ngModel)]="formHorario.asignatura_id" class="search-input">
-        <option [ngValue]="null">Selecciona una asignatura...</option>
-        <option *ngFor="let a of asignaturas" [ngValue]="a.asignatura_id">{{ a.nombre_asignatura }}</option>
-      </select>
+      <p-select
+        [options]="asignaturaOptions"
+        [(ngModel)]="formHorario.asignatura_id"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona una asignatura..."
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
 
-      <ng-container *ngIf="esAdmin">
-        <label>Docente</label>
-        <select [(ngModel)]="formHorario.docente_id" class="search-input">
-          <option [ngValue]="null">Sin asignar</option>
-          <option *ngFor="let d of docentes" [ngValue]="d.usuario_id">{{ d.nombre_completo }}</option>
-        </select>
-      </ng-container>
+    <div class="form-field" *ngIf="esAdmin">
+      <label>Docente</label>
+      <p-select
+        [options]="docenteOptions"
+        [(ngModel)]="formHorario.docente_id"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sin asignar"
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
 
+    <div class="form-field">
       <label>Día</label>
-      <select [(ngModel)]="formHorario.dia_semana" class="search-input">
-        <option *ngFor="let d of diasSemana" [value]="d">{{ d }}</option>
-      </select>
+      <p-select
+        [options]="diaOptions"
+        [(ngModel)]="formHorario.dia_semana"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
 
-      <label>Hora de inicio</label>
-      <input type="time" [(ngModel)]="formHorario.hora_inicio" class="search-input">
+    <div class="form-row">
+      <div class="form-field">
+        <label>Hora de inicio</label>
+        <input type="time" pInputText [(ngModel)]="formHorario.hora_inicio" class="tw-w-full">
+      </div>
 
-      <label>Hora de fin</label>
-      <input type="time" [(ngModel)]="formHorario.hora_fin" class="search-input">
-
-      <label>Aula</label>
-      <input type="text" [(ngModel)]="formHorario.aula" class="search-input" placeholder="Ej: Cocina A">
-
-      <div class="modal-actions">
-        <button class="btn-icon" style="background-color: black;" (click)="cerrarModal()">Cancelar</button>
-        <button class="btn-gold" (click)="guardarHorario()">Guardar</button>
+      <div class="form-field">
+        <label>Hora de fin</label>
+        <input type="time" pInputText [(ngModel)]="formHorario.hora_fin" class="tw-w-full">
       </div>
     </div>
-  </div>
+
+    <div class="form-field">
+      <label>Aula</label>
+      <input type="text" pInputText [(ngModel)]="formHorario.aula" placeholder="Ej: Cocina A" class="tw-w-full">
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Guardar" icon="pi pi-check" (click)="guardarHorario()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- ============================================================
+       MODAL: Matricular estudiantes en este grupo/horario
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModalMatricula"
+    [modal]="true"
+    [style]="{ width: '520px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="'Estudiantes — ' + horarioMatriculaNombre"
+    (onHide)="cerrarModalMatricula()">
+
+    <app-spinner [visible]="cargandoMatricula" texto="Cargando matrícula..."></app-spinner>
+
+    <ng-container *ngIf="!cargandoMatricula">
+      <ul class="lista-matriculados" *ngIf="estudiantesMatriculados.length > 0">
+        <li *ngFor="let e of estudiantesMatriculados">
+          <span>{{ e.apellido }}, {{ e.nombre }} <small>({{ e.codigo_estudiante }})</small></span>
+          <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm p-button-danger"
+            pTooltip="Retirar del grupo" (click)="retirarEstudianteDelGrupo(e)"></button>
+        </li>
+      </ul>
+      <p class="hint-text" *ngIf="estudiantesMatriculados.length === 0">
+        Aún no hay estudiantes matriculados en este grupo.
+      </p>
+
+      <div class="selector-matricula">
+        <p-select
+          [options]="estudiantesDisponiblesOptions"
+          [(ngModel)]="estudianteAMatricular"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona un estudiante para matricular..."
+          styleClass="tw-flex-1"
+          appendTo="body">
+        </p-select>
+        <button pButton type="button" icon="pi pi-plus" label="Matricular" class="p-button-outlined"
+          [disabled]="guardandoMatricula" (click)="matricularEstudianteSeleccionado()"></button>
+      </div>
+      <p class="hint-text" *ngIf="estudiantesDisponiblesOptions.length === 0 && estudiantes.length > 0">
+        No hay más estudiantes de esta titulación disponibles para matricular.
+      </p>
+    </ng-container>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrarModalMatricula()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '420px' }" [closable]="false"></p-confirmDialog>
 </div>

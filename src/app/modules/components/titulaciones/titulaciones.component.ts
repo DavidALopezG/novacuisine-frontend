@@ -2,11 +2,42 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TitulacionesService } from '../../../services/titulaciones/titulaciones.service';
+import { NotificacionService } from '../../../services/notificacion/notificacion.service';
+import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
+
+import { ConfirmationService } from 'primeng/api';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { ToolbarModule } from 'primeng/toolbar';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
+import { MessageModule } from 'primeng/message';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-titulaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SpinnerComponent,
+    TableModule,
+    TagModule,
+    ButtonModule,
+    DialogModule,
+    ToolbarModule,
+    InputTextModule,
+    InputNumberModule,
+    SelectModule,
+    MessageModule,
+    ConfirmDialogModule,
+    TooltipModule,
+  ],
+  providers: [ConfirmationService],
   templateUrl: './titulaciones.component.html',
   styleUrl: './titulaciones.component.css'
 })
@@ -24,8 +55,13 @@ export class TitulacionesComponent implements OnInit {
   duracionMeses: number | null = null;
 
   tiposDisponibles = ['Titulación', 'Certificación'];
+  tipoOptions = this.tiposDisponibles.map(t => ({ label: t, value: t }));
 
-  constructor(private titulacionesService: TitulacionesService) { }
+  constructor(
+    private titulacionesService: TitulacionesService,
+    private notif: NotificacionService,
+    private confirmacion: ConfirmationService
+  ) { }
 
   ngOnInit(): void {
     this.cargarTitulaciones();
@@ -72,7 +108,7 @@ export class TitulacionesComponent implements OnInit {
 
   guardarTitulacion(): void {
     if (!this.nombreTitulacion.trim()) {
-      alert('El nombre de la titulación es obligatorio.');
+      this.notif.advertencia('El nombre de la titulación es obligatorio.');
       return;
     }
 
@@ -88,22 +124,32 @@ export class TitulacionesComponent implements OnInit {
 
     accion.subscribe({
       next: () => {
-        alert(this.modoEdicion ? '✅ Titulación actualizada.' : '✅ Titulación creada.');
+        this.notif.exito(this.modoEdicion ? 'Titulación actualizada.' : 'Titulación creada.');
         this.cerrarModal();
         this.cargarTitulaciones();
       },
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo guardar la titulación.'))
+      error: (err) => this.notif.error(err?.error?.error || 'No se pudo guardar la titulación.')
     });
   }
 
   eliminarTitulacion(titulacion: any): void {
-    if (!confirm(`¿Eliminar la titulación "${titulacion.nombre_titulacion}"?`)) return;
-
-    this.titulacionesService.eliminarTitulacion(titulacion.titulacion_id).subscribe({
-      next: () => {
-        this.cargarTitulaciones();
-      },
-      error: (err) => alert('❌ ' + (err?.error?.error || 'No se pudo eliminar la titulación.'))
+    this.confirmacion.confirm({
+      header: 'Eliminar titulación',
+      message: `¿Eliminar la titulación "${titulacion.nombre_titulacion}"? Esta acción no se puede deshacer.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.titulacionesService.eliminarTitulacion(titulacion.titulacion_id).subscribe({
+          next: () => {
+            this.notif.exito('Titulación eliminada.');
+            this.cargarTitulaciones();
+          },
+          error: (err) => this.notif.error(err?.error?.error || 'No se pudo eliminar la titulación.')
+        });
+      }
     });
   }
 }

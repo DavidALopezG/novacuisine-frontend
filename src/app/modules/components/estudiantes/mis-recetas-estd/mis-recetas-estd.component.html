@@ -1,76 +1,99 @@
 <div class="estudiante-container">
-  <h2>👨‍🍳 Mi Recetario Personal</h2>
-  <p>Aquí encontrarás las técnicas y platillos asignados por tus docentes.</p>
 
-  <!-- 🌀 Spinner de Carga Principal -->
-  <app-spinner [visible]="loading" texto="Cargando tus recetas..."></app-spinner>
-
-  <p *ngIf="error" class="no-results">{{ error }}</p>
-  <p *ngIf="!loading && !error && recetas.length === 0">
-    Aún no tienes recetas asignadas por tus docentes.
-  </p>
-
-  <div class="recetas-grid" *ngIf="!loading && !error">
-    <div class="receta-card" *ngFor="let receta of recetas">
-      <div class="badge">{{ receta.nombre_asignatura || 'Sin asignatura' }}</div>
-      <h3>{{ receta.nombre }}</h3>
-      <p>Porciones: {{ receta.porciones }} · Tiempo: {{ receta.tiempo_prep_min || '-' }} min</p>
-      <p *ngIf="receta.numero_version">Versión {{ receta.numero_version }} ({{ receta.estado_version }})</p>
-      <button class="btn-ver" (click)="verRecetaCompleta(receta)">Ver Receta Completa</button>
-    </div>
-  </div>
-
-  <!-- Modal Detalle de Receta -->
-  <div class="modal-overlay" *ngIf="mostrarModalDetalle">
-    <div class="modal-box">
-      <!-- 🌀 Spinner de Carga del Modal -->
-      <app-spinner [visible]="cargandoDetalle" texto="Cargando ficha técnica..."></app-spinner>
-
-      <ng-container *ngIf="!cargandoDetalle && recetaDetalle">
-        <h3>{{ recetaDetalle.receta.nombre }}</h3>
-        <p class="hint-text">
-          {{ recetaDetalle.receta.nombre_asignatura || 'Sin asignatura' }} ·
-          {{ recetaDetalle.receta.porciones }} porciones ·
-          {{ recetaDetalle.receta.tiempo_prep_min || '-' }} min
-        </p>
-
-        <h4>📋 Pasos de preparación</h4>
-        <ol class="lista-pasos" *ngIf="recetaDetalle.ultima_version?.contenido_json?.pasos?.length > 0">
-          <li *ngFor="let paso of recetaDetalle.ultima_version.contenido_json.pasos">
-            <span class="paso-texto">{{ paso }}</span>
-          </li>
-        </ol>
-        <p *ngIf="!recetaDetalle.ultima_version?.contenido_json?.pasos?.length" class="hint-text">
-          Tu docente aún no ha registrado los pasos de preparación de esta receta.
-        </p>
-
-        <h4>🧂 Ingredientes</h4>
-        <ul class="lista-ingredientes" *ngIf="recetaDetalle.insumos?.length > 0">
-          <li *ngFor="let ing of recetaDetalle.insumos">
-            <ng-container *ngIf="ing.cantidad > 0; else alGustoEstd">
-              {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
-            </ng-container>
-            <ng-template #alGustoEstd>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
-          </li>
-        </ul>
-        <p *ngIf="!recetaDetalle.insumos || recetaDetalle.insumos.length === 0" class="hint-text">
-          Esta receta aún no tiene ingredientes registrados.
-        </p>
-
-        <h4>🍳 Menaje / Utensilios</h4>
-        <ul class="lista-ingredientes" *ngIf="recetaDetalle.menaje?.length > 0">
-          <li *ngFor="let m of recetaDetalle.menaje">
-            {{ m.cantidad_requerida }} x {{ m.nombre }}
-          </li>
-        </ul>
-        <p *ngIf="!recetaDetalle.menaje || recetaDetalle.menaje.length === 0" class="hint-text">
-          No se requieren utensilios especiales registrados.
-        </p>
-      </ng-container>
-
-      <div class="modal-actions">
-        <button class="btn-ver" (click)="cerrarModalDetalle()">Cerrar</button>
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-book nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Mi Recetario Personal</h2>
+          <p class="nova-toolbar-subtitle">Técnicas y platillos asignados por tus docentes.</p>
+        </div>
       </div>
-    </div>
+    </ng-template>
+  </p-toolbar>
+
+  <app-spinner [visible]="loading" texto="Cargando tus recetas..."></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
+
+  <div class="empty-state" *ngIf="!loading && !error && recetas.length === 0">
+    <i class="pi pi-inbox"></i>
+    Aún no tienes recetas asignadas por tus docentes.
   </div>
+
+  <!-- Grid de tarjetas -->
+  <div class="recetas-grid" *ngIf="!loading && !error">
+    <p-card styleClass="receta-card" *ngFor="let receta of recetas">
+      <p-tag severity="info" [value]="receta.nombre_asignatura || 'Sin asignatura'" styleClass="tw-mb-2"></p-tag>
+      <h3 class="receta-nombre">{{ receta.nombre }}</h3>
+      <p class="receta-meta"><i class="pi pi-users"></i> {{ receta.porciones }} porciones · <i class="pi pi-clock"></i> {{ receta.tiempo_prep_min || '-' }} min</p>
+      <p class="receta-version" *ngIf="receta.numero_version">Versión {{ receta.numero_version }} ({{ receta.estado_version }})</p>
+      <p-button label="Ver Receta Completa" icon="pi pi-eye" styleClass="tw-w-full tw-mt-3" (onClick)="verRecetaCompleta(receta)"></p-button>
+    </p-card>
+  </div>
+
+  <!-- ============================================================
+       MODAL: Detalle de receta (ficha técnica completa)
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModalDetalle"
+    [modal]="true"
+    [style]="{ width: '620px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="recetaDetalle?.receta?.nombre || 'Ficha técnica'"
+    (onHide)="cerrarModalDetalle()">
+
+    <app-spinner [visible]="cargandoDetalle" texto="Cargando ficha técnica..."></app-spinner>
+
+    <ng-container *ngIf="!cargandoDetalle && recetaDetalle">
+      <p class="hint-text">
+        {{ recetaDetalle.receta.nombre_asignatura || 'Sin asignatura' }} ·
+        {{ recetaDetalle.receta.porciones }} porciones ·
+        {{ recetaDetalle.receta.tiempo_prep_min || '-' }} min
+      </p>
+
+      <p-divider></p-divider>
+
+      <h4 class="section-title"><i class="pi pi-list-check"></i> Pasos de preparación</h4>
+      <ol class="lista-pasos" *ngIf="recetaDetalle.ultima_version?.contenido_json?.pasos?.length > 0">
+        <li *ngFor="let paso of recetaDetalle.ultima_version.contenido_json.pasos">
+          <span class="paso-texto">{{ paso }}</span>
+        </li>
+      </ol>
+      <p *ngIf="!recetaDetalle.ultima_version?.contenido_json?.pasos?.length" class="hint-text">
+        Tu docente aún no ha registrado los pasos de preparación de esta receta.
+      </p>
+
+      <p-divider></p-divider>
+
+      <h4 class="section-title"><i class="pi pi-shopping-bag"></i> Ingredientes</h4>
+      <ul class="lista-ingredientes" *ngIf="recetaDetalle.insumos?.length > 0">
+        <li *ngFor="let ing of recetaDetalle.insumos">
+          <ng-container *ngIf="ing.cantidad > 0; else alGustoEstd">
+            {{ ing.cantidad }} {{ ing.unidad_medida }} de {{ ing.nombre_insumo }}
+          </ng-container>
+          <ng-template #alGustoEstd>{{ ing.nombre_insumo }} (c/n, al gusto)</ng-template>
+        </li>
+      </ul>
+      <p *ngIf="!recetaDetalle.insumos || recetaDetalle.insumos.length === 0" class="hint-text">
+        Esta receta aún no tiene ingredientes registrados.
+      </p>
+
+      <p-divider></p-divider>
+
+      <h4 class="section-title"><i class="pi pi-inbox"></i> Menaje / Utensilios</h4>
+      <ul class="lista-ingredientes" *ngIf="recetaDetalle.menaje?.length > 0">
+        <li *ngFor="let m of recetaDetalle.menaje">
+          {{ m.cantidad_requerida }} x {{ m.nombre }}
+        </li>
+      </ul>
+      <p *ngIf="!recetaDetalle.menaje || recetaDetalle.menaje.length === 0" class="hint-text">
+        No se requieren utensilios especiales registrados.
+      </p>
+    </ng-container>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrarModalDetalle()"></button>
+    </ng-template>
+  </p-dialog>
 </div>
