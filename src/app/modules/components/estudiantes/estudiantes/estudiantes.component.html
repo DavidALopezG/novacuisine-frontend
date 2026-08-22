@@ -111,8 +111,8 @@
         <ul class="lista-recetas" *ngIf="recetasDelEstudiante.length > 0">
           <li *ngFor="let receta of recetasDelEstudiante">
             <div>
-              <div class="receta-nombre">{{ receta.nombre_receta }}</div>
-              <p-tag severity="secondary" [value]="receta.categoria"></p-tag>
+              <div class="receta-nombre">{{ receta.nombre }}</div>
+              <p-tag severity="secondary" [value]="receta.nombre_asignatura || 'Sin asignatura'"></p-tag>
             </div>
             <i class="pi pi-book"></i>
           </li>
