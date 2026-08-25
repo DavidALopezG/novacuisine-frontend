@@ -82,6 +82,9 @@
             pTooltip="Aprobar versión" tooltipPosition="top" (click)="aprobarVersionReceta(receta)"></button>
           <button pButton type="button" icon="pi pi-user-plus" class="p-button-text p-button-rounded"
             pTooltip="Asignar a estudiante" tooltipPosition="top" (click)="abrirModalAsignar(receta)"></button>
+          <button pButton type="button" [icon]="imprimiendoId === receta.receta_id ? 'pi pi-spin pi-spinner' : 'pi pi-print'"
+            class="p-button-text p-button-rounded" [disabled]="imprimiendoId === receta.receta_id"
+            pTooltip="Imprimir ficha técnica (PDF)" tooltipPosition="top" (click)="imprimirReceta(receta)"></button>
           <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
             pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarReceta(receta)"></button>
         </td>

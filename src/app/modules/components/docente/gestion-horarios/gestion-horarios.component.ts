@@ -90,12 +90,22 @@ export class GestionHorariosComponent implements OnInit {
   // y se excluyen los que ya están matriculados en este bloque.
   get estudiantesDisponiblesOptions(): { label: string; value: string }[] {
     const yaMatriculadosIds = new Set(this.estudiantesMatriculados.map(e => String(e.estudiante_id)));
+    // Antes esto filtraba también por e.titulacion_id === this.horarioMatriculaTitulacionId,
+    // lo que ocultaba SILENCIOSAMENTE a cualquier estudiante de otra titulación — aunque
+    // "Asignar receta" (estudiante_receta_acceso) nunca tuvo esa restricción. Se quita para
+    // que ambos flujos sean consistentes: el docente decide, no un filtro oculto.
     return this.estudiantes
-      .filter(e =>
-        (!this.horarioMatriculaTitulacionId || e.titulacion_id === this.horarioMatriculaTitulacionId) &&
-        !yaMatriculadosIds.has(String(e.estudiante_id))
-      )
-      .map(e => ({ label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})`, value: e.estudiante_id }));
+      .filter(e => !yaMatriculadosIds.has(String(e.estudiante_id)))
+      .sort((a, b) => {
+        const aCoincide = a.titulacion_id === this.horarioMatriculaTitulacionId ? 0 : 1;
+        const bCoincide = b.titulacion_id === this.horarioMatriculaTitulacionId ? 0 : 1;
+        return aCoincide - bCoincide;
+      })
+      .map(e => ({
+        label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})` +
+          (e.titulacion_id !== this.horarioMatriculaTitulacionId ? ' — otra titulación' : ''),
+        value: e.estudiante_id
+      }));
   }
 
   constructor(
@@ -178,6 +188,11 @@ export class GestionHorariosComponent implements OnInit {
       return;
     }
 
+    if (this.formHorario.hora_fin <= this.formHorario.hora_inicio) {
+      this.notif.advertencia('La hora de fin debe ser posterior a la hora de inicio.');
+      return;
+    }
+
     this.horariosService.crearHorario(this.formHorario).subscribe({
       next: (resp) => {
         this.notif.exito('Horario creado correctamente.');
@@ -256,8 +271,31 @@ export class GestionHorariosComponent implements OnInit {
       this.notif.advertencia('Selecciona un estudiante para matricular.');
       return;
     }
+
+    const estudiante = this.estudiantes.find(e => e.estudiante_id === this.estudianteAMatricular);
+    const cruzaTitulacion = this.horarioMatriculaTitulacionId && estudiante?.titulacion_id
+      && estudiante.titulacion_id !== this.horarioMatriculaTitulacionId;
+
+    if (cruzaTitulacion) {
+      this.confirmacion.confirm({
+        header: 'Estudiante de otra titulación',
+        message: `${estudiante.nombre} ${estudiante.apellido} pertenece a una titulación distinta a la de este grupo (${this.horarioMatriculaNombre}). ¿Confirmas que quieres matricularlo de todas formas?`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, matricular',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-warning',
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => this.ejecutarMatricula()
+      });
+      return;
+    }
+
+    this.ejecutarMatricula();
+  }
+
+  private ejecutarMatricula(): void {
     this.guardandoMatricula = true;
-    this.horariosService.matricularEstudiante(this.horarioMatriculaId, this.estudianteAMatricular).subscribe({
+    this.horariosService.matricularEstudiante(this.horarioMatriculaId!, this.estudianteAMatricular!).subscribe({
       next: () => {
         this.notif.exito('Estudiante matriculado en el grupo.');
         this.estudianteAMatricular = null;

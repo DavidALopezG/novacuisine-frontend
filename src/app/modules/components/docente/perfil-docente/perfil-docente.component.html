@@ -1,0 +1,92 @@
+<div class="perfil-container">
+
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-user nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Mi Perfil</h2>
+          <p class="nova-toolbar-subtitle">Tus datos y actividad como docente en Nova Cuisine.</p>
+        </div>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
+
+  <div class="perfil-grid" *ngIf="!loading && !error && usuario">
+
+    <!-- Columna izquierda: tarjeta principal -->
+    <p-card styleClass="profile-main">
+      <div class="avatar-section">
+        <p-avatar [label]="iniciales" size="xlarge" shape="circle" styleClass="nova-avatar"></p-avatar>
+        <p-tag [severity]="usuario.activo ? 'success' : 'secondary'" [value]="usuario.activo ? 'Activo' : 'Inactivo'"></p-tag>
+      </div>
+
+      <div class="user-info">
+        <h3>{{ usuario.nombre_completo }}</h3>
+        <p class="rol">Docente</p>
+        <p class="codigo">{{ usuario.usuario_id }}</p>
+      </div>
+
+      <p-divider></p-divider>
+
+      <div class="contact-info">
+        <div class="info-item">
+          <small>Correo Electrónico</small>
+          <p>{{ usuario.email }}</p>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Columna derecha: actividad -->
+    <div class="details-column">
+
+      <!-- KPIs de actividad -->
+      <div class="kpi-grid" *ngIf="stats">
+        <p-card styleClass="kpi-card">
+          <div class="kpi-body">
+            <div class="kpi-icon kpi-icon--gold"><i class="pi pi-calendar"></i></div>
+            <div class="kpi-data">
+              <h3>{{ stats.total_grupos }}</h3>
+              <p>Grupos a cargo</p>
+            </div>
+          </div>
+        </p-card>
+
+        <p-card styleClass="kpi-card kpi-card--success">
+          <div class="kpi-body">
+            <div class="kpi-icon kpi-icon--success"><i class="pi pi-users"></i></div>
+            <div class="kpi-data">
+              <h3>{{ stats.total_estudiantes }}</h3>
+              <p>Estudiantes matriculados</p>
+            </div>
+          </div>
+        </p-card>
+
+        <p-card styleClass="kpi-card kpi-card--warning">
+          <div class="kpi-body">
+            <div class="kpi-icon kpi-icon--warning"><i class="pi pi-book"></i></div>
+            <div class="kpi-data">
+              <h3>{{ stats.total_recetas }}</h3>
+              <p>Recetas creadas</p>
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Asignaturas que imparte -->
+      <p-card header="Asignaturas que Imparto">
+        <div class="asignaturas-list" *ngIf="stats && stats.asignaturas.length > 0">
+          <p-tag *ngFor="let a of stats.asignaturas" severity="info" [value]="a.nombre_asignatura" styleClass="asignatura-tag"></p-tag>
+        </div>
+        <div class="empty-state" *ngIf="!stats || stats.asignaturas.length === 0">
+          <i class="pi pi-inbox"></i>
+          Aún no tienes grupos/horarios asignados.
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>

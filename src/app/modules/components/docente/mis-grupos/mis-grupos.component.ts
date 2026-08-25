@@ -97,12 +97,24 @@ export class MisGruposComponent implements OnInit {
 
   get estudiantesDisponiblesOptions(): { label: string; value: string }[] {
     const yaMatriculadosIds = new Set(this.estudiantesMatriculados.map(e => String(e.estudiante_id)));
+    // Antes esto filtraba también por e.titulacion_id === this.horarioMatriculaTitulacionId,
+    // lo que ocultaba SILENCIOSAMENTE a cualquier estudiante de otra titulación — aunque
+    // "Asignar receta" (estudiante_receta_acceso) nunca tuvo esa restricción. Se quita para
+    // que ambos flujos sean consistentes: el docente decide, no un filtro oculto.
     return this.estudiantes
-      .filter(e =>
-        (!this.horarioMatriculaTitulacionId || e.titulacion_id === this.horarioMatriculaTitulacionId) &&
-        !yaMatriculadosIds.has(String(e.estudiante_id))
-      )
-      .map(e => ({ label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})`, value: e.estudiante_id }));
+      .filter(e => !yaMatriculadosIds.has(String(e.estudiante_id)))
+      .sort((a, b) => {
+        // Los de la misma titulación del grupo aparecen primero (más probable que sean
+        // los que busca el docente), el resto queda disponible más abajo en la lista.
+        const aCoincide = a.titulacion_id === this.horarioMatriculaTitulacionId ? 0 : 1;
+        const bCoincide = b.titulacion_id === this.horarioMatriculaTitulacionId ? 0 : 1;
+        return aCoincide - bCoincide;
+      })
+      .map(e => ({
+        label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})` +
+          (e.titulacion_id !== this.horarioMatriculaTitulacionId ? ' — otra titulación' : ''),
+        value: e.estudiante_id
+      }));
   }
 
   constructor(
@@ -283,8 +295,31 @@ export class MisGruposComponent implements OnInit {
       this.notif.advertencia('Selecciona un estudiante para matricular.');
       return;
     }
+
+    const estudiante = this.estudiantes.find(e => e.estudiante_id === this.estudianteAMatricular);
+    const cruzaTitulacion = this.horarioMatriculaTitulacionId && estudiante?.titulacion_id
+      && estudiante.titulacion_id !== this.horarioMatriculaTitulacionId;
+
+    if (cruzaTitulacion) {
+      this.confirmacion.confirm({
+        header: 'Estudiante de otra titulación',
+        message: `${estudiante.nombre} ${estudiante.apellido} pertenece a una titulación distinta a la de este grupo (${this.horarioMatriculaNombre}). ¿Confirmas que quieres matricularlo de todas formas?`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, matricular',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-warning',
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => this.ejecutarMatricula()
+      });
+      return;
+    }
+
+    this.ejecutarMatricula();
+  }
+
+  private ejecutarMatricula(): void {
     this.guardandoMatricula = true;
-    this.horariosService.matricularEstudiante(this.horarioMatriculaId, this.estudianteAMatricular).subscribe({
+    this.horariosService.matricularEstudiante(this.horarioMatriculaId!, this.estudianteAMatricular!).subscribe({
       next: () => {
         this.notif.exito('Estudiante matriculado en el grupo.');
         this.estudianteAMatricular = null;

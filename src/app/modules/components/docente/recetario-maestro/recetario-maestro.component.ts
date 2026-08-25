@@ -93,6 +93,7 @@ export class RecetarioMaestroComponent implements OnInit {
 
   loading = true;
   error: string | null = null;
+  imprimiendoId: number | null = null;
 
   searchTerm = '';
   categoriaSeleccionada = 'Todas';
@@ -141,6 +142,7 @@ export class RecetarioMaestroComponent implements OnInit {
   mostrarModalAsignar = false;
   recetaAsignarId: number | null = null;
   recetaAsignarNombre = '';
+  recetaAsignarTitulacionId: number | null = null;
   estudianteSeleccionadoId: string | null = null;
   asignando = false;
 
@@ -432,6 +434,27 @@ export class RecetarioMaestroComponent implements OnInit {
 
   // ─────────────────── MODAL 2 ────────────────────────────
 
+  imprimirReceta(receta: Receta): void {
+    this.imprimiendoId = receta.receta_id;
+    this.recetasService.exportarPdf(receta.receta_id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receta-${receta.nombre}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        this.imprimiendoId = null;
+      },
+      error: () => {
+        this.notif.error('No se pudo generar el PDF de la receta.');
+        this.imprimiendoId = null;
+      }
+    });
+  }
+
   abrirModalIngredientes(receta: Receta): void {
     this.recetaIngredientesId = receta.receta_id;
     this.recetaIngredientesNombre = receta.nombre;
@@ -544,6 +567,7 @@ export class RecetarioMaestroComponent implements OnInit {
   abrirModalAsignar(receta: Receta): void {
     this.recetaAsignarId = receta.receta_id;
     this.recetaAsignarNombre = receta.nombre;
+    this.recetaAsignarTitulacionId = this.asignaturas.find(a => a.asignatura_id === receta.asignatura_id)?.titulacion_id ?? null;
     this.estudianteSeleccionadoId = null;
     this.mostrarModalAsignar = true;
   }
@@ -551,6 +575,7 @@ export class RecetarioMaestroComponent implements OnInit {
   cerrarModalAsignar(): void {
     this.mostrarModalAsignar = false;
     this.recetaAsignarId = null;
+    this.recetaAsignarTitulacionId = null;
   }
 
   confirmarAsignacion(): void {
@@ -558,8 +583,31 @@ export class RecetarioMaestroComponent implements OnInit {
       this.notif.advertencia('Selecciona un estudiante.');
       return;
     }
+
+    const estudiante = this.estudiantes.find(e => e.estudiante_id === this.estudianteSeleccionadoId);
+    const cruzaTitulacion = this.recetaAsignarTitulacionId && estudiante?.titulacion_id
+      && estudiante.titulacion_id !== this.recetaAsignarTitulacionId;
+
+    if (cruzaTitulacion) {
+      this.confirmacion.confirm({
+        header: 'Receta de otra titulación',
+        message: `"${this.recetaAsignarNombre}" pertenece a una titulación distinta a la de ${estudiante.nombre} ${estudiante.apellido}. ¿Confirmas que quieres asignarla de todas formas?`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, asignar',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-warning',
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => this.ejecutarAsignacion()
+      });
+      return;
+    }
+
+    this.ejecutarAsignacion();
+  }
+
+  private ejecutarAsignacion(): void {
     this.asignando = true;
-    this.recetasService.asignarReceta(this.recetaAsignarId, this.estudianteSeleccionadoId).subscribe({
+    this.recetasService.asignarReceta(this.recetaAsignarId!, this.estudianteSeleccionadoId!).subscribe({
       next: (resp) => { this.notif.exito(resp?.message || 'Receta asignada.'); this.asignando = false; this.cerrarModalAsignar(); },
       error: () => { this.notif.error('No se pudo asignar la receta.'); this.asignando = false; }
     });

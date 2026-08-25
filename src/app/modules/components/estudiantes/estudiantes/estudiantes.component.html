@@ -91,8 +91,8 @@
       <div class="info-card">
         <h4 class="section-title">Datos Generales</h4>
         <div class="dato-item">
-          <label>Titulación ID</label>
-          <span>#{{ estudianteSeleccionado?.titulacion_id }}</span>
+          <label>Titulación</label>
+          <span>{{ nombreTitulacionSeleccionado }}</span>
         </div>
         <div class="dato-item">
           <label>Estado Financiero</label>
@@ -111,8 +111,8 @@
         <ul class="lista-recetas" *ngIf="recetasDelEstudiante.length > 0">
           <li *ngFor="let receta of recetasDelEstudiante">
             <div>
-              <div class="receta-nombre">{{ receta.nombre }}</div>
-              <p-tag severity="secondary" [value]="receta.nombre_asignatura || 'Sin asignatura'"></p-tag>
+              <div class="receta-nombre">{{ receta.nombre_receta }}</div>
+              <p-tag severity="secondary" [value]="receta.categoria"></p-tag>
             </div>
             <i class="pi pi-book"></i>
           </li>
@@ -212,4 +212,6 @@
         [disabled]="asignandoReceta" (click)="confirmarAsignarReceta()"></button>
     </ng-template>
   </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '440px' }" [closable]="false"></p-confirmDialog>
 </div>

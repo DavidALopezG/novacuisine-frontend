@@ -7,6 +7,7 @@ import { TitulacionesService } from './../../../../services/titulaciones/titulac
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
 
+import { ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -19,6 +20,7 @@ import { SelectModule } from 'primeng/select';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-estudiantes',
@@ -39,7 +41,9 @@ import { DividerModule } from 'primeng/divider';
     MessageModule,
     TooltipModule,
     DividerModule,
+    ConfirmDialogModule,
   ],
+  providers: [ConfirmationService],
   templateUrl: './estudiantes.component.html',
   styleUrl: './estudiantes.component.css'
 })
@@ -80,11 +84,17 @@ export class EstudiantesComponent implements OnInit {
     return this.catalogoRecetas.map(r => ({ label: r.nombre, value: r.receta_id }));
   }
 
+  get nombreTitulacionSeleccionado(): string {
+    const t = this.titulaciones.find(t => t.titulacion_id === this.estudianteSeleccionado?.titulacion_id);
+    return t?.nombre_titulacion || 'Sin titulación asignada';
+  }
+
   constructor(
     private estudiantesService: EstudiantesService,
     private recetasService: RecetasService,
     private titulacionesService: TitulacionesService,
-    private notif: NotificacionService
+    private notif: NotificacionService,
+    private confirmacion: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -198,8 +208,31 @@ export class EstudiantesComponent implements OnInit {
       this.notif.advertencia('Selecciona una receta.');
       return;
     }
+
+    const receta = this.catalogoRecetas.find(r => r.receta_id === this.recetaSeleccionadaId);
+    const cruzaTitulacion = receta?.titulacion_id && this.estudianteSeleccionado.titulacion_id
+      && receta.titulacion_id !== this.estudianteSeleccionado.titulacion_id;
+
+    if (cruzaTitulacion) {
+      this.confirmacion.confirm({
+        header: 'Receta de otra titulación',
+        message: `"${receta.nombre}" pertenece a una titulación distinta a la de ${this.estudianteSeleccionado.nombre} ${this.estudianteSeleccionado.apellido} (${this.nombreTitulacionSeleccionado}). ¿Confirmas que quieres asignarla de todas formas?`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, asignar',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-warning',
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => this.ejecutarAsignacionReceta()
+      });
+      return;
+    }
+
+    this.ejecutarAsignacionReceta();
+  }
+
+  private ejecutarAsignacionReceta(): void {
     this.asignandoReceta = true;
-    this.recetasService.asignarReceta(this.recetaSeleccionadaId, this.estudianteSeleccionado.estudiante_id)
+    this.recetasService.asignarReceta(this.recetaSeleccionadaId!, this.estudianteSeleccionado.estudiante_id)
       .subscribe({
         next: () => {
           this.notif.exito('Receta vinculada correctamente');

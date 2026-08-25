@@ -48,4 +48,9 @@ export class RecetasService {
   misRecetas(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/mis-recetas`);
   }
+
+  // Ficha técnica en PDF, generada 100% en el backend (mismo patrón que Reportes)
+  exportarPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/exportar/pdf`, { responseType: 'blob' });
+  }
 }

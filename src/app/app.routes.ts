@@ -15,6 +15,7 @@ import { HorarioClaseComponent } from './modules/components/estudiantes/horario-
 // Importa el componente para Docentes cuando exista
  import { MisGruposComponent } from './modules/components/docente/mis-grupos/mis-grupos.component';
  import { RecetarioMaestroComponent } from './modules/components/docente/recetario-maestro/recetario-maestro.component';
+ import { PerfilDocenteComponent } from './modules/components/docente/perfil-docente/perfil-docente.component';
 import { TitulacionesComponent } from './modules/components/titulaciones/titulaciones.component';
 import { GestionHorariosComponent } from './modules/components/docente/gestion-horarios/gestion-horarios.component';
 import { authGuard } from './guards/auth.guard';
@@ -37,6 +38,7 @@ export const routes: Routes = [
       // Rutas Docente (Rol 2)
        { path: 'mis-grupos', component: MisGruposComponent },
        { path: 'recetario-maestro', component: RecetarioMaestroComponent },
+       { path: 'perfil-docente', component: PerfilDocenteComponent },
       // { path: 'evaluaciones', component: CalificacionesComponent },
 
       // 📅 Gestión de horarios: compartida por Admin (gestiona todos) y Docente (gestiona los suyos)

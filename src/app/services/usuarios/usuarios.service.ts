@@ -36,4 +36,8 @@ export class UsuariosService {
   deleteUsuario(id: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
+
+  obtenerMiPerfil(): Observable<{ usuario: Usuario; stats: any }> {
+    return this.http.get<{ usuario: Usuario; stats: any }>(`${this.apiUrl}/mi-perfil`);
+  }
 }

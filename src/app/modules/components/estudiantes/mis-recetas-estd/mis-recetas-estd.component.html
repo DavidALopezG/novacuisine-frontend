@@ -94,6 +94,8 @@
 
     <ng-template pTemplate="footer">
       <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrarModalDetalle()"></button>
+      <button pButton type="button" [label]="imprimiendo ? 'Generando...' : 'Descargar Receta'" icon="pi pi-print"
+        [disabled]="imprimiendo || !recetaDetalle" (click)="imprimirReceta()"></button>
     </ng-template>
   </p-dialog>
 </div>

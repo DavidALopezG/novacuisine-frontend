@@ -51,6 +51,7 @@ export class MisRecetasEstdComponent implements OnInit {
   // Detalle completo de la receta seleccionada
   mostrarModalDetalle = false;
   cargandoDetalle = false;
+  imprimiendo = false;
   recetaDetalle: any = null;
 
   constructor(
@@ -101,5 +102,27 @@ export class MisRecetasEstdComponent implements OnInit {
   cerrarModalDetalle(): void {
     this.mostrarModalDetalle = false;
     this.recetaDetalle = null;
+  }
+
+  imprimirReceta(): void {
+    if (!this.recetaDetalle?.receta?.receta_id) return;
+    this.imprimiendo = true;
+    this.recetasService.exportarPdf(this.recetaDetalle.receta.receta_id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receta-${this.recetaDetalle.receta.nombre}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        this.imprimiendo = false;
+      },
+      error: () => {
+        this.notif.error('No se pudo generar el PDF de la receta.');
+        this.imprimiendo = false;
+      }
+    });
   }
 }
