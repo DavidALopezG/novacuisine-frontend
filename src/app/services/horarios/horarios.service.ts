@@ -36,8 +36,8 @@ export class HorariosService {
     return this.http.get<any[]>(`${this.apiUrl}/${horarioId}/estudiantes`);
   }
 
-  matricularEstudiante(horarioId: number, estudianteId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${horarioId}/estudiantes`, { estudiante_id: estudianteId });
+  matricularEstudiante(horarioId: number, estudianteId: string, forzar: boolean = false): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${horarioId}/estudiantes`, { estudiante_id: estudianteId, forzar });
   }
 
   retirarEstudiante(horarioId: number, estudianteId: string): Observable<any> {

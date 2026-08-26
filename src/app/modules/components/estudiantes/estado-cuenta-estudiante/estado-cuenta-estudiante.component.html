@@ -71,6 +71,7 @@
               <th>Monto Total</th>
               <th>Saldo Pendiente</th>
               <th>Estado</th>
+              <th>Comprobante</th>
             </tr>
           </ng-template>
 
@@ -81,12 +82,24 @@
               <td>{{ item.monto_total | currency }}</td>
               <td>{{ item.saldo_pendiente | currency }}</td>
               <td><p-tag [severity]="estadoSeverity(item)" [value]="estadoReal(item)"></p-tag></td>
+              <td>
+                <ng-container [ngSwitch]="item.comprobante_estado">
+                  <p-tag *ngSwitchCase="'PENDIENTE'" severity="warn" value="En revisión"></p-tag>
+                  <p-tag *ngSwitchCase="'RECHAZADO'" severity="danger" value="Rechazado" [pTooltip]="item.comprobante_observacion"></p-tag>
+                  <p-tag *ngSwitchCase="'APROBADO'" severity="success" value="Aprobado"></p-tag>
+                  <button *ngSwitchDefault pButton type="button" label="Subir" icon="pi pi-upload"
+                    class="p-button-text p-button-sm"
+                    [disabled]="!puedeSubirComprobante(item)"
+                    (click)="abrirModalComprobante(item)">
+                  </button>
+                </ng-container>
+              </td>
             </tr>
           </ng-template>
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="5" class="empty-state">
+              <td colspan="6" class="empty-state">
                 <i class="pi pi-inbox"></i>
                 No tienes obligaciones de cobro registradas.
               </td>
@@ -104,8 +117,40 @@
           <small>{{ m.detalles }}</small>
         </div>
 
-        <p-button label="Reportar Pago Realizado" icon="pi pi-send" styleClass="p-button-outlined tw-w-full tw-mt-3" (onClick)="reportarPago()"></p-button>
+        <p class="action-hint tw-mt-3">
+          Después de transferir, sube tu comprobante desde la tabla de la izquierda
+          (columna "Comprobante") para que el administrador lo valide.
+        </p>
       </p-card>
     </div>
   </ng-container>
+
+  <!-- Modal: subir comprobante de pago -->
+  <p-dialog header="Subir comprobante de pago" [(visible)]="mostrarModalComprobante" [modal]="true"
+    [style]="{ width: '420px' }" [draggable]="false" (onHide)="cerrarModalComprobante()">
+    <div class="tw-flex tw-flex-col tw-gap-4" *ngIf="obligacionSeleccionada">
+      <p class="action-hint">
+        Obligación #{{ obligacionSeleccionada.obligacion_id }} —
+        saldo pendiente {{ obligacionSeleccionada.saldo_pendiente | currency }}
+      </p>
+
+      <div class="form-field">
+        <label>Monto que pagaste</label>
+        <p-inputNumber [(ngModel)]="montoDeclarado" mode="currency" currency="USD" locale="en-US" [min]="0.01" styleClass="tw-w-full"></p-inputNumber>
+      </div>
+
+      <div class="form-field">
+        <label>Archivo del comprobante (imagen o PDF)</label>
+        <input type="file" accept="image/*,.pdf" (change)="onArchivoSeleccionado($event)" />
+      </div>
+
+      <p-message severity="info" text="Tu comprobante quedará en revisión hasta que un administrador lo apruebe." styleClass="tw-w-full"></p-message>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModalComprobante()"></button>
+      <button pButton type="button" label="Enviar comprobante" icon="pi pi-send"
+        [loading]="subiendoComprobante" (click)="enviarComprobante()"></button>
+    </ng-template>
+  </p-dialog>
 </div>

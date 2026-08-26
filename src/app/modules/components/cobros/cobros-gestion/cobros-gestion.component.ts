@@ -5,6 +5,7 @@ import { CobrosService } from '../../../../services/cobros/cobros.service';
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
+import { APP_CONFIG } from '../../../../config/app.config.env';
 
 // Módulos PrimeNG
 import { TableModule } from 'primeng/table';
@@ -31,6 +32,11 @@ interface Obligacion {
   monto_pagado: number;
   estado: string;
   fecha_pago: Date | null;
+  comprobante_ruta?: string | null;
+  comprobante_monto_declarado?: number | null;
+  comprobante_estado?: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | null;
+  comprobante_fecha_subida?: Date | null;
+  comprobante_observacion?: string | null;
 }
 
 @Component({
@@ -278,5 +284,42 @@ confirmarPago(): void {
     this.mostrarModalObligacion = false;
     this.mostrarModalImportar = false;
     this.obligacionSeleccionada = null;
+  }
+
+  // ── Comprobantes de pago subidos por el estudiante ─────────
+
+  /** URL absoluta del archivo del comprobante (el backend lo sirve como estático fuera de /api). */
+  urlComprobante(o: Obligacion): string {
+    if (!o.comprobante_ruta) return '';
+    const raiz = APP_CONFIG.apiUrl.replace(/\/api\/?$/, '');
+    return `${raiz}${o.comprobante_ruta}`;
+  }
+
+  aprobarComprobante(o: Obligacion): void {
+    this.cobrosService.aprobarComprobante(o.obligacion_id).subscribe({
+      next: (res) => {
+        this.notif.exito(res?.message || 'Comprobante aprobado y pago aplicado.');
+        this.cargarObligaciones();
+        this.cargarEstudiantes();
+      },
+      error: (err) => {
+        console.error('Error al aprobar comprobante:', err);
+        this.notif.error(err?.error?.error || 'No se pudo aprobar el comprobante.');
+      }
+    });
+  }
+
+  rechazarComprobante(o: Obligacion): void {
+    const observacion = window.prompt('Motivo del rechazo (opcional):') || undefined;
+    this.cobrosService.rechazarComprobante(o.obligacion_id, observacion).subscribe({
+      next: () => {
+        this.notif.exito('Comprobante rechazado.');
+        this.cargarObligaciones();
+      },
+      error: (err) => {
+        console.error('Error al rechazar comprobante:', err);
+        this.notif.error(err?.error?.error || 'No se pudo rechazar el comprobante.');
+      }
+    });
   }
 }

@@ -16,4 +16,12 @@ export class AsignaturasService {
   crearAsignatura(asignatura: any): Observable<any> {
     return this.http.post(this.apiUrl, asignatura);
   }
+
+  actualizarAsignatura(id: number, asignatura: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, asignatura);
+  }
+
+  eliminarAsignatura(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
 }

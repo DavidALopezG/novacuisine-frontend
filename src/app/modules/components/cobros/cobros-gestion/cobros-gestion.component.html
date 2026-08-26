@@ -69,6 +69,7 @@
         <th>Pagado</th>
         <th>Pendiente</th>
         <th>Estado</th>
+        <th>Comprobante</th>
         <th class="tw-text-right">Acciones</th>
       </tr>
     </ng-template>
@@ -92,6 +93,20 @@
             [value]="esVencida(o) ? 'VENCIDO' : (o.estado | uppercase)">
           </p-tag>
         </td>
+        <td>
+          <div *ngIf="o.comprobante_estado === 'PENDIENTE'" class="tw-flex tw-items-center tw-gap-2">
+            <a [href]="urlComprobante(o)" target="_blank" class="tw-text-blue-600 tw-underline tw-text-sm">
+              Ver (${{ o.comprobante_monto_declarado | number:'1.2-2' }})
+            </a>
+            <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-rounded p-button-success p-button-sm"
+              pTooltip="Aprobar comprobante" (click)="aprobarComprobante(o)"></button>
+            <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-rounded p-button-danger p-button-sm"
+              pTooltip="Rechazar comprobante" (click)="rechazarComprobante(o)"></button>
+          </div>
+          <p-tag *ngIf="o.comprobante_estado === 'APROBADO'" severity="success" value="Aprobado"></p-tag>
+          <p-tag *ngIf="o.comprobante_estado === 'RECHAZADO'" severity="danger" value="Rechazado" [pTooltip]="o.comprobante_observacion"></p-tag>
+          <span *ngIf="!o.comprobante_estado" class="tw-text-xs tw-text-gray-400">Sin comprobante</span>
+        </td>
         <td class="tw-text-right">
           <button 
             *ngIf="o.estado !== 'PAGADO'" 
@@ -109,7 +124,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="8" class="tw-text-center tw-py-8 tw-text-gray-400">
+        <td colspan="9" class="tw-text-center tw-py-8 tw-text-gray-400">
           <i class="pi pi-inbox tw-text-2xl tw-block tw-mb-2"></i>
           No se encontraron obligaciones de cobro registradas.
         </td>

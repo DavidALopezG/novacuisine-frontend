@@ -32,6 +32,7 @@
     <p-card styleClass="grupo-card" *ngFor="let grupo of grupos">
       <div class="card-header">
         <p-tag severity="secondary" [value]="grupo.dia_semana"></p-tag>
+        <p-tag [severity]="grupo.modalidad === 'Intensivo' ? 'warn' : 'info'" [value]="grupo.modalidad || 'Presencial'"></p-tag>
         <span class="aula-tag" *ngIf="grupo.aula"><i class="pi pi-map-marker"></i> {{ grupo.aula }}</span>
       </div>
 
@@ -39,8 +40,9 @@
       <p class="grupo-horario"><i class="pi pi-clock"></i> {{ grupo.hora_inicio }} - {{ grupo.hora_fin }}</p>
 
       <div class="grupo-stats">
-        <strong>{{ grupo.alumnos_matriculados }}</strong>
+        <strong>{{ grupo.alumnos_matriculados }} / {{ grupo.cupo_maximo || 6 }}</strong>
         <span>Estudiantes matriculados</span>
+        <p-tag *ngIf="grupoLleno(grupo)" severity="danger" value="Cupo lleno" styleClass="tw-ml-2"></p-tag>
       </div>
 
       <div class="card-footer">
@@ -84,6 +86,18 @@
       <p-select
         [options]="diaOptions"
         [(ngModel)]="formGrupo.dia_semana"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
+
+    <div class="form-field">
+      <label>Modalidad</label>
+      <p-select
+        [options]="modalidadOptions"
+        [(ngModel)]="formGrupo.modalidad"
         optionLabel="label"
         optionValue="value"
         styleClass="tw-w-full"
@@ -140,7 +154,12 @@
         Aún no hay estudiantes matriculados en este grupo.
       </p>
 
-      <div class="selector-matricula">
+      <p-message *ngIf="modalMatriculaLleno" severity="warn"
+        [text]="'Cupo máximo alcanzado (' + horarioMatriculaCupoMaximo + ' estudiantes). Retira a alguien para poder matricular a otro.'"
+        styleClass="tw-w-full tw-mb-3">
+      </p-message>
+
+      <div class="selector-matricula" *ngIf="!modalMatriculaLleno">
         <p-select
           [options]="estudiantesDisponiblesOptions"
           [(ngModel)]="estudianteAMatricular"
@@ -153,7 +172,7 @@
         <button pButton type="button" icon="pi pi-plus" label="Matricular" class="p-button-outlined"
           [disabled]="guardandoMatricula" (click)="matricularEstudianteSeleccionado()"></button>
       </div>
-      <p class="hint-text" *ngIf="estudiantesDisponiblesOptions.length === 0 && estudiantes.length > 0">
+      <p class="hint-text" *ngIf="!modalMatriculaLleno && estudiantesDisponiblesOptions.length === 0 && estudiantes.length > 0">
         No hay más estudiantes de esta titulación disponibles para matricular.
       </p>
     </ng-container>

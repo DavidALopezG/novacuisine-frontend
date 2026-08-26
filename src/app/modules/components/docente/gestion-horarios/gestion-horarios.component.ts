@@ -69,7 +69,10 @@ export class GestionHorariosComponent implements OnInit {
   };
 
   get asignaturaOptions(): { label: string; value: number }[] {
-    return this.asignaturas.map(a => ({ label: a.nombre_asignatura, value: a.asignatura_id }));
+    return this.asignaturas.map(a => ({
+      label: a.nivel ? `[${a.nivel}] ${a.nombre_asignatura}` : a.nombre_asignatura,
+      value: a.asignatura_id
+    }));
   }
 
   get docenteOptions(): { label: string; value: string }[] {

@@ -32,8 +32,14 @@ interface GrupoDocente {
   hora_inicio: string;
   hora_fin: string;
   aula: string | null;
+  modalidad: 'Presencial' | 'Intensivo';
   alumnos_matriculados: number;
+  cupo_maximo: number;
 }
+
+// Cupo máximo por horario/grupo (regla institucional: máx. 6 estudiantes por horario).
+// Se usa como respaldo si el backend aún no envía cupo_maximo en la respuesta.
+const CUPO_MAXIMO_DEFAULT = 6;
 
 @Component({
   selector: 'app-mis-grupos',
@@ -68,6 +74,10 @@ export class MisGruposComponent implements OnInit {
 
   diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   diaOptions = this.diasSemana.map(d => ({ label: d, value: d }));
+  modalidadOptions = [
+    { label: 'Presencial', value: 'Presencial' },
+    { label: 'Intensivo', value: 'Intensivo' }
+  ];
 
   // ── Modal crear/editar grupo ──────────────────────────────
   mostrarModal = false;
@@ -78,11 +88,15 @@ export class MisGruposComponent implements OnInit {
     dia_semana: 'Lunes',
     hora_inicio: '',
     hora_fin: '',
-    aula: ''
+    aula: '',
+    modalidad: 'Presencial' as 'Presencial' | 'Intensivo'
   };
 
   get asignaturaOptions(): { label: string; value: number }[] {
-    return this.asignaturas.map(a => ({ label: a.nombre_asignatura, value: a.asignatura_id }));
+    return this.asignaturas.map(a => ({
+      label: a.nivel ? `[${a.nivel}] ${a.nombre_asignatura}` : a.nombre_asignatura,
+      value: a.asignatura_id
+    }));
   }
 
   // ─────────────────── MATRÍCULA ───────────────────────────
@@ -91,6 +105,7 @@ export class MisGruposComponent implements OnInit {
   horarioMatriculaId: number | null = null;
   horarioMatriculaNombre = '';
   horarioMatriculaTitulacionId: number | null = null;
+  horarioMatriculaCupoMaximo: number = CUPO_MAXIMO_DEFAULT;
   estudiantesMatriculados: any[] = [];
   estudianteAMatricular: string | null = null;
   guardandoMatricula = false;
@@ -178,7 +193,8 @@ export class MisGruposComponent implements OnInit {
       dia_semana: 'Lunes',
       hora_inicio: '',
       hora_fin: '',
-      aula: ''
+      aula: '',
+      modalidad: 'Presencial'
     };
     this.mostrarModal = true;
   }
@@ -190,7 +206,8 @@ export class MisGruposComponent implements OnInit {
       dia_semana: grupo.dia_semana,
       hora_inicio: grupo.hora_inicio,
       hora_fin: grupo.hora_fin,
-      aula: grupo.aula || ''
+      aula: grupo.aula || '',
+      modalidad: grupo.modalidad || 'Presencial'
     };
     this.mostrarModal = true;
   }
@@ -263,9 +280,22 @@ export class MisGruposComponent implements OnInit {
     this.horarioMatriculaId = grupo.horario_id;
     this.horarioMatriculaNombre = `${grupo.nombre_asignatura} — ${grupo.dia_semana}`;
     this.horarioMatriculaTitulacionId = grupo.titulacion_id ?? null;
+    this.horarioMatriculaCupoMaximo = grupo.cupo_maximo ?? CUPO_MAXIMO_DEFAULT;
     this.estudianteAMatricular = null;
     this.cargarMatriculados();
     this.mostrarModalMatricula = true;
+  }
+
+  /** true si el grupo ya alcanzó el cupo máximo de estudiantes. */
+  grupoLleno(grupo: GrupoDocente): boolean {
+    const cupo = grupo.cupo_maximo ?? CUPO_MAXIMO_DEFAULT;
+    return (grupo.alumnos_matriculados || 0) >= cupo;
+  }
+
+  /** true si el modal de matrícula actualmente abierto está en cupo lleno. */
+  get modalMatriculaLleno(): boolean {
+    const cupo = this.horarioMatriculaCupoMaximo ?? CUPO_MAXIMO_DEFAULT;
+    return this.estudiantesMatriculados.length >= cupo;
   }
 
   cargarMatriculados(): void {
@@ -296,6 +326,11 @@ export class MisGruposComponent implements OnInit {
       return;
     }
 
+    if (this.modalMatriculaLleno) {
+      this.notif.advertencia(`Este grupo ya alcanzó el cupo máximo de ${this.horarioMatriculaCupoMaximo} estudiantes.`);
+      return;
+    }
+
     const estudiante = this.estudiantes.find(e => e.estudiante_id === this.estudianteAMatricular);
     const cruzaTitulacion = this.horarioMatriculaTitulacionId && estudiante?.titulacion_id
       && estudiante.titulacion_id !== this.horarioMatriculaTitulacionId;
@@ -317,9 +352,9 @@ export class MisGruposComponent implements OnInit {
     this.ejecutarMatricula();
   }
 
-  private ejecutarMatricula(): void {
+  private ejecutarMatricula(forzar: boolean = false): void {
     this.guardandoMatricula = true;
-    this.horariosService.matricularEstudiante(this.horarioMatriculaId!, this.estudianteAMatricular!).subscribe({
+    this.horariosService.matricularEstudiante(this.horarioMatriculaId!, this.estudianteAMatricular!, forzar).subscribe({
       next: () => {
         this.notif.exito('Estudiante matriculado en el grupo.');
         this.estudianteAMatricular = null;
@@ -328,6 +363,29 @@ export class MisGruposComponent implements OnInit {
         this.cargarGrupos(); // refresca el contador de alumnos_matriculados en la tarjeta
       },
       error: (err) => {
+        this.guardandoMatricula = false;
+
+        // Cruce de horario a nivel de estudiante: patrón "permitir + confirmar",
+        // igual que el cruce de titulación. Si confirma, se reenvía con forzar=true.
+        if (err?.status === 409 && err?.error?.tipo === 'CRUCE_HORARIO_ESTUDIANTE') {
+          const cruces = err.error.cruces || [];
+          const detalle = cruces
+            .map((c: any) => `${c.nombre_asignatura || 'otro grupo'} (${c.dia_semana} ${c.hora_inicio}-${c.hora_fin})`)
+            .join(', ');
+          this.confirmacion.confirm({
+            header: 'Cruce de horario',
+            message: `Este estudiante ya está matriculado en ${detalle}, que se cruza en día y hora con "${this.horarioMatriculaNombre}". ¿Confirmas que quieres matricularlo de todas formas?`,
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sí, matricular igual',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: 'p-button-warning',
+            rejectButtonStyleClass: 'p-button-text',
+            accept: () => this.ejecutarMatricula(true)
+          });
+          return;
+        }
+
+        console.error('Error al matricular:', err);
         this.notif.error(err?.error?.error || 'No se pudo matricular al estudiante.');
         this.guardandoMatricula = false;
       }

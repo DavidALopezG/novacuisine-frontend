@@ -17,6 +17,7 @@ import { HorarioClaseComponent } from './modules/components/estudiantes/horario-
  import { RecetarioMaestroComponent } from './modules/components/docente/recetario-maestro/recetario-maestro.component';
  import { PerfilDocenteComponent } from './modules/components/docente/perfil-docente/perfil-docente.component';
 import { TitulacionesComponent } from './modules/components/titulaciones/titulaciones.component';
+import { AsignaturasComponent } from './modules/components/asignaturas/asignaturas.component';
 import { GestionHorariosComponent } from './modules/components/docente/gestion-horarios/gestion-horarios.component';
 import { authGuard } from './guards/auth.guard';
 import { noAuthGuard } from './guards/no-auth.guard';
@@ -34,6 +35,7 @@ export const routes: Routes = [
       { path: 'estudiantes', component: EstudiantesComponent },
       { path: 'reportes', component: ReportesComponent },
       { path: 'titulaciones', component: TitulacionesComponent },
+      { path: 'asignaturas', component: AsignaturasComponent },
 
       // Rutas Docente (Rol 2)
        { path: 'mis-grupos', component: MisGruposComponent },

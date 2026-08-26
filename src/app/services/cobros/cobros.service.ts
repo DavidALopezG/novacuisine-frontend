@@ -37,5 +37,23 @@ export class CobrosService {
     return this.http.get<any[]>(`${this.apiUrl}/mis-obligaciones`);
   }
 
+  // 📤 Estudiante sube el comprobante de su pago (transferencia/Deuna)
+  subirComprobante(obligacionId: number, archivo: File, montoDeclarado: number): Observable<any> {
+    const formData = new FormData();
+    formData.append('comprobante', archivo);
+    formData.append('monto_declarado', String(montoDeclarado));
+    return this.http.post(`${this.apiUrl}/obligaciones/${obligacionId}/comprobante`, formData);
+  }
+
+  // ✅ Admin aprueba el comprobante (aplica el pago)
+  aprobarComprobante(obligacionId: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/obligaciones/${obligacionId}/comprobante/aprobar`, {});
+  }
+
+  // ❌ Admin rechaza el comprobante
+  rechazarComprobante(obligacionId: number, observacion?: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/obligaciones/${obligacionId}/comprobante/rechazar`, { observacion });
+  }
+
   // ... otros métodos (crearObligacion, registrarPago)
 }

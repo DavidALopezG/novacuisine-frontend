@@ -34,4 +34,15 @@ export class EstudiantesService {
   createEstudiante(data: any): Observable<any> {
     return this.http.post(this.url, data);
   }
+
+  actualizarEstudiante(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.url}/${id}`, data);
+  }
+
+  // 📷 Foto tipo carnet (requisito de inscripción institucional)
+  subirFoto(id: number, archivo: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('foto', archivo);
+    return this.http.post(`${this.url}/${id}/foto`, formData);
+  }
 }

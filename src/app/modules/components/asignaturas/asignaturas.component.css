@@ -1,0 +1,67 @@
+.asignaturas-container {
+  padding: 24px 28px;
+}
+
+.nova-toolbar-icon {
+  font-size: 1.6rem;
+  color: var(--nova-gold);
+  background: rgba(184, 134, 11, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.nova-toolbar-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--nova-black);
+  font-family: 'Playfair Display', serif;
+}
+
+.nova-toolbar-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+}
+
+.asignatura-name {
+  font-weight: 600;
+  color: var(--nova-black);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+}
+
+.empty-state {
+  text-align: center;
+  color: #9a9a9a;
+  padding: 2.5rem 0;
+}
+
+.empty-state i {
+  display: block;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  color: #cfcfcf;
+}
+
+::ng-deep .nova-table .p-datatable-thead > tr > th {
+  background: var(--nova-black);
+  color: var(--nova-white);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.form-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
+}

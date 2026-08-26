@@ -39,6 +39,7 @@
 
     <ng-template pTemplate="header">
       <tr>
+        <th></th>
         <th>Código</th>
         <th>Nombre Completo</th>
         <th>Email</th>
@@ -50,6 +51,10 @@
 
     <ng-template pTemplate="body" let-est>
       <tr>
+        <td>
+          <img *ngIf="est.foto_ruta" [src]="urlFoto(est.foto_ruta)" alt="Foto" class="avatar-thumb">
+          <div *ngIf="!est.foto_ruta" class="avatar-placeholder"><i class="pi pi-user"></i></div>
+        </td>
         <td class="student-code">{{ est.codigo_estudiante }}</td>
         <td class="student-name">{{ est.apellido }}, {{ est.nombre }}</td>
         <td>{{ est.email }}</td>
@@ -68,7 +73,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="6" class="empty-state">
+        <td colspan="7" class="empty-state">
           <i class="pi pi-inbox"></i>
           No se encontraron estudiantes registrados.
         </td>
@@ -89,6 +94,16 @@
 
     <div class="expediente-grid">
       <div class="info-card">
+        <div class="foto-expediente">
+          <img *ngIf="estudianteSeleccionado?.foto_ruta" [src]="urlFoto(estudianteSeleccionado.foto_ruta)" alt="Foto del estudiante" class="foto-expediente-img">
+          <div *ngIf="!estudianteSeleccionado?.foto_ruta" class="foto-expediente-placeholder"><i class="pi pi-user"></i></div>
+
+          <label class="cambiar-foto-btn" [class.tw-opacity-50]="subiendoFotoExpediente">
+            <i class="pi pi-camera"></i> {{ estudianteSeleccionado?.foto_ruta ? 'Cambiar foto' : 'Subir foto' }}
+            <input type="file" accept="image/*" hidden [disabled]="subiendoFotoExpediente" (change)="onCambiarFotoExpediente($event)">
+          </label>
+        </div>
+
         <h4 class="section-title">Datos Generales</h4>
         <div class="dato-item">
           <label>Titulación</label>
@@ -111,8 +126,9 @@
         <ul class="lista-recetas" *ngIf="recetasDelEstudiante.length > 0">
           <li *ngFor="let receta of recetasDelEstudiante">
             <div>
-              <div class="receta-nombre">{{ receta.nombre_receta }}</div>
-              <p-tag severity="secondary" [value]="receta.categoria"></p-tag>
+              <div class="receta-nombre">{{ receta.nombre }}</div>
+              <p-tag severity="secondary" [value]="receta.nombre_asignatura || 'Sin asignatura'"></p-tag>
+              <p-tag *ngIf="receta.estado_version" [severity]="receta.estado_version === 'APROBADO' ? 'success' : 'warn'" [value]="receta.estado_version"></p-tag>
             </div>
             <i class="pi pi-book"></i>
           </li>
@@ -174,11 +190,28 @@
           appendTo="body">
         </p-select>
       </div>
+
+      <div class="form-field">
+        <label>Cédula</label>
+        <input type="text" pInputText [(ngModel)]="nuevoEstudiante.cedula" placeholder="Ej: 0604069120" class="tw-w-full">
+      </div>
+
+      <div class="form-field">
+        <label>Fecha de nacimiento</label>
+        <input type="date" pInputText [(ngModel)]="nuevoEstudiante.fecha_nacimiento" class="tw-w-full">
+        <small class="tw-text-gray-500">Edad mínima de ingreso: 16 años.</small>
+      </div>
+
+      <div class="form-field tw-col-span-2">
+        <label>Foto tamaño carnet</label>
+        <input type="file" accept="image/*" (change)="onFotoSeleccionada($event)">
+        <small class="tw-text-gray-500">Se sube después de registrar al estudiante.</small>
+      </div>
     </div>
 
     <ng-template pTemplate="footer">
       <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
-      <button pButton type="button" label="Registrar" icon="pi pi-check" (click)="crearEstudiante()"></button>
+      <button pButton type="button" label="Registrar" icon="pi pi-check" [loading]="subiendoFoto" (click)="crearEstudiante()"></button>
     </ng-template>
   </p-dialog>
 

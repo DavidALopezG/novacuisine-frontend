@@ -6,6 +6,7 @@ import { RecetasService } from './../../../../services/recetas/recetas.service';
 import { TitulacionesService } from './../../../../services/titulaciones/titulaciones.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
+import { APP_CONFIG } from '../../../../config/app.config.env';
 
 import { ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
@@ -73,8 +74,17 @@ export class EstudiantesComponent implements OnInit {
     nombre: '',
     apellido: '',
     email: '',
-    titulacion_id: null as number | null
+    titulacion_id: null as number | null,
+    cedula: '',
+    fecha_nacimiento: '' // yyyy-mm-dd, viene de un <input type="date">
   };
+
+  // Foto tipo carnet (requisito institucional de inscripción)
+  fotoSeleccionada: File | null = null;
+  subiendoFoto = false;
+
+  // Reemplazo de foto desde el expediente (estudiante ya existente)
+  subiendoFotoExpediente = false;
 
   get titulacionOptions(): { label: string; value: number }[] {
     return this.titulaciones.map(t => ({ label: t.nombre_titulacion, value: t.titulacion_id }));
@@ -87,6 +97,13 @@ export class EstudiantesComponent implements OnInit {
   get nombreTitulacionSeleccionado(): string {
     const t = this.titulaciones.find(t => t.titulacion_id === this.estudianteSeleccionado?.titulacion_id);
     return t?.nombre_titulacion || 'Sin titulación asignada';
+  }
+
+  /** URL absoluta de la foto (el backend la sirve como estático fuera de /api). */
+  urlFoto(fotoRuta: string | null | undefined): string {
+    if (!fotoRuta) return '';
+    const raiz = APP_CONFIG.apiUrl.replace(/\/api\/?$/, '');
+    return `${raiz}${fotoRuta}`;
   }
 
   constructor(
@@ -160,6 +177,10 @@ export class EstudiantesComponent implements OnInit {
     this.estudiantesService.getPerfilCompleto(estudiante.estudiante_id).subscribe({
       next: (res) => {
         this.recetasDelEstudiante = res.recetas || [];
+        // Refresca con los datos más recientes del estudiante (ej. foto_ruta tras un cambio)
+        if (res.estudiante) {
+          this.estudianteSeleccionado = { ...this.estudianteSeleccionado, ...res.estudiante };
+        }
         this.mostrarModalDetalle = true;
         this.loading = false;
       },
@@ -169,6 +190,32 @@ export class EstudiantesComponent implements OnInit {
         this.notif.error('Error al cargar las recetas del estudiante');
       }
     });
+  }
+
+  /** Sube/reemplaza la foto del estudiante que está actualmente abierto en el expediente. */
+  onCambiarFotoExpediente(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0 || !this.estudianteSeleccionado) return;
+
+    const archivo = input.files[0];
+    this.subiendoFotoExpediente = true;
+
+    this.estudiantesService.subirFoto(this.estudianteSeleccionado.estudiante_id, archivo).subscribe({
+      next: (res) => {
+        this.subiendoFotoExpediente = false;
+        this.notif.exito('Foto actualizada correctamente.');
+        this.estudianteSeleccionado.foto_ruta = res?.foto_ruta || this.estudianteSeleccionado.foto_ruta;
+        // Refleja el cambio también en la tabla, sin esperar a recargar todo
+        const enLista = this.listaEstudiantes.find(e => e.estudiante_id === this.estudianteSeleccionado.estudiante_id);
+        if (enLista) enLista.foto_ruta = this.estudianteSeleccionado.foto_ruta;
+      },
+      error: (err) => {
+        this.subiendoFotoExpediente = false;
+        this.notif.error(err?.error?.error || 'No se pudo actualizar la foto.');
+      }
+    });
+
+    input.value = ''; // permite volver a seleccionar el mismo archivo si hace falta
   }
 
   // --- ACCIONES DE ADMINISTRADOR ---
@@ -184,12 +231,41 @@ export class EstudiantesComponent implements OnInit {
     }
 
     this.estudiantesService.createEstudiante(this.nuevoEstudiante).subscribe({
-      next: () => {
+      next: (res) => {
         this.notif.exito('Estudiante registrado exitosamente');
+        const nuevoId = res?.estudiante?.estudiante_id;
+        if (nuevoId && this.fotoSeleccionada) {
+          this.subirFotoTrasCrear(nuevoId);
+        } else {
+          this.cargarEstudiantes();
+          this.cerrarModal();
+        }
+      },
+      error: (err) => this.notif.error(err?.error?.error || err?.error?.message || 'Error al crear estudiante')
+    });
+  }
+
+  onFotoSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.fotoSeleccionada = input.files[0];
+    }
+  }
+
+  private subirFotoTrasCrear(estudianteId: number): void {
+    this.subiendoFoto = true;
+    this.estudiantesService.subirFoto(estudianteId, this.fotoSeleccionada!).subscribe({
+      next: () => {
+        this.subiendoFoto = false;
         this.cargarEstudiantes();
         this.cerrarModal();
       },
-      error: (err) => this.notif.error(err?.error?.error || err?.error?.message || 'Error al crear estudiante')
+      error: (err) => {
+        this.subiendoFoto = false;
+        this.notif.error('El estudiante se creó, pero la foto no se pudo subir: ' + (err?.error?.error || err.message));
+        this.cargarEstudiantes();
+        this.cerrarModal();
+      }
     });
   }
 
@@ -254,12 +330,15 @@ export class EstudiantesComponent implements OnInit {
     this.mostrarModalNuevoEstudiante = false;
     this.estudianteSeleccionado = null;
     this.recetasDelEstudiante = [];
+    this.fotoSeleccionada = null;
     this.nuevoEstudiante = {
       codigo_estudiante: '',
       nombre: '',
       apellido: '',
       email: '',
-      titulacion_id: null
+      titulacion_id: null,
+      cedula: '',
+      fecha_nacimiento: ''
     };
   }
 }

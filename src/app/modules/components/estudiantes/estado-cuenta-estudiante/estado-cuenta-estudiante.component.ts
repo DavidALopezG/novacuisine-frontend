@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CobrosService } from '../../../../services/cobros/cobros.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
@@ -10,12 +11,16 @@ import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { MessageModule } from 'primeng/message';
+import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-estado-cuenta-estudiante',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     CurrencyPipe,
     DatePipe,
     SpinnerComponent,
@@ -25,6 +30,9 @@ import { MessageModule } from 'primeng/message';
     ButtonModule,
     ToolbarModule,
     MessageModule,
+    DialogModule,
+    InputNumberModule,
+    TooltipModule,
   ],
   templateUrl: './estado-cuenta-estudiante.component.html',
   styleUrl: './estado-cuenta-estudiante.component.css'
@@ -44,9 +52,17 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
   historialPagos: any[] = [];
 
   metodosDisponibles = [
-    { banco: 'Banco Pichincha', detalles: 'Cta. Corriente #123456789 - Nova Cuisine S.A.' },
-    { banco: 'Transferencia / Depósito', detalles: 'Reportar pago con comprobante al administrador.' }
+    { banco: 'Banco Guayaquil', detalles: 'Cta. Ahorros #39060111' },
+    { banco: 'Cooperativa Riobamba Ltda.', detalles: 'Cta. Ahorros #412110150470' },
+    { banco: 'Deuna - Banco Pichincha', detalles: 'Cta. Ahorros #7701601501' }
   ];
+
+  // ── Modal subir comprobante ────────────────────────────────
+  mostrarModalComprobante = false;
+  obligacionSeleccionada: any = null;
+  archivoComprobante: File | null = null;
+  montoDeclarado: number | null = null;
+  subiendoComprobante = false;
 
   constructor(private cobrosService: CobrosService, private notif: NotificacionService) {}
 
@@ -115,8 +131,60 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
     }
   }
 
-  reportarPago(): void {
-    this.notif.info('Para reportar tu pago, comunícate con la administración del instituto y presenta tu comprobante.');
+  // ── Comprobante de pago ─────────────────────────────────────
+
+  puedeSubirComprobante(o: any): boolean {
+    return this.estadoReal(o) !== 'PAGADO' && o.comprobante_estado !== 'PENDIENTE';
+  }
+
+  abrirModalComprobante(obligacion: any): void {
+    this.obligacionSeleccionada = obligacion;
+    this.archivoComprobante = null;
+    this.montoDeclarado = Number(obligacion.saldo_pendiente) || null;
+    this.mostrarModalComprobante = true;
+  }
+
+  cerrarModalComprobante(): void {
+    this.mostrarModalComprobante = false;
+    this.obligacionSeleccionada = null;
+    this.archivoComprobante = null;
+  }
+
+  onArchivoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.archivoComprobante = input.files[0];
+    }
+  }
+
+  enviarComprobante(): void {
+    if (!this.archivoComprobante) {
+      this.notif.advertencia('Selecciona el archivo del comprobante (imagen o PDF).');
+      return;
+    }
+    if (!this.montoDeclarado || this.montoDeclarado <= 0) {
+      this.notif.advertencia('Ingresa el monto que pagaste.');
+      return;
+    }
+
+    this.subiendoComprobante = true;
+    this.cobrosService.subirComprobante(
+      this.obligacionSeleccionada.obligacion_id,
+      this.archivoComprobante,
+      this.montoDeclarado
+    ).subscribe({
+      next: () => {
+        this.notif.exito('Comprobante enviado. Un administrador lo revisará antes de aplicarlo como pago.');
+        this.subiendoComprobante = false;
+        this.cerrarModalComprobante();
+        this.cargarEstadoCuenta();
+      },
+      error: (err) => {
+        console.error('Error al subir comprobante:', err);
+        this.notif.error(err?.error?.error || 'No se pudo subir el comprobante.');
+        this.subiendoComprobante = false;
+      }
+    });
   }
 
   descargarEstadoCuenta(): void {

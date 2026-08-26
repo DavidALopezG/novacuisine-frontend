@@ -188,3 +188,71 @@
   font-weight: 600;
   color: #555;
 }
+
+/* Avatar en la tabla de estudiantes */
+.avatar-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e5e5e5;
+}
+
+.avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: #b5b5b5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+/* Foto grande + reemplazo en el expediente */
+.foto-expediente {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.foto-expediente-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--nova-gold);
+}
+
+.foto-expediente-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: #b5b5b5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  border: 2px dashed #d5d5d5;
+}
+
+.cambiar-foto-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--nova-gold);
+  cursor: pointer;
+  padding: 4px 10px;
+  border: 1px solid var(--nova-gold);
+  border-radius: 999px;
+}
+
+.cambiar-foto-btn:hover {
+  background: rgba(184, 134, 11, 0.08);
+}

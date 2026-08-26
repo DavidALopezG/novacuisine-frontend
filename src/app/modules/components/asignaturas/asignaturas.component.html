@@ -1,0 +1,136 @@
+<div class="asignaturas-container">
+
+  <!-- Barra superior estandarizada -->
+  <p-toolbar styleClass="nova-toolbar tw-mb-5">
+    <ng-template pTemplate="start">
+      <div class="tw-flex tw-items-center tw-gap-3">
+        <i class="pi pi-book nova-toolbar-icon"></i>
+        <div>
+          <h2 class="nova-toolbar-title">Asignaturas</h2>
+          <p class="nova-toolbar-subtitle">Pensum académico: materias por nivel de formación.</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Nueva Asignatura" icon="pi pi-plus" (onClick)="abrirModalNueva()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <app-spinner [visible]="loading"></app-spinner>
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="tw-w-full tw-mb-4"></p-message>
+
+  <!-- Filtros -->
+  <div *ngIf="!loading && !error" class="filtros-bar tw-flex tw-flex-wrap tw-gap-3 tw-mb-4">
+    <input type="text" pInputText [(ngModel)]="filtroTexto" placeholder="Buscar por nombre..." class="tw-flex-1 tw-min-w-[220px]">
+    <p-select
+      [options]="nivelOptions"
+      [(ngModel)]="filtroNivel"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Filtrar por nivel..."
+      styleClass="tw-w-64"
+      appendTo="body">
+    </p-select>
+  </div>
+
+  <!-- Tabla de asignaturas -->
+  <p-table
+    *ngIf="!loading && !error"
+    [value]="asignaturasFiltradas"
+    [paginator]="asignaturasFiltradas.length > 10"
+    [rows]="10"
+    styleClass="p-datatable-sm nova-table"
+    responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Nivel</th>
+        <th>Nombre de la Asignatura</th>
+        <th>Titulación</th>
+        <th>Electiva</th>
+        <th class="tw-text-right">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-a>
+      <tr>
+        <td><p-tag [severity]="nivelSeverity(a.nivel)" [value]="a.nivel || 'Sin nivel'"></p-tag></td>
+        <td class="asignatura-name">{{ a.nombre_asignatura }}</td>
+        <td>{{ nombreTitulacion(a.titulacion_id) }}</td>
+        <td>
+          <i class="pi" [ngClass]="a.es_electiva ? 'pi-check-circle tw-text-green-600' : 'pi-minus-circle tw-text-gray-300'"></i>
+        </td>
+        <td class="actions-cell">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-rounded"
+            pTooltip="Editar" tooltipPosition="top" (click)="editarAsignatura(a)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
+            pTooltip="Eliminar" tooltipPosition="top" (click)="eliminarAsignatura(a)"></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="empty-state">
+          <i class="pi pi-inbox"></i>
+          No hay asignaturas registradas todavía.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- ============================================================
+       MODAL: Crear / Editar asignatura
+       ============================================================ -->
+  <p-dialog
+    [(visible)]="mostrarModal"
+    [modal]="true"
+    [style]="{ width: '460px' }"
+    [breakpoints]="{ '960px': '90vw' }"
+    [header]="modoEdicion ? 'Editar Asignatura' : 'Nueva Asignatura'"
+    (onHide)="cerrarModal()">
+
+    <div class="form-field">
+      <label>Nombre</label>
+      <input type="text" pInputText [(ngModel)]="form.nombre_asignatura" placeholder="Ej: Cocina regional ecuatoriana I" class="tw-w-full">
+    </div>
+
+    <div class="form-field">
+      <label>Nivel del pensum</label>
+      <p-select
+        [options]="nivelFormOptions"
+        [(ngModel)]="form.nivel"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona un nivel..."
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
+
+    <div class="form-field">
+      <label>Titulación</label>
+      <p-select
+        [options]="titulacionOptions"
+        [(ngModel)]="form.titulacion_id"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona una titulación..."
+        styleClass="tw-w-full"
+        appendTo="body">
+      </p-select>
+    </div>
+
+    <div class="form-field tw-flex tw-items-center tw-gap-2">
+      <p-checkbox [(ngModel)]="form.es_electiva" [binary]="true" inputId="es_electiva"></p-checkbox>
+      <label for="es_electiva">Es electiva</label>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrarModal()"></button>
+      <button pButton type="button" label="Guardar" icon="pi pi-check" (click)="guardarAsignatura()"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-confirmDialog [style]="{ width: '420px' }" [closable]="false"></p-confirmDialog>
+</div>
