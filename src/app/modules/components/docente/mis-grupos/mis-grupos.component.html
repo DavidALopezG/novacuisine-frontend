@@ -71,7 +71,7 @@
     <div class="form-field">
       <label>Asignatura</label>
       <p-select
-        [options]="asignaturaOptions"
+        [options]="asignaturaOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
         [(ngModel)]="formGrupo.asignatura_id"
         optionLabel="label"
         optionValue="value"
@@ -161,7 +161,7 @@
 
       <div class="selector-matricula" *ngIf="!modalMatriculaLleno">
         <p-select
-          [options]="estudiantesDisponiblesOptions"
+          [options]="estudiantesDisponiblesOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
           [(ngModel)]="estudianteAMatricular"
           optionLabel="label"
           optionValue="value"

@@ -303,3 +303,9 @@ td button:disabled {
     display: flex;
     flex-direction: column;
   }
+/* Indicadores del encabezado de cobros */
+.kpi { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:2px; }
+.kpi span { font-size:12px; color:#6b7280; }
+.kpi strong { font-size:18px; }
+.kpi small { font-size:11px; color:#6b7280; }
+.kpi-alerta { background:#fef2f2; border-color:#fecaca; }

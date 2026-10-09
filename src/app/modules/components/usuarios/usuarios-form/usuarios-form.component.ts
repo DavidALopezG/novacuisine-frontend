@@ -107,10 +107,10 @@ export class UsuariosComponent implements OnInit {
 
   inicializarFormulario() {
     this.usuarioForm = this.fb.group({
-      usuario_id: ['', Validators.required],
-      nombre_completo: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      contrasena: [''], // obligatoria solo al crear; vacía en edición = no se cambia
+      usuario_id: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]], // cédula: 10 dígitos
+      nombre_completo: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(120)]],
+      contrasena: ['', [Validators.maxLength(72)]], // obligatoria solo al crear; vacía en edición = no se cambia
       rol_id: [1, Validators.required],
       titulacion_id: [null], // solo aplica si rol_id = 3 (Estudiante)
       activo: [true]
@@ -170,13 +170,36 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
-  guardarUsuario() {
-    if (!this.usuarioForm.valid) return;
+  guardando = false;
 
-    if (!this.editando && !this.usuarioForm.value.contrasena?.trim()) {
+  private contrasenaSegura(pwd: string): boolean {
+    return pwd.length >= 8 && /[A-Za-z]/.test(pwd) && /\d/.test(pwd);
+  }
+
+  guardarUsuario() {
+    if (this.guardando) return; // evita doble clic
+
+    if (!this.usuarioForm.valid) {
+      this.usuarioForm.markAllAsTouched();
+      this.notif.advertencia('Revisa los campos: la cédula debe tener 10 dígitos, el correo ser válido y el nombre tener al menos 3 caracteres.');
+      return;
+    }
+
+    const contrasena = (this.usuarioForm.value.contrasena || '').trim();
+
+    if (!this.editando && !contrasena) {
       this.notif.advertencia('Debes asignar una contraseña inicial para el nuevo usuario.');
       return;
     }
+    if (contrasena && !this.contrasenaSegura(contrasena)) {
+      this.notif.advertencia('La contraseña debe tener mínimo 8 caracteres, con letras y números.');
+      return;
+    }
+    if (!this.editando && Number(this.usuarioForm.value.rol_id) === 3 && !this.usuarioForm.value.titulacion_id) {
+      this.notif.advertencia('Selecciona la titulación del estudiante.');
+      return;
+    }
+    this.guardando = true;
 
     if (this.editando && this.usuarioSeleccionadoId) {
       this.usuariosService.updateUsuario(
@@ -184,20 +207,28 @@ export class UsuariosComponent implements OnInit {
         this.usuarioForm.value
       ).subscribe({
         next: () => {
+          this.guardando = false;
           this.notif.exito('Usuario actualizado correctamente');
           this.cargarUsuarios();
           this.cerrarFormulario();
         },
-        error: (err) => this.notif.error(err?.error?.error || 'No se pudo actualizar el usuario.')
+        error: (err) => {
+          this.guardando = false;
+          this.notif.error(err?.error?.error || 'No se pudo actualizar el usuario.');
+        }
       });
     } else {
       this.usuariosService.createUsuario(this.usuarioForm.value).subscribe({
         next: (resp) => {
+          this.guardando = false;
           this.notif.exito(resp?.message || 'Usuario creado correctamente');
           this.cargarUsuarios();
           this.cerrarFormulario();
         },
-        error: (err) => this.notif.error(err?.error?.error || 'No se pudo crear el usuario.')
+        error: (err) => {
+          this.guardando = false;
+          this.notif.error(err?.error?.error || 'No se pudo crear el usuario.');
+        }
       });
     }
   }

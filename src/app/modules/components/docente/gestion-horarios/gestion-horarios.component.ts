@@ -105,7 +105,7 @@ export class GestionHorariosComponent implements OnInit {
         return aCoincide - bCoincide;
       })
       .map(e => ({
-        label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})` +
+        label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})${e.cedula ? ' · CI ' + e.cedula : ''}` +
           (e.titulacion_id !== this.horarioMatriculaTitulacionId ? ' — otra titulación' : ''),
         value: e.estudiante_id
       }));
@@ -296,9 +296,9 @@ export class GestionHorariosComponent implements OnInit {
     this.ejecutarMatricula();
   }
 
-  private ejecutarMatricula(): void {
+  private ejecutarMatricula(forzar: boolean = false): void {
     this.guardandoMatricula = true;
-    this.horariosService.matricularEstudiante(this.horarioMatriculaId!, this.estudianteAMatricular!).subscribe({
+    this.horariosService.matricularEstudiante(this.horarioMatriculaId!, this.estudianteAMatricular!, forzar).subscribe({
       next: () => {
         this.notif.exito('Estudiante matriculado en el grupo.');
         this.estudianteAMatricular = null;
@@ -307,8 +307,28 @@ export class GestionHorariosComponent implements OnInit {
         this.cargarHorarios(); // refresca el contador de alumnos_matriculados en la tabla
       },
       error: (err) => {
-        this.notif.error(err?.error?.error || 'No se pudo matricular al estudiante.');
         this.guardandoMatricula = false;
+
+        // Cruce de horario del estudiante: "permitir + confirmar" (reenvía con forzar=true)
+        if (err?.status === 409 && err?.error?.tipo === 'CRUCE_HORARIO_ESTUDIANTE') {
+          const cruces = err.error.cruces || [];
+          const detalle = cruces
+            .map((c: any) => `${c.nombre_asignatura || 'otro grupo'} (${c.dia_semana} ${String(c.hora_inicio).slice(0, 5)}-${String(c.hora_fin).slice(0, 5)})`)
+            .join(', ');
+          this.confirmacion.confirm({
+            header: 'Cruce de horario',
+            message: `Este estudiante ya está matriculado en ${detalle}, que se cruza en día y hora con "${this.horarioMatriculaNombre}". ¿Confirmas que quieres matricularlo de todas formas?`,
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sí, matricular igual',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: 'p-button-warning',
+            rejectButtonStyleClass: 'p-button-text',
+            accept: () => this.ejecutarMatricula(true)
+          });
+          return;
+        }
+
+        this.notif.error(err?.error?.error || 'No se pudo matricular al estudiante.');
       }
     });
   }

@@ -55,5 +55,52 @@ export class CobrosService {
     return this.http.put(`${this.apiUrl}/obligaciones/${obligacionId}/comprobante/rechazar`, { observacion });
   }
 
-  // ... otros métodos (crearObligacion, registrarPago)
+  // ── Planes de pago, estado de cuenta, recargos y correo (Administrador) ──
+  crearPlan(plan: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/planes`, plan);
+  }
+
+  eliminarPlan(planId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/planes/${planId}`);
+  }
+
+  obtenerEstadoCuentaAdmin(estudianteId: string | number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/estudiantes/${estudianteId}/estado-cuenta`);
+  }
+
+  pagarAcumulado(estudianteId: string | number, data: { monto: number; metodo_pago: string; plan_id?: number | null }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/estudiantes/${estudianteId}/pagar`, data);
+  }
+
+  editarCuota(obligacionId: number, data: { monto_base?: number; fecha_vencimiento?: string; concepto?: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/cuotas/${obligacionId}`, data);
+  }
+
+  condonarRecargo(obligacionId: number, motivo: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/cuotas/${obligacionId}/condonar-recargo`, { motivo });
+  }
+
+  obtenerConfiguracion(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/configuracion`);
+  }
+
+  guardarConfiguracion(cfg: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/configuracion`, cfg);
+  }
+
+  aplicarRecargosAhora(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/recargos/aplicar`, {});
+  }
+
+  enviarRecordatorio(estudianteId: string | number, forzar = false): Observable<any> {
+    return this.http.post(`${this.apiUrl}/notificaciones/recordatorio`, { estudiante_id: estudianteId, forzar });
+  }
+
+  enviarRecordatorioMasivo(forzar = false): Observable<any> {
+    return this.http.post(`${this.apiUrl}/notificaciones/recordatorio-masivo`, { forzar });
+  }
+
+  obtenerResumen(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/resumen`);
+  }
 }

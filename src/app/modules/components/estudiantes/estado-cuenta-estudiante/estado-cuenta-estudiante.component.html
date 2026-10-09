@@ -66,8 +66,10 @@
 
           <ng-template pTemplate="header">
             <tr>
-              <th>Obligación</th>
+              <th>Concepto</th>
               <th>Vencimiento</th>
+              <th>Valor base</th>
+              <th>Recargo por mora</th>
               <th>Monto Total</th>
               <th>Saldo Pendiente</th>
               <th>Estado</th>
@@ -77,8 +79,13 @@
 
           <ng-template pTemplate="body" let-item>
             <tr>
-              <td>#{{ item.obligacion_id }}</td>
+              <td>
+                {{ item.concepto || ('Cobro #' + item.obligacion_id) }}
+                <small *ngIf="item.numero_cuota" class="tw-block tw-text-gray-500">Cuota {{ item.numero_cuota }}</small>
+              </td>
               <td>{{ item.fecha_vencimiento | date:'shortDate' }}</td>
+              <td>{{ (item.monto_base ?? item.monto_total) | currency }}</td>
+              <td [class.tw-text-orange-600]="+(item.recargo_acumulado || 0) > 0">{{ (item.recargo_acumulado || 0) | currency }}</td>
               <td>{{ item.monto_total | currency }}</td>
               <td>{{ item.saldo_pendiente | currency }}</td>
               <td><p-tag [severity]="estadoSeverity(item)" [value]="estadoReal(item)"></p-tag></td>
@@ -99,7 +106,7 @@
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="6" class="empty-state">
+              <td colspan="8" class="empty-state">
                 <i class="pi pi-inbox"></i>
                 No tienes obligaciones de cobro registradas.
               </td>

@@ -12,11 +12,23 @@
     </ng-template>
     <ng-template pTemplate="end">
       <div class="tw-flex tw-gap-2">
-        <p-button label="Nueva Obligación" icon="pi pi-plus" (onClick)="abrirModalNuevaObligacion()"></p-button>
+        <p-button label="Nuevo plan de pagos" icon="pi pi-calendar-plus" (onClick)="abrirPlan()"></p-button>
+        <p-button label="Cobro único" icon="pi pi-plus" severity="secondary" (onClick)="abrirModalNuevaObligacion()"></p-button>
         <p-button label="Importar Excel" icon="pi pi-file-excel" severity="success" (onClick)="abrirModalImportar()"></p-button>
+        <p-button label="Notificar morosos" icon="pi pi-envelope" severity="warn" [loading]="notificandoMasivo" (onClick)="notificarMorosos()"></p-button>
+        <p-button label="Recargos" icon="pi pi-percentage" severity="contrast" [outlined]="true" (onClick)="mostrarConfigMora = true"></p-button>
       </div>
     </ng-template>
   </p-toolbar>
+
+  <div *ngIf="resumen" class="tw-grid tw-grid-cols-2 md:tw-grid-cols-6 tw-gap-3 tw-mb-4">
+    <div class="kpi"><span>Recaudado</span><strong class="tw-text-green-600">${{ resumen.total_recaudado | number:'1.2-2' }}</strong></div>
+    <div class="kpi"><span>Por cobrar</span><strong>${{ resumen.total_pendiente | number:'1.2-2' }}</strong></div>
+    <div class="kpi kpi-alerta"><span>Vencido</span><strong class="tw-text-red-700">${{ resumen.total_vencido | number:'1.2-2' }}</strong><small>{{ resumen.cuotas_vencidas }} cuota(s) · {{ resumen.estudiantes_morosos }} estudiante(s)</small></div>
+    <div class="kpi"><span>Recargos por mora</span><strong class="tw-text-orange-600">${{ resumen.total_recargos | number:'1.2-2' }}</strong></div>
+    <div class="kpi"><span>Vence en 30 días</span><strong>${{ resumen.por_vencer_30d | number:'1.2-2' }}</strong></div>
+    <div class="kpi"><span>Efectividad de cobro</span><strong>{{ resumen.efectividad_cobro }}%</strong></div>
+  </div>
 
   <p-message 
     *ngIf="deudaCritica" 
@@ -64,10 +76,13 @@
       <tr>
         <th>ID</th>
         <th>Estudiante</th>
-        <th>Vencimiento</th>
-        <th>Total</th>
-        <th>Pagado</th>
-        <th>Pendiente</th>
+        <th>Concepto</th>
+        <th>Vence</th>
+        <th class="tw-text-right">Base</th>
+        <th class="tw-text-right">Recargo</th>
+        <th class="tw-text-right">Total</th>
+        <th class="tw-text-right">Pagado</th>
+        <th class="tw-text-right">Pendiente</th>
         <th>Estado</th>
         <th>Comprobante</th>
         <th class="tw-text-right">Acciones</th>
@@ -83,10 +98,16 @@
             <span class="tw-text-xs tw-text-gray-500">{{ o.codigo_estudiante || 'Sin código' }}</span>
           </div>
         </td>
+        <td>
+          <span>{{ o.concepto || 'Cobro único' }}</span>
+          <small *ngIf="o.numero_cuota" class="tw-block tw-text-gray-500">{{ o.plan_nombre }} · cuota {{ o.numero_cuota }}/{{ o.plan_total_cuotas }}</small>
+        </td>
         <td>{{ o.fecha_vencimiento | date:'dd/MM/yyyy' }}</td>
-        <td>${{ o.monto_total | number:'1.2-2' }}</td>
-        <td class="tw-text-green-600">${{ o.monto_pagado | number:'1.2-2' }}</td>
-        <td class="tw-text-red-600 tw-font-semibold">${{ (o.monto_total - o.monto_pagado) | number:'1.2-2' }}</td>
+        <td class="tw-text-right">${{ (o.monto_base ?? o.monto_total) | number:'1.2-2' }}</td>
+        <td class="tw-text-right" [class.tw-text-orange-600]="+(o.recargo_acumulado || 0) > 0">${{ (o.recargo_acumulado || 0) | number:'1.2-2' }}</td>
+        <td class="tw-text-right">${{ o.monto_total | number:'1.2-2' }}</td>
+        <td class="tw-text-right tw-text-green-600">${{ o.monto_pagado | number:'1.2-2' }}</td>
+        <td class="tw-text-right tw-text-red-600 tw-font-semibold">${{ (o.monto_total - o.monto_pagado) | number:'1.2-2' }}</td>
         <td>
           <p-tag 
             [severity]="estadoSeverity(o.estado, o)" 
@@ -107,7 +128,12 @@
           <p-tag *ngIf="o.comprobante_estado === 'RECHAZADO'" severity="danger" value="Rechazado" [pTooltip]="o.comprobante_observacion"></p-tag>
           <span *ngIf="!o.comprobante_estado" class="tw-text-xs tw-text-gray-400">Sin comprobante</span>
         </td>
-        <td class="tw-text-right">
+        <td class="tw-text-right tw-whitespace-nowrap">
+          <button pButton type="button" icon="pi pi-list" class="p-button-text p-button-rounded"
+            pTooltip="Estado de cuenta" tooltipPosition="top" (click)="abrirEstadoCuenta(o)"></button>
+          <button *ngIf="o.estado !== 'PAGADO' && esVencida(o)" pButton type="button" icon="pi pi-envelope"
+            class="p-button-text p-button-rounded p-button-warn" pTooltip="Enviar recordatorio por correo"
+            tooltipPosition="top" (click)="enviarCorreo(o)"></button>
           <button 
             *ngIf="o.estado !== 'PAGADO'" 
             pButton 
@@ -124,7 +150,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="9" class="tw-text-center tw-py-8 tw-text-gray-400">
+        <td colspan="12" class="tw-text-center tw-py-8 tw-text-gray-400">
           <i class="pi pi-inbox tw-text-2xl tw-block tw-mb-2"></i>
           No se encontraron obligaciones de cobro registradas.
         </td>
@@ -148,20 +174,19 @@
       <div class="form-field tw-flex tw-flex-col tw-gap-1">
         <label class="tw-font-medium tw-text-sm">Monto a Pagar ($)</label>
         <p-inputNumber 
-          [(ngModel)]="montoPago" 
-          mode="decimal" 
-          [minFractionDigits]="2" 
-          [maxFractionDigits]="2" 
-          [min]="0.01" 
-          [max]="obligacionSeleccionada.monto_total - obligacionSeleccionada.monto_pagado" 
-          styleClass="tw-w-full">
-        </p-inputNumber>
+        [(ngModel)]="montoPago" 
+        mode="decimal" 
+        [minFractionDigits]="2" 
+        [maxFractionDigits]="2" 
+        styleClass="tw-w-full">
+      </p-inputNumber>
+      <small *ngIf="errorMontoPago" class="tw-text-red-600">{{ errorMontoPago }}</small>
       </div>
     </div>
 
     <ng-template pTemplate="footer">
       <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="cerrarModal()"></button>
-      <button pButton type="button" label="Confirmar Pago" icon="pi pi-check" (click)="confirmarPago()"></button>
+      <button pButton type="button" label="Confirmar Pago" icon="pi pi-check" [disabled]="procesandoPago" [loading]="procesandoPago" (click)="confirmarPago()"></button>
     </ng-template>
   </p-dialog>
 
@@ -176,7 +201,7 @@
       <div class="form-field tw-flex tw-flex-col tw-gap-1">
         <label class="tw-font-medium tw-text-sm">Estudiante</label>
         <p-select 
-          [options]="estudianteOptions" 
+          [options]="estudianteOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados" 
           [(ngModel)]="nuevaObligacion.estudiante_id" 
           optionLabel="label" 
           optionValue="value" 
@@ -193,7 +218,6 @@
           mode="decimal" 
           [minFractionDigits]="2" 
           [maxFractionDigits]="2" 
-          [min]="0.01" 
           styleClass="tw-w-full">
         </p-inputNumber>
       </div>
@@ -206,7 +230,7 @@
 
     <ng-template pTemplate="footer">
       <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="cerrarModal()"></button>
-      <button pButton type="button" label="Crear Obligación" icon="pi pi-check" (click)="crearObligacion()"></button>
+      <button pButton type="button" label="Crear Obligación" icon="pi pi-check" [disabled]="creandoObligacion" [loading]="creandoObligacion" (click)="crearObligacion()"></button>
     </ng-template>
   </p-dialog>
 
@@ -255,5 +279,13 @@
       </button>
     </ng-template>
   </p-dialog>
+
+  <app-plan-pagos-dialog [(visible)]="mostrarPlan" [estudianteOptions]="estudianteOptions" [estudiantes]="estudiantes"
+    [titulaciones]="titulaciones" [estudianteInicial]="estudiantePlanInicial" (creado)="refrescarTodo()"></app-plan-pagos-dialog>
+
+  <app-estado-cuenta-dialog [(visible)]="mostrarEstadoCuenta" [estudianteId]="estudianteEstadoCuenta"
+    (cambiado)="refrescarTodo()"></app-estado-cuenta-dialog>
+
+  <app-config-mora-dialog [(visible)]="mostrarConfigMora" (cambiado)="refrescarTodo()"></app-config-mora-dialog>
 
 </div>

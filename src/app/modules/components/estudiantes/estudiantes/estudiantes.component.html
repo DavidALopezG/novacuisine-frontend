@@ -229,7 +229,7 @@
     <div class="form-field">
       <label>Receta</label>
       <p-select
-        [options]="recetaOptions"
+        [options]="recetaOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
         [(ngModel)]="recetaSeleccionadaId"
         optionLabel="label"
         optionValue="value"

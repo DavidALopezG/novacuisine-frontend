@@ -132,7 +132,7 @@
       <div class="form-field tw-col-span-2">
         <label>Asignatura</label>
         <p-select
-          [options]="asignaturaOptions"
+          [options]="asignaturaOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
           [(ngModel)]="formReceta.asignatura_id"
           optionLabel="label"
           optionValue="value"
@@ -164,7 +164,7 @@
 
       <div class="selector-ingrediente">
         <p-select
-          [options]="insumoOptions"
+          [options]="insumoOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
           [(ngModel)]="selectorInsumoId"
           optionLabel="label"
           optionValue="value"
@@ -253,7 +253,7 @@
 
     <div class="selector-ingrediente">
       <p-select
-        [options]="insumoOptions"
+        [options]="insumoOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
         [(ngModel)]="selectorInsumoId"
         optionLabel="label"
         optionValue="value"
@@ -326,7 +326,7 @@
     <div class="form-field">
       <label>Estudiante</label>
       <p-select
-        [options]="estudianteOptions"
+        [options]="estudianteOptions" [filter]="true" filterBy="label" filterPlaceholder="Buscar..." [showClear]="true" emptyFilterMessage="Sin resultados"
         [(ngModel)]="estudianteSeleccionadoId"
         optionLabel="label"
         optionValue="value"

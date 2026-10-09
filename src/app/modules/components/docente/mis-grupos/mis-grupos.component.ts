@@ -126,7 +126,7 @@ export class MisGruposComponent implements OnInit {
         return aCoincide - bCoincide;
       })
       .map(e => ({
-        label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})` +
+        label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante})${e.cedula ? ' · CI ' + e.cedula : ''}` +
           (e.titulacion_id !== this.horarioMatriculaTitulacionId ? ' — otra titulación' : ''),
         value: e.estudiante_id
       }));
@@ -217,7 +217,7 @@ export class MisGruposComponent implements OnInit {
     this.editandoId = null;
   }
 
-  guardarGrupo(): void {
+  guardarGrupo(forzar: boolean = false): void {
     if (!this.formGrupo.asignatura_id || !this.formGrupo.hora_inicio || !this.formGrupo.hora_fin) {
       this.notif.advertencia('Selecciona la asignatura y completa la hora de inicio y fin.');
       return;
@@ -230,7 +230,7 @@ export class MisGruposComponent implements OnInit {
 
     const creandoNuevo = !this.editandoId;
     const peticion = this.editandoId
-      ? this.horariosService.actualizarHorario(this.editandoId, this.formGrupo)
+      ? this.horariosService.actualizarHorario(this.editandoId, { ...this.formGrupo, forzar })
       : this.horariosService.crearHorario(this.formGrupo);
 
     peticion.subscribe({
@@ -252,7 +252,23 @@ export class MisGruposComponent implements OnInit {
           error: () => { this.error = 'No se pudieron recargar tus grupos.'; this.loading = false; }
         });
       },
-      error: (err) => this.notif.error(err?.error?.error || 'No se pudo guardar el grupo.')
+      error: (err) => {
+        // Al editar día/hora, algún alumno matriculado quedaría con cruce: permitir + confirmar
+        if (err?.status === 409 && err?.error?.tipo === 'CRUCE_HORARIO_MATRICULADOS') {
+          this.confirmacion.confirm({
+            header: 'Cruce de horario en alumnos matriculados',
+            message: `${err.error.error} ¿Quieres guardar el cambio de todas formas?`,
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sí, guardar igual',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: 'p-button-warning',
+            rejectButtonStyleClass: 'p-button-text',
+            accept: () => this.guardarGrupo(true)
+          });
+          return;
+        }
+        this.notif.error(err?.error?.error || 'No se pudo guardar el grupo.');
+      }
     });
   }
 

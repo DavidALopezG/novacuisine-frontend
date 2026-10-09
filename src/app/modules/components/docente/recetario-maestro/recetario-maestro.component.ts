@@ -225,7 +225,7 @@ export class RecetarioMaestroComponent implements OnInit {
   }
 
   get estudianteOptions(): { label: string; value: string }[] {
-    return this.estudiantes.map(e => ({ label: `${e.nombre} ${e.apellido} (${e.codigo_estudiante})`, value: e.estudiante_id }));
+    return this.estudiantes.map(e => ({ label: `${e.nombre} ${e.apellido} (${e.codigo_estudiante})${e.cedula ? ' · CI ' + e.cedula : ''}`, value: e.estudiante_id }));
   }
 
   // ─────────────────── MODAL 1 ────────────────────────────
@@ -556,7 +556,7 @@ export class RecetarioMaestroComponent implements OnInit {
       accept: () => {
         this.recetasService.aprobarVersion(receta.version_id!).subscribe({
           next: () => { this.notif.exito('Versión aprobada.'); this.cargarRecetas(); },
-          error: () => this.notif.error('No se pudo aprobar la versión.')
+          error: (err) => this.notif.error(err?.error?.error || 'No se pudo aprobar la versión.')
         });
       }
     });

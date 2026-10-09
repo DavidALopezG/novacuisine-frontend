@@ -5,7 +5,11 @@ import { CobrosService } from '../../../../services/cobros/cobros.service';
 import { EstudiantesService } from '../../../../services/estudiantes/estudiantes.service';
 import { NotificacionService } from '../../../../services/notificacion/notificacion.service';
 import { SpinnerComponent } from '../../../../shared/spinner/spinner.component';
+import { TitulacionesService } from '../../../../services/titulaciones/titulaciones.service';
 import { APP_CONFIG } from '../../../../config/app.config.env';
+import { PlanPagosDialogComponent } from '../plan-pagos-dialog/plan-pagos-dialog.component';
+import { EstadoCuentaDialogComponent } from '../estado-cuenta-dialog/estado-cuenta-dialog.component';
+import { ConfigMoraDialogComponent } from '../config-mora-dialog/config-mora-dialog.component';
 
 // Módulos PrimeNG
 import { TableModule } from 'primeng/table';
@@ -30,6 +34,12 @@ interface Obligacion {
   fecha_vencimiento: Date;
   monto_total: number;
   monto_pagado: number;
+  concepto?: string | null;
+  numero_cuota?: number | null;
+  plan_nombre?: string | null;
+  plan_total_cuotas?: number;
+  monto_base?: number;
+  recargo_acumulado?: number;
   estado: string;
   fecha_pago: Date | null;
   comprobante_ruta?: string | null;
@@ -57,7 +67,10 @@ interface Obligacion {
     InputNumberModule,
     SelectModule,
     MessageModule,
-    TooltipModule
+    TooltipModule,
+    PlanPagosDialogComponent,
+    EstadoCuentaDialogComponent,
+    ConfigMoraDialogComponent
   ],
   templateUrl: './cobros-gestion.component.html',
   styleUrl: './cobros-gestion.component.css'
@@ -82,6 +95,16 @@ export class CobrosGestionComponent implements OnInit {
   ];
 
   estudianteOptions: { label: string; value: number }[] = [];
+  titulaciones: any[] = [];
+  resumen: any = null;
+
+  // Nuevos diálogos (plan de pagos, estado de cuenta, configuración de mora)
+  mostrarPlan = false;
+  mostrarEstadoCuenta = false;
+  mostrarConfigMora = false;
+  estudianteEstadoCuenta: number | string | null = null;
+  estudiantePlanInicial: number | string | null = null;
+  notificandoMasivo = false;
 
   // Visibilidad de modales
   mostrarModalPago = false;
@@ -90,6 +113,25 @@ export class CobrosGestionComponent implements OnInit {
 
   obligacionSeleccionada: Obligacion | null = null;
   montoPago = 0;
+  procesandoPago = false;
+
+  get saldoSeleccionado(): number {
+    const o = this.obligacionSeleccionada;
+    return o ? Math.round((Number(o.monto_total) - Number(o.monto_pagado)) * 100) / 100 : 0;
+  }
+
+  get errorMontoPago(): string | null {
+    const m = Number(this.montoPago);
+    if (this.montoPago === null || this.montoPago === undefined || !Number.isFinite(m) || m <= 0) {
+      return 'Ingresa un monto mayor a 0.';
+    }
+    if (m > this.saldoSeleccionado) {
+      return `El monto excede el saldo pendiente ($${this.saldoSeleccionado.toFixed(2)}).`;
+    }
+    return null;
+  }
+
+  creandoObligacion = false;
 
   nuevaObligacion = {
     estudiante_id: 0,
@@ -105,12 +147,74 @@ export class CobrosGestionComponent implements OnInit {
   constructor(
     private cobrosService: CobrosService,
     private estudiantesService: EstudiantesService,
+    private titulacionesService: TitulacionesService,
     private notif: NotificacionService
   ) {}
 
   ngOnInit(): void {
     this.cargarObligaciones();
     this.cargarEstudiantes();
+    this.cargarResumen();
+    this.titulacionesService.obtenerTitulaciones().subscribe({
+      next: (t) => (this.titulaciones = t),
+      error: () => {}
+    });
+  }
+
+  cargarResumen(): void {
+    this.cobrosService.obtenerResumen().subscribe({
+      next: (r) => (this.resumen = r?.resumen ?? null),
+      error: () => (this.resumen = null)
+    });
+  }
+
+  /** Refresca tabla e indicadores tras cualquier cambio hecho desde los diálogos. */
+  refrescarTodo(): void {
+    this.cargarObligaciones();
+    this.cargarResumen();
+    this.cargarEstudiantes();
+  }
+
+  abrirPlan(estudianteId: number | string | null = null): void {
+    this.estudiantePlanInicial = estudianteId;
+    this.mostrarPlan = true;
+  }
+
+  abrirEstadoCuenta(o: Obligacion): void {
+    this.estudianteEstadoCuenta = o.estudiante_id;
+    this.mostrarEstadoCuenta = true;
+  }
+
+  enviarCorreo(o: Obligacion, forzar = false): void {
+    this.cobrosService.enviarRecordatorio(o.estudiante_id, forzar).subscribe({
+      next: (res) => this.notif.exito(res?.message || 'Recordatorio enviado.'),
+      error: (err) => {
+        if (err?.error?.tipo === 'RECIENTE' && window.confirm(`${err.error.error}\n¿Enviarlo de nuevo de todos modos?`)) {
+          this.enviarCorreo(o, true);
+          return;
+        }
+        this.notif.error(err?.error?.error || 'No se pudo enviar el correo.');
+      }
+    });
+  }
+
+  notificarMorosos(): void {
+    if (this.notificandoMasivo) return;
+    if (!window.confirm('Se enviará un recordatorio por correo a todos los estudiantes con cuotas vencidas (máximo uno cada 24 h por estudiante). ¿Continuar?')) return;
+    this.notificandoMasivo = true;
+    this.cobrosService.enviarRecordatorioMasivo().subscribe({
+      next: (r) => {
+        this.notificandoMasivo = false;
+        const enviados = (r.enviados || 0) + (r.simulados || 0);
+        this.notif.exito(
+          `Correos: ${enviados}${r.simulados ? ' (simulados)' : ''} enviados · ${r.omitidos_recientes} ya avisados hoy · ${r.sin_email} sin correo · ${r.errores} con error.`
+        );
+      },
+      error: (err) => {
+        this.notificandoMasivo = false;
+        this.notif.error(err?.error?.error || 'No se pudo completar el envío masivo.');
+      }
+    });
   }
 
   cargarObligaciones(): void {
@@ -135,7 +239,7 @@ export class CobrosGestionComponent implements OnInit {
       next: (data: any[]) => {
         this.estudiantes = data;
         this.estudianteOptions = data.map(e => ({
-          label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante || 'Sin Cód.'})`,
+          label: `${e.apellido} ${e.nombre} (${e.codigo_estudiante || 'Sin Cód.'})${e.cedula ? ' · CI ' + e.cedula : ''}`,
           value: e.estudiante_id
         }));
       },
@@ -195,52 +299,82 @@ export class CobrosGestionComponent implements OnInit {
     this.montoPago = o.monto_total - o.monto_pagado;
     this.mostrarModalPago = true;
   }
-// ESTA FUNCION ESTA MAL PORQUE NO REGISTRA CORRECTAMENTE PAGOS
 confirmarPago(): void {
-  if (!this.obligacionSeleccionada) return;
+  if (!this.obligacionSeleccionada || this.procesandoPago) return;
 
-  if (this.montoPago <= 0) {
+  const saldo = Math.round((this.obligacionSeleccionada.monto_total - this.obligacionSeleccionada.monto_pagado) * 100) / 100;
+  const monto = Number(this.montoPago);
+
+  if (!Number.isFinite(monto) || monto <= 0) {
     this.notif.advertencia('Ingresa un monto válido mayor a 0.');
+    return;
+  }
+  if (Math.round(monto * 100) / 100 !== monto) {
+    this.notif.advertencia('El monto admite máximo 2 decimales.');
+    return;
+  }
+  if (monto > saldo) {
+    this.notif.advertencia(`El monto ($${monto.toFixed(2)}) excede el saldo pendiente ($${saldo.toFixed(2)}).`);
     return;
   }
 
   const pagoData = {
     obligacion_id: this.obligacionSeleccionada.obligacion_id,
-    monto_pago: this.montoPago
+    monto_pago: monto
   };
 
+  this.procesandoPago = true;
   this.cobrosService.registrarPago(pagoData).subscribe({
     next: () => {
+      this.procesandoPago = false;
       this.notif.exito('Pago registrado correctamente.');
       this.cerrarModal();
       this.cargarObligaciones();
       this.cargarEstudiantes();
     },
     error: (err) => {
+      this.procesandoPago = false;
       console.error('Error al registrar pago:', err);
       this.notif.error(err?.error?.error || 'Error al registrar el pago.');
     }
   });
 }
-//FUNCION MAL
   abrirModalNuevaObligacion(): void {
     this.nuevaObligacion = { estudiante_id: 0, monto_total: 0, fecha_vencimiento: '' };
     this.mostrarModalObligacion = true;
   }
 
   crearObligacion(): void {
+    if (this.creandoObligacion) return;
+
     if (!this.nuevaObligacion.estudiante_id || !this.nuevaObligacion.monto_total || !this.nuevaObligacion.fecha_vencimiento) {
       this.notif.advertencia('Completa todos los campos obligatorios.');
       return;
     }
+    if (this.nuevaObligacion.monto_total <= 0) {
+      this.notif.advertencia('El monto debe ser mayor a 0.');
+      return;
+    }
+    if (this.nuevaObligacion.monto_total > 10000) {
+      this.notif.advertencia('El monto de una obligación no puede superar $10.000. Verifica el valor ingresado.');
+      return;
+    }
+    const hoy = new Date().toISOString().slice(0, 10);
+    if (this.nuevaObligacion.fecha_vencimiento < hoy) {
+      this.notif.advertencia('La fecha de vencimiento no puede ser anterior a hoy.');
+      return;
+    }
 
+    this.creandoObligacion = true;
     this.cobrosService.crearObligacion(this.nuevaObligacion).subscribe({
       next: () => {
+        this.creandoObligacion = false;
         this.notif.exito('Obligación creada correctamente');
         this.cerrarModal();
         this.cargarObligaciones();
       },
       error: (err) => {
+        this.creandoObligacion = false;
         console.error('Error al crear obligación:', err);
         this.notif.error(err?.error?.error || 'Error al crear la obligación.');
       }
