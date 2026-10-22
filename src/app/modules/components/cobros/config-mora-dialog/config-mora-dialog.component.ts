@@ -119,7 +119,7 @@ export class ConfigMoraDialogComponent implements OnChanges {
     if (!Number.isFinite(v) || v <= 0) return 'Ingresa un valor mayor a 0.';
     if (this.tipo === 'PORCENTAJE' && v > 100) return 'El porcentaje no puede superar 100.';
     if (this.tipo === 'FIJO' && v > 500) return 'El valor fijo no puede superar $500.';
-    if (this.tope !== null && this.tope !== undefined && Number(this.tope) <= 0) return 'El tope debe ser mayor a 0 (o déjalo vacío).';
+    if (this.tope !== null && this.tope !== undefined && (Number(this.tope) <= 0 || Number(this.tope) > 500)) return 'El tope debe estar entre 0 y 500 % (o déjalo vacío).';
     return null;
   }
 

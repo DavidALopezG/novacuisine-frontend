@@ -34,9 +34,10 @@ export class LoginComponent implements OnInit {
 
     this.registerForm = this.fb.group({
       usuario_id: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.minLength(10), Validators.maxLength(10)]],
-      nombre_completo: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      contrasena: ['', [Validators.required, Validators.minLength(6)]],
+      nombre_completo: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(120)]],
+      // Misma regla que el servidor: mínimo 8, con al menos una letra y un número (antes pedía 6 y el servidor rechazaba)
+      contrasena: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(72), Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/)]],
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }

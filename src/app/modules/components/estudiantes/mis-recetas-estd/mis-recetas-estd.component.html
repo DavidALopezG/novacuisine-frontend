@@ -78,18 +78,6 @@
       <p *ngIf="!recetaDetalle.insumos || recetaDetalle.insumos.length === 0" class="hint-text">
         Esta receta aún no tiene ingredientes registrados.
       </p>
-
-      <p-divider></p-divider>
-
-      <h4 class="section-title"><i class="pi pi-inbox"></i> Menaje / Utensilios</h4>
-      <ul class="lista-ingredientes" *ngIf="recetaDetalle.menaje?.length > 0">
-        <li *ngFor="let m of recetaDetalle.menaje">
-          {{ m.cantidad_requerida }} x {{ m.nombre }}
-        </li>
-      </ul>
-      <p *ngIf="!recetaDetalle.menaje || recetaDetalle.menaje.length === 0" class="hint-text">
-        No se requieren utensilios especiales registrados.
-      </p>
     </ng-container>
 
     <ng-template pTemplate="footer">

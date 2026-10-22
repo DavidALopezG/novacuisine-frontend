@@ -103,7 +103,8 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
       : null;
 
     const hayVencidos   = obligaciones.some(o => this.estadoReal(o) === 'VENCIDO');
-    const hayPendientes = obligaciones.some(o => this.estadoReal(o) === 'PENDIENTE');
+    // PARCIAL también es deuda abierta: antes un estudiante con abonos parciales aparecía "Al día"
+    const hayPendientes = obligaciones.some(o => ['PENDIENTE', 'PARCIAL'].includes(this.estadoReal(o)));
 
     this.resumen = {
       totalPagado,
@@ -115,9 +116,14 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
 
   // Calcula el estado real de una obligación basándose en los datos del backend
   estadoReal(o: any): string {
+    // Misma regla que el servidor/Reportes (estado_real). Si no viene, se calcula por DÍA, no por hora:
+    // antes una cuota que vence hoy aparecía "Vencida" desde las 00:00:01 del mismo día de vencimiento.
+    if (o.estado_real) return o.estado_real;
     const estado = (o.estado || '').toUpperCase();
     if (estado === 'PAGADO') return 'PAGADO';
-    if (new Date(o.fecha_vencimiento) < new Date()) return 'VENCIDO';
+    const venc = new Date(o.fecha_vencimiento); venc.setHours(0, 0, 0, 0);
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    if (venc < hoy) return 'VENCIDO';
     if (Number(o.monto_pagado) > 0) return 'PARCIAL';
     return 'PENDIENTE';
   }
@@ -164,6 +170,24 @@ export class EstadoCuentaEstudianteComponent implements OnInit {
     }
     if (!this.montoDeclarado || this.montoDeclarado <= 0) {
       this.notif.advertencia('Ingresa el monto que pagaste.');
+      return;
+    }
+    if (Math.round(this.montoDeclarado * 100) / 100 !== this.montoDeclarado) {
+      this.notif.advertencia('El monto admite máximo 2 decimales.');
+      return;
+    }
+    const saldo = Number(this.obligacionSeleccionada?.saldo_pendiente);
+    if (Number.isFinite(saldo) && this.montoDeclarado > saldo) {
+      this.notif.advertencia(`El monto no puede superar tu saldo pendiente ($${saldo.toFixed(2)}).`);
+      return;
+    }
+    const tiposOk = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!tiposOk.includes(this.archivoComprobante.type)) {
+      this.notif.advertencia('El comprobante debe ser una imagen (JPG, PNG, WEBP) o un PDF.');
+      return;
+    }
+    if (this.archivoComprobante.size > 5 * 1024 * 1024) {
+      this.notif.advertencia('El comprobante no puede superar los 5 MB.');
       return;
     }
 

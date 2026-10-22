@@ -258,6 +258,9 @@ export class CobrosGestionComponent implements OnInit {
   }
 
   esVencida(o: Obligacion): boolean {
+    // El servidor ya calcula el estado real con la misma regla de Reportes: se usa si viene en la respuesta
+    const real = (o as any).estado_real as string | undefined;
+    if (real) return real === 'VENCIDO';
     if (o.estado?.toUpperCase() === 'PAGADO') return false;
     const venc = new Date(o.fecha_vencimiento);
     const hoy = new Date();
@@ -296,7 +299,9 @@ export class CobrosGestionComponent implements OnInit {
   // --- Modales ---
   abrirModalPago(o: Obligacion): void {
     this.obligacionSeleccionada = o;
-    this.montoPago = o.monto_total - o.monto_pagado;
+    // El API devuelve NUMERIC como texto ("100.10"): restar directo arrastra ruido binario
+    // (0.30 - 0.10 = 0.19999999999999998) y la validación de 2 decimales rechazaba el pago sugerido.
+    this.montoPago = Math.round((Number(o.monto_total) - Number(o.monto_pagado)) * 100) / 100;
     this.mostrarModalPago = true;
   }
 confirmarPago(): void {
@@ -355,11 +360,17 @@ confirmarPago(): void {
       this.notif.advertencia('El monto debe ser mayor a 0.');
       return;
     }
+    if (Math.round(this.nuevaObligacion.monto_total * 100) / 100 !== this.nuevaObligacion.monto_total) {
+      this.notif.advertencia('El monto admite máximo 2 decimales.');
+      return;
+    }
     if (this.nuevaObligacion.monto_total > 10000) {
       this.notif.advertencia('El monto de una obligación no puede superar $10.000. Verifica el valor ingresado.');
       return;
     }
-    const hoy = new Date().toISOString().slice(0, 10);
+    // Fecha LOCAL (toISOString da la fecha en UTC: después de las 19:00 en Ecuador ya es "mañana")
+    const d = new Date();
+    const hoy = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     if (this.nuevaObligacion.fecha_vencimiento < hoy) {
       this.notif.advertencia('La fecha de vencimiento no puede ser anterior a hoy.');
       return;

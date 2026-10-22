@@ -271,7 +271,7 @@ export class RecetarioMaestroComponent implements OnInit {
     if (this.modoEdicion && this.recetaSeleccionadaId) {
       this.recetasService.actualizarReceta(this.recetaSeleccionadaId, this.formReceta).subscribe({
         next: () => { this.notif.exito('Receta actualizada correctamente'); this.cerrarModal(); this.cargarRecetas(); },
-        error: () => this.notif.error('Error al actualizar la receta.')
+        error: (err) => this.notif.error(err?.error?.error || 'Error al actualizar la receta.')
       });
     } else {
       // ─── BUG FIX: si quedó algo seleccionado en el selector sin presionar "+",
@@ -297,7 +297,7 @@ export class RecetarioMaestroComponent implements OnInit {
           this.cerrarModal();
           this.cargarRecetas();
         },
-        error: () => this.notif.error('Error al crear la receta.')
+        error: (err) => this.notif.error(err?.error?.error || 'Error al crear la receta.')
       });
     }
   }
@@ -314,7 +314,7 @@ export class RecetarioMaestroComponent implements OnInit {
       accept: () => {
         this.recetasService.eliminarReceta(receta.receta_id).subscribe({
           next: () => { this.notif.exito('Receta eliminada'); this.cargarRecetas(); },
-          error: () => this.notif.error('Error al eliminar la receta.')
+          error: (err) => this.notif.error(err?.error?.error || 'Error al eliminar la receta.')
         });
       }
     });
@@ -609,7 +609,7 @@ export class RecetarioMaestroComponent implements OnInit {
     this.asignando = true;
     this.recetasService.asignarReceta(this.recetaAsignarId!, this.estudianteSeleccionadoId!).subscribe({
       next: (resp) => { this.notif.exito(resp?.message || 'Receta asignada.'); this.asignando = false; this.cerrarModalAsignar(); },
-      error: () => { this.notif.error('No se pudo asignar la receta.'); this.asignando = false; }
+      error: (err) => { this.notif.error(err?.error?.error || 'No se pudo asignar la receta.'); this.asignando = false; }
     });
   }
 }
